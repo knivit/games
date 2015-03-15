@@ -1,0 +1,35 @@
+numberOfRobots = 2
+probabilityLadderAffectsHuntingAction = 80
+probabilityLadderAffectsGoAction = 50
+GO_LEFT = 10, 40
+GO_RIGHT = 10, 40
+GO_UP = 10, 22
+GO_DOWN = 10, 22
+WAIT = 5, 5
+HUNTING_PLAYER = 55, 80
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X       Z                                                             Z        X
+X    *          H     *    H                   H    *     H    H          *    X
+X  XXXXXXXXXXXXXHXXXXXXXXXXHXXXX-----------XXXXHXXXXXXXXXXH    HXXXXXXXXXXXXX  X
+X               H          H                   H          H    H               X
+X               H          H                   H          H    H               X
+X               H   *      H               H   H          H    H               X
+X             XXXXXXXXXXXXXHX-------------XHXXXHXXXXX-----H----H----------     X
+X                          H               H   H          H    H               X
+X  *  H                    H               H              H    H               X
+XXXXXXHXX             *    H               H              H    H               X
+X     H               H    H               H              H    H               X
+X     H       *       H    H       *       H              H    H     *     *   X
+X    XXXXXXXXXXXXXXXXXH    HXXXXXXXXXXXXXXXHXX      XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X                     H    H               H                                   X
+X                     H    H               H                                   X
+X  U                  H    H               H                                   X
+X                     H    H               H     *            H                X
+X---------------------H----H-------------XXXXXXXXXXXX-------XXHXX----------    X
+X             *       H    H                                  H       *        X
+X            * *      H    H    * * *                 * * *   H      * *       X
+X           * * *     H    H                                  H     * * *      X
+X          * * * *    H    H                                  H    * * * *     X
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                           COPYRIGHT (C) 2011 TSOFT

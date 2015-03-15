@@ -1,0 +1,50 @@
+[Уровень 0 - заготовка для новых уровней (80x25). В игре не используется. Символы '!@#%^&*()' - ловцы. Символ '$' - клад, '' (Alt+127) - герой, '' (Alt+31..28) - телепортеры 1, 2 ...]
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . X
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
+[Уровень 1]
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X . XXX . XXX . XXX . X X . X . XXX . X . XXX . X . X X . X X . . . $ XXX . X
+X $ . . $ X X . X X . X X . X . $ . $ . $ . . $ X . X X . X X . XXX . . . $ X
+X . XXX . X X . X X $ XXX . . $ XXX . X . XXX . . $ XXX . X X . X X . XXX . X
+X . X X . XXX $ XXX . . . $ X . X X . X . X X . X . . . $ XXX . X X . X X . X
+X . X X $ . . . . . . XXX . X . X X . X . X X . X . XXX . . . $ XXX . X X . X
+X . XXX . XXX . XXX . X X . X . XXX . X . XXX . X . X X . XXX . . . $ XXX . X
+X $ . . . X X . X X . X X . X . $ . $ . $ . . $ X . X X . X X . XXX . . . $ X
+X . XXX . X X . X X $ XXX . . $ XXX X . X XXX . . $ XXX . X X . X X . XXX . X
+X . X X . XXX $ XXX . . . $ X . XXXXX   XXXXX . X . . . $ XXX . X X . X X . X
+X . X X $ . . . . . . XXX . X . X @       % X . X . XXX . . . $ XXX . X X . X
+X . XXX . XXX . XXX . X X . X . X           X . X . X X . XXX . . . $ XXX . X
+ $ . . . X X . X X . X X . X .               $ X . X X . X X . XXX . . . $ 
+X . XXX . X X . X X $ XXX . . $ X           X . . $ XXX . X X . X X . XXX . X
+X . X X . XXX $ XXX . . . $ X . X #       & X . X . . . $ XXX . X X . X X . X
+X . X X $ . . . . . . XXX . X . XXXXX   XXXXX . X . XXX . . . $ XXX . X X . X
+X . XXX . XXX . XXX . X X . X . XXX X . X XXX . X . X X . XXX . . . $ XXX . X
+X $ . . . X X . X X . X X . X $ . . $ . $ . . $ X . X X . X X . XXX . . . $ X
+X . XXX . X X . X X $ XXX . . . XXX . X . XXX . . $ XXX . X X . X X . XXX . X
+X . X X . XXX $ XXX . . . $ X . X X . X . X X . X . . . $ XXX . X X . X X . X
+X . X X . XXX . . . . XXX . X . X X . X . X X . X . XXX . . . $ XXX . X X . X
+X . XXX $ . . . XXX . X X . X . XXX . X . XXX . X . X X . XXX . . . $ XXX . X
+X $ . . . XXX . X X  X X . X . $ . $ . $ . . $ X . X X . X X . XXX . . . $ X
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 

@@ -1,0 +1,33 @@
+numberOfRobots = 3
+probabilityLadderAffectsHuntingAction = 90
+probabilityLadderAffectsGoAction = 60
+GO_LEFT = 10, 40
+GO_RIGHT = 10, 40
+GO_UP = 10, 10
+GO_DOWN = 10, 10
+WAIT = 5, 5
+HUNTING_PLAYER = 55, 60
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X                                                                              X
+X                                                                              X
+X                   H      *           H           *      H                    X
+X            Z      HXXXXXXXXXXXXXXXXXXHXXXXXXXXXXXXXXXXXXH       U            X
+X                   H                  H                  H                    X
+X                   H                  H                  H                    X
+X  -----------------H------------------H------------------H-----------------   X
+X                   H                  H                  H                    X
+X                   H                  H                  H                    X
+X                   H                  H                  H                    X
+X                   H     H     *      H      *     H     H                    X
+X     ***   ***     H     HXXXXXXXXXXXXHXXXXXXXXXXXXH     H     ***   ***      X
+X     ***   ***     H     H                         H     H     ***   ***      X
+X     ***   ***     H     H            *            H     H     ***   ***      X
+X     ***   ***     H     H            H            H     H     ***   ***      X
+X      *******      H     H            H            H     H       *****        X
+X     ***   ***     H     H            H            H     H        ***         X
+X     ***   ***     HXXXXXH            H            HXXXXXH        ***         X
+X     ***   ***     HXXXXXH            H            HXXXXXH        ***         X
+X     ***   ***     HXXXXXH            H            HXXXXXH        ***         X
+X                   HXXXXXH            H            HXXXXXH                    X
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
