@@ -1,0 +1,109 @@
+package com.tsoft.game.games.loderunner;
+
+import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.tsoft.game.games.loderunner.mode.LRMenuMode;
+
+import static com.tsoft.game.games.loderunner.LRGameState.*;
+
+public class LRGame implements ApplicationListener {
+
+    private Sprite[] sprites;
+    private OrthographicCamera camera;
+    private SpriteBatch batch;
+
+    public static void main(String[] args) {
+        Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
+        config.setTitle("Lode Runner");
+        config.setWindowedMode(800, 600);
+        config.useVsync(true);
+        config.setForegroundFPS(60);
+        new Lwjgl3Application(new LRGame(), config);
+    }
+
+    @Override
+    public void create() {
+        // game
+        world = new LRWorld();
+        mode = new LRMenuMode();
+        mode.init();
+
+        // sprites
+        int n = 0;
+        sprites = new Sprite[16 * 6];
+        Texture texture = new Texture(Gdx.files.internal("assets/sprites.gif"));
+        for (int y = 0; y < 6 * LRScreen.FONT_HEIGHT; y += LRScreen.FONT_HEIGHT) {
+            for (int x = 0; x < 16 * LRScreen.FONT_WIDTH; x += LRScreen.FONT_WIDTH) {
+                Sprite sprite = new Sprite(texture, x, y, LRScreen.FONT_WIDTH, LRScreen.FONT_HEIGHT);
+                sprites[n ++] = sprite;
+            }
+        }
+
+        // graphics
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, LRScreen.FONT_WIDTH*LRScreen.WIDTH, LRScreen.FONT_HEIGHT*LRScreen.HEIGHT);
+        batch = new SpriteBatch();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+
+    }
+
+    @Override
+    public void render() {
+        // game
+        time = TimeUtils.millis();
+
+        if (mode.nextMode() != null) {
+            mode = mode.nextMode();
+            mode.init();
+        } else {
+            mode.update();
+
+            if (mode.finished()) {
+                //finish();
+            }
+        }
+
+        // render
+        //ScreenUtils.clear(0, 0, 0, 1);
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        for (int y = 0; y < screen.getHeight(); y ++) {
+            for (int x = 0; x < screen.getWidth(); x ++) {
+                int n = screen.getChar(x, y) - 32;
+                if (n < 0) {
+                    n = 0;
+                }
+
+                batch.draw(sprites[n], x*LRScreen.FONT_WIDTH, y*LRScreen.FONT_HEIGHT);
+            }
+        }
+        batch.end();
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void dispose() {
+
+    }
+}

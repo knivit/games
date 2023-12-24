@@ -8,21 +8,47 @@
     <artifactId>xonix</artifactId>
     <version>1.0</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <gdx.version>1.12.0</gdx.version>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>com.golden.gamedev</groupId>
-            <artifactId>golden</artifactId>
-            <version>0.2.3</version>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx</artifactId>
+            <version>${gdx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-lwjgl3</artifactId>
+            <version>${gdx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-tools</artifactId>
+            <version>${gdx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-platform</artifactId>
+            <version>${gdx.version}</version>
+            <classifier>natives-desktop</classifier>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
 
