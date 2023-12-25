@@ -2,8 +2,6 @@ package com.tsoft.game.games.loderunner.mode;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.tsoft.game.games.loderunner.LRGameState;
-import com.tsoft.game.games.loderunner.LRGameStatus;
 import com.tsoft.game.games.loderunner.actor.LRPlayer;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
@@ -18,12 +16,13 @@ public class LRPlayMode implements GameMode {
 
     private LRPlayer player;
     private ActionTimer playerTimer;
+    private LRPlayStatus status;
 
     private GameMode nextMode;
 
     @Override
     public void init() {
-        LRGameState.status = new LRGameStatus();
+        status = new LRPlayStatus();
 
         resetLevel();
 
@@ -34,10 +33,12 @@ public class LRPlayMode implements GameMode {
         world.loadLevel(status.getLevel());
 
         robots = new Robots();
-        robotTimer = new ActionTimer(300);
+        robotTimer = new ActionTimer(150);
 
-        player = new LRPlayer();
-        playerTimer = new ActionTimer(300);
+        player = new LRPlayer(status);
+        playerTimer = new ActionTimer(100);
+
+        status.update();
     }
 
     @Override
@@ -54,34 +55,20 @@ public class LRPlayMode implements GameMode {
             robots.move();
         }
 
-        LRGameState.status.update();
+        status.update();
 
-        if (LRGameState.status.getLife() < 0) {
+        if (status.getLife() < 0) {
             nextMode = new LRMenuMode();
         }
 
         if (player.isNextLevel()) {
-            LRGameState.status.nextLevel();
+            status.nextLevel();
             resetLevel();
         }
     }
 
     @Override
-    public boolean finished() {
-        return false;
-    }
-
-    @Override
     public GameMode nextMode() {
         return nextMode;
-    }
-
-    @Override
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder(getClass().getName()).append(" {\n");
-        buf.append(robots.getLogString()).append('\n');
-        buf.append(player.getLogString()).append('\n');
-        buf.append('}');
-        return buf.toString();
     }
 }

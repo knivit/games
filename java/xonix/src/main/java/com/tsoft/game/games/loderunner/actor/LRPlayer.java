@@ -2,10 +2,13 @@ package com.tsoft.game.games.loderunner.actor;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.tsoft.game.games.loderunner.LRGameState;
 import com.tsoft.game.games.loderunner.LRScreen;
+import com.tsoft.game.games.loderunner.mode.LRPlayStatus;
 
 import java.awt.*;
+
+import static com.tsoft.game.games.loderunner.LRGameSound.*;
+import static com.tsoft.game.games.loderunner.LRGameState.*;
 
 public class LRPlayer {
 
@@ -16,38 +19,40 @@ public class LRPlayer {
     public int y;
     private char offChar;
 
+    private final LRPlayStatus status;
     private boolean isNextLevel;
 
-    public LRPlayer() {
-        LRGameState.world.setPlayer(this);
+    public LRPlayer(LRPlayStatus status) {
+        this.status = status;
+        world.setPlayer(this);
 
         reset();
     }
 
     private void reset() {
-        x = LRGameState.world.playerStartPlace.x;
-        y = LRGameState.world.playerStartPlace.y;
-        offChar = LRGameState.screen.getChar(x, y);
+        x = world.playerStartPlace.x;
+        y = world.playerStartPlace.y;
+        offChar = screen.getChar(x, y);
         isNextLevel = false;
     }
 
     private void show() {
-        offChar = LRGameState.screen.getChar(x, y);
-        LRGameState.screen.putChar(x, y, PLAYER_CHAR);
+        offChar = screen.getChar(x, y);
+        screen.putChar(x, y, PLAYER_CHAR);
     }
 
     private void hide() {
-        LRGameState.screen.putChar(x, y, offChar);
+        screen.putChar(x, y, offChar);
     }
 
     private boolean canMoveUp() {
-        char ch = LRGameState.screen.getChar(x, y);
-        return (ch == LRScreen.LADDER_CHAR || ch == LRScreen.TREASURE_CHAR ||
+        char ch = screen.getChar(x, y);
+        return (ch == LRScreen.LADDER_CHAR || ch == LRScreen.ROPE_CHAR ||
                 ch == LRScreen.TREASURE_CHAR);
     }
 
     private boolean canMoveDown() {
-        char ch = LRGameState.screen.getChar(x, y);
+        char ch = screen.getChar(x, y);
         return (ch == LRScreen.EMPTY_CHAR || ch == LRScreen.LADDER_CHAR ||
                 ch == LRScreen.ROPE_CHAR  || ch == LRScreen.TREASURE_CHAR);
     }
@@ -58,11 +63,11 @@ public class LRPlayer {
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT))  {
             if (x > 0) off.x = -1;
         } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))  {
-            if (x < (LRGameState.screen.getWidth() - 1)) off.x = 1;
+            if (x < (screen.getWidth() - 1)) off.x = 1;
         } else if (Gdx.input.isKeyPressed(Input.Keys.UP))  {
-            if (y < (LRGameState.screen.getHeight() - 2) && canMoveDown()) off.y = 1;
+            if (y < (screen.getHeight() - 1) && canMoveUp()) off.y = 1;
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))  {
-            if (y > 0 && canMoveUp()) off.y = -1;
+            if (y > 1 && canMoveDown()) off.y = -1;
         }
 
         return off;
@@ -72,15 +77,23 @@ public class LRPlayer {
         hide();
 
         Point off;
-        if (LRGameState.world.getPhysic().isFalling(x, y)) {
-            off = new Point(0, 1);
+        boolean falling = false;
+        if (world.getPhysic().isFalling(x, y)) {
+            off = new Point(0, -1);
+            falling = true;
         } else {
             off = getPlayerOffset();
         }
 
+        if (off.x == 0 && off.y == 0) {
+            show();
+            return;
+        }
+
         int newX = x + off.x;
         int newY = y + off.y;
-        char newCh = LRGameState.screen.getChar(newX, newY);
+        char newCh = screen.getChar(newX, newY);
+
         boolean canMove = true;
         switch (newCh) {
             case LRScreen.WALL_CHAR: {
@@ -93,10 +106,11 @@ public class LRPlayer {
                 break;
             }
             case LRScreen.TREASURE_CHAR: {
-                LRGameState.status.addScore(10);
-                LRGameState.screen.putChar(newX, newY, LRScreen.EMPTY_CHAR);
-
+                status.addScore(10);
+                screen.putChar(newX, newY, LRScreen.EMPTY_CHAR);
                 isNextLevel = getTreasureNumber() == 0;
+
+                sound.push(TREASURE);
                 break;
             }
         }
@@ -104,6 +118,10 @@ public class LRPlayer {
         if (canMove) {
             x = newX;
             y = newY;
+
+            if (!falling) {
+                sound.push(STEP);
+            }
         }
 
         show();
@@ -111,9 +129,9 @@ public class LRPlayer {
 
     private int getTreasureNumber() {
         int count = 0;
-        for (int y = 0; y < ((LRScreen.HEIGHT - 1)); y ++) {
-            for (int x = 0; x < (LRScreen.WIDTH); x ++) {
-                if (LRGameState.screen.getChar(x, y) == LRScreen.TREASURE_CHAR) {
+        for (int y = 0; y < (LRScreen.HEIGHT - 1); y ++) {
+            for (int x = 0; x < LRScreen.WIDTH; x ++) {
+                if (screen.getChar(x, y) == LRScreen.TREASURE_CHAR) {
                     count ++;
                 }
             }
@@ -122,22 +140,16 @@ public class LRPlayer {
     }
 
     public void removeLife() {
-        LRGameState.status.removeLife();
+        status.removeLife();
 
         hide();
 
         reset();
+
+        sound.push(REMOVE_LIFE);
     }
 
     public boolean isNextLevel() {
         return isNextLevel;
-    }
-
-    public String getLogString() {
-        return "LRPlayer {" +
-                "x=" + x +
-                ", y=" + y +
-                ", offChar=" + offChar +
-                '}';
     }
 }

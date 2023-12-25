@@ -19,6 +19,15 @@ public class TextScreen {
         return screen[x][y];
     }
 
+    public char[] getLine(int y) {
+        checkXY(0, y);
+        char[] clone = new char[width];
+        for (int x = 0; x < width; x ++) {
+            clone[x] = screen[x][y];
+        }
+        return clone;
+    }
+
     public void putChar(int x, int y, char ch) {
         checkXY(x, y);
         screen[x][y] = ch;

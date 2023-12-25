@@ -2,7 +2,6 @@ package com.tsoft.game.games.xonix.mode;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.tsoft.game.games.xonix.XGGameStatus;
 import com.tsoft.game.games.xonix.XGScreen;
 import com.tsoft.game.games.xonix.actor.Flies;
 import com.tsoft.game.games.xonix.actor.Fly;
@@ -19,12 +18,13 @@ public class XGPlayMode implements GameMode {
     private ActionTimer flyTimer;
 
     private ActionTimer playerTimer;
+    private XGPlayStatus status;
 
     private GameMode nextMode;
 
     @Override
     public void init() {
-        status = new XGGameStatus();
+        status = new XGPlayStatus();
 
         resetLevel();
 
@@ -34,7 +34,7 @@ public class XGPlayMode implements GameMode {
     private void resetLevel() {
         screen.reset();
 
-        player = new XGPlayer();
+        player = new XGPlayer(status);
         playerTimer = new ActionTimer(100);
 
         innerFlyes = new Flies();
@@ -74,22 +74,7 @@ public class XGPlayMode implements GameMode {
     }
 
     @Override
-    public boolean finished() {
-        return false;
-    }
-
-    @Override
     public GameMode nextMode() {
         return nextMode;
-    }
-
-    @Override
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder(getClass().getName()).append(" {\n");
-        buf.append(player.getLogString()).append('\n');
-        buf.append(innerFlyes.getLogString()).append('\n');
-        buf.append(outerFlyes.getLogString()).append('\n');
-        buf.append('}');
-        return buf.toString();
     }
 }

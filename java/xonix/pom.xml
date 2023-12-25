@@ -12,6 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <gdx.version>1.12.0</gdx.version>
+        <gdx-controllers.version>2.2.3</gdx-controllers.version>
     </properties>
 
     <dependencies>
@@ -38,6 +39,12 @@
             <artifactId>gdx-platform</artifactId>
             <version>${gdx.version}</version>
             <classifier>natives-desktop</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx-controllers</groupId>
+            <artifactId>gdx-controllers-desktop</artifactId>
+            <version>${gdx-controllers.version}</version>
         </dependency>
     </dependencies>
 

@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.tsoft.game.games.loderunner.mode.LRMenuMode;
 
@@ -51,6 +50,10 @@ public class LRGame implements ApplicationListener {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, LRScreen.FONT_WIDTH*LRScreen.WIDTH, LRScreen.FONT_HEIGHT*LRScreen.HEIGHT);
         batch = new SpriteBatch();
+
+        // sound
+        sound = new LRGameSound();
+        sound.init();
     }
 
     @Override
@@ -62,20 +65,14 @@ public class LRGame implements ApplicationListener {
     public void render() {
         // game
         time = TimeUtils.millis();
-
         if (mode.nextMode() != null) {
             mode = mode.nextMode();
             mode.init();
         } else {
             mode.update();
-
-            if (mode.finished()) {
-                //finish();
-            }
         }
 
         // render
-        //ScreenUtils.clear(0, 0, 0, 1);
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -90,6 +87,9 @@ public class LRGame implements ApplicationListener {
             }
         }
         batch.end();
+
+        // sound
+        sound.play();
     }
 
     @Override
@@ -104,6 +104,8 @@ public class LRGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-
+        if (batch != null) {
+            batch.dispose();
+        }
     }
 }

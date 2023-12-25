@@ -2,38 +2,38 @@ package com.tsoft.game.games.loderunner.mode;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.tsoft.game.games.loderunner.LRGameState;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameMode;
 
-import static com.tsoft.game.games.loderunner.LRGameState.time;
+import static com.tsoft.game.games.loderunner.LRGameState.*;
 
 public class LRMenuMode implements GameMode {
 
     private Robots robots;
     private ActionTimer robotTimer;
 
-    private boolean finished;
+    private LRMenuStatus status;
+    private ActionTimer statusTimer;
+
     private GameMode nextMode;
 
     @Override
     public void init() {
-        LRGameState.world.loadLevel(0);
+        world.loadLevel(0);
 
         robots = new Robots();
         robotTimer = new ActionTimer(300);
-        LRGameState.world.setRobots(robots);
+        world.setRobots(robots);
+
+        status = new LRMenuStatus();
+        statusTimer = new ActionTimer(100);
 
         nextMode = null;
     }
 
     @Override
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-            finished = true;
-        }
-
         if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
             nextMode = new LRPlayMode();
         }
@@ -41,23 +41,14 @@ public class LRMenuMode implements GameMode {
         if (robotTimer.action(time)) {
             robots.move();
         }
-    }
 
-    @Override
-    public boolean finished() {
-        return finished;
+        if (statusTimer.action(time)) {
+            status.update();
+        }
     }
 
     @Override
     public GameMode nextMode() {
         return nextMode;
-    }
-
-    @Override
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder(getClass().getName()).append(" {\n");
-        buf.append(robots.getLogString()).append('\n');
-        buf.append('}');
-        return buf.toString();
     }
 }

@@ -15,7 +15,6 @@ public class XGMenuMode implements GameMode {
     private Flies innerFlyes;
     private ActionTimer flyTimer;
 
-    private boolean finished;
     private GameMode nextMode;
 
     @Override
@@ -31,10 +30,6 @@ public class XGMenuMode implements GameMode {
 
     @Override
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-            finished = true;
-        }
-
         if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
             nextMode = new XGPlayMode();
         }
@@ -45,20 +40,7 @@ public class XGMenuMode implements GameMode {
     }
 
     @Override
-    public boolean finished() {
-        return finished;
-    }
-
-    @Override
     public GameMode nextMode() {
         return nextMode;
-    }
-
-    @Override
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder(getClass().getName()).append(" {\n");
-        buf.append(innerFlyes.getLogString()).append('\n');
-        buf.append('}');
-        return buf.toString();
     }
 }

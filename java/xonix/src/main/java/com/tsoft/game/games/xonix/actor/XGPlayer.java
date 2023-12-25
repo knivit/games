@@ -3,7 +3,10 @@ package com.tsoft.game.games.xonix.actor;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.tsoft.game.games.xonix.XGScreen;
+import com.tsoft.game.games.xonix.mode.XGPlayStatus;
 
+import static com.tsoft.game.games.xonix.XGGameSound.REMOVE_LIFE;
+import static com.tsoft.game.games.xonix.XGGameSound.STEP;
 import static com.tsoft.game.games.xonix.XGGameState.*;
 
 public class XGPlayer {
@@ -19,9 +22,12 @@ public class XGPlayer {
     private static final char FILLED_CHAR = '1';
     private static final char NOT_FILLED_CHAR = '0';
 
+    private final XGPlayStatus status;
     private boolean isNextLevel;
 
-    public XGPlayer() {
+    public XGPlayer(XGPlayStatus status) {
+        this.status = status;
+
         reset();
     }
 
@@ -74,6 +80,8 @@ public class XGPlayer {
             return;
         }
 
+        hide();
+
         if (inSpace) {
             screen.putChar(x, y, PLAYER_PATH_CHAR);
         } else {
@@ -89,6 +97,7 @@ public class XGPlayer {
         if (ch == XGScreen.EMPTY_CHAR || ch == XGScreen.BORDER_CHAR) {
             if (ch == XGScreen.EMPTY_CHAR) {
                 inSpace = true;
+                sound.push(STEP);
             } else {
                 if (inSpace) {
                     inSpace = false;
@@ -186,19 +195,11 @@ public class XGPlayer {
         replace(PLAYER_PATH_CHAR, XGScreen.EMPTY_CHAR);
 
         reset();
+
+        sound.push(REMOVE_LIFE);
     }
 
     public boolean isNextLevel() {
         return isNextLevel;
-    }
-
-    public String getLogString() {
-        return "XGPlayer {" +
-                "x=" + x +
-                ", y=" + y +
-                ", inSpace=" + inSpace +
-                ", offChar=" + offChar +
-                ", isNextLevel=" + isNextLevel +
-                '}';
     }
 }

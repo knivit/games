@@ -121,7 +121,7 @@ public class Game extends Panel implements Runnable {
     }
 
     public static void main(String[] args) {
-        final Game game = new Game();
+        Game game = new Game();
         game.init();
 
         JFrame frame = new JFrame("Digger");

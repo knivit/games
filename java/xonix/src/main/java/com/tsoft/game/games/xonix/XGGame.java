@@ -50,6 +50,10 @@ public class XGGame implements ApplicationListener {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, XGScreen.FONT_WIDTH*XGScreen.WIDTH, XGScreen.FONT_HEIGHT*XGScreen.HEIGHT);
         batch = new SpriteBatch();
+
+        // audio
+        sound = new XGGameSound();
+        sound.init();
     }
 
     @Override
@@ -61,33 +65,27 @@ public class XGGame implements ApplicationListener {
     public void render() {
         // game
         time = TimeUtils.millis();
-
         if (mode.nextMode() != null) {
             mode = mode.nextMode();
             mode.init();
         } else {
             mode.update();
-
-            if (mode.finished()) {
-                //finish();
-            }
         }
 
-        // render
+        // graphics
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (int y = 0; y < screen.getHeight(); y ++) {
             for (int x = 0; x < screen.getWidth(); x ++) {
-                int n = screen.getChar(x, y) - 32;
-                if (n < 0) {
-                    n = 0;
-                }
-
-                batch.draw(sprites[n], XGScreen.FONT_WIDTH*x, XGScreen.FONT_HEIGHT*y);
+                int n = Math.max(screen.getChar(x, y) - 32, 0);
+                batch.draw(sprites[n], XGScreen.FONT_WIDTH * x, XGScreen.FONT_HEIGHT * y);
             }
         }
         batch.end();
+
+        // sound
+        sound.play();
     }
 
     @Override
@@ -102,6 +100,8 @@ public class XGGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-
+        if (batch != null) {
+            batch.dispose();
+        }
     }
 }

@@ -6,9 +6,5 @@ public interface GameMode {
 
     void update();
 
-    boolean finished();
-
     GameMode nextMode();
-
-    String getLogString();
 }

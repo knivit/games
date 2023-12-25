@@ -1,11 +1,12 @@
 package com.tsoft.game.games.digger;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 
 public class Main {
     private World world;
@@ -37,11 +38,9 @@ public class Main {
 
     private void loadLevels() {
         for (int n = 0; n < 8; n ++) {
-            URL resource = getClass().getResource("levels/" + n + ".txt");
+            FileHandle resource = Gdx.files.internal("assets/digger/levels/" + n + ".txt");
 
-            String fileName = resource.getFile();
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(fileName));
+            try (BufferedReader reader = resource.reader(1024)) {
                 int y = 0;
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -49,8 +48,6 @@ public class Main {
                     leveldat[n][y] = line;
                     y ++;
                 }
-            } catch (FileNotFoundException ex) {
-                System.out.println("File not found: " + fileName);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

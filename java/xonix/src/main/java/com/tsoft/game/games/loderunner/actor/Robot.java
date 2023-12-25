@@ -11,7 +11,7 @@ public class Robot {
     public static final char START_PLACE_CHAR = 'Z';
     public static final char ROBOT_CHAR = '@';
 
-    private RobotBehaviour behaviour;
+    private final RobotBehaviour behaviour;
 
     private int x;
     private int y;
@@ -37,14 +37,15 @@ public class Robot {
         RobotBehaviour.Action priorAction = action;
 
         // falling
-        int dx = 0, dy = 0;
+        int dx = 0, dy;
         if (world.getPhysic().isFalling(x, y)) {
             priorAction = null;
-            dy = 1;
+            dy = -1;
         } else {
             if (action == null || action.duration < 0) {
                 action = behaviour.getRandomAction(world.getPlayer() != null);
             }
+
             Point off = getOff(world.getPlayer());
             dx = off.x;
             dy = off.y;
@@ -52,6 +53,7 @@ public class Robot {
 
         boolean isUpOrDown = (priorAction != null &&
                 ((priorAction.actionType == RobotBehaviour.ActionType.GO_UP) || (priorAction.actionType == RobotBehaviour.ActionType.GO_DOWN)));
+
         if (!isUpOrDown) {
             switch (offChar) {
                 case LRScreen.LADDER_CHAR: {
@@ -86,7 +88,7 @@ public class Robot {
             action = null;
         } else {
             char newChar = screen.getChar(newX, newY);
-            if (dx == 0 && dy == -1 && !canMoveUp(newChar)) {
+            if (dx == 0 && dy == 1 && !canMoveUp(newChar)) {
                 action = null;
             } else {
                 boolean canMove = true;
@@ -100,7 +102,7 @@ public class Robot {
                         canMove = false;
                     }
                     case LRScreen.EMPTY_CHAR: {
-                        if (dy < 0) {
+                        if (dy > 0) {
                             action = null;
                             canMove = false;
                         }
@@ -130,11 +132,11 @@ public class Robot {
                 break;
             }
             case GO_UP: {
-                dy = -1;
+                dy = 1;
                 break;
             }
             case GO_DOWN: {
-                dy = 1;
+                dy = -1;
                 break;
             }
             case WAIT: {

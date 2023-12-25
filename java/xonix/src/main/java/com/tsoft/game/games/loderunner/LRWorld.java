@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.tsoft.game.games.loderunner.LRGameState.*;
+
 public class LRWorld {
 
     private LRPhysic physic;
@@ -25,7 +27,7 @@ public class LRWorld {
     public HashMap<String, String> properties = new HashMap<String, String>();
 
     public LRWorld() {
-        LRGameState.screen = new LRScreen();
+        screen = new LRScreen();
         physic = new LRPhysic();
     }
 
@@ -50,7 +52,7 @@ public class LRWorld {
     }
 
     private void clearWorld() {
-        LRGameState.screen.fill(LRScreen.EMPTY_CHAR);
+        screen.fill(LRScreen.EMPTY_CHAR);
         robotStartPlaces.clear();
         playerStartPlace = null;
         player = null;
@@ -63,14 +65,14 @@ public class LRWorld {
         FileHandle resource = Gdx.files.internal("assets/loderunner/levels/" + n + ".txt");
 
         try (BufferedReader reader = resource.reader(1024)) {
-            int y = 0;
+            int y = LRScreen.HEIGHT - 1;
             String line;
             boolean isLevelStarted = false;
 
             while ((line = reader.readLine()) != null) {
                 if (!isLevelStarted) {
                     // skip empty lines
-                    if (line.trim().length() == 0) {
+                    if (line.trim().isEmpty()) {
                         continue;
                     }
 
@@ -87,7 +89,7 @@ public class LRWorld {
                 }
 
                 for (int x = 0; x < LRScreen.WIDTH && x < line.length(); x ++) {
-                    LRGameState.screen.putChar(x, y, line.charAt(x));
+                    screen.putChar(x, y, line.charAt(x));
 
                     switch (line.charAt(x)) {
                         case Robot.START_PLACE_CHAR: {
@@ -101,7 +103,7 @@ public class LRWorld {
                         }
                     }
                 }
-                y ++;
+                y --;
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -115,7 +117,7 @@ public class LRWorld {
 
     public String getLogString() {
         StringBuilder buf = new StringBuilder("World {");
-        buf.append(LRGameState.screen.getLogString()).append('\n');
+        buf.append(screen.getLogString()).append('\n');
         buf.append(", playerStartPlace= \n").append(playerStartPlace.toString()).append('\n');
         buf.append(", robotStartPlaces= {\n");
         for (Point point : robotStartPlaces) {

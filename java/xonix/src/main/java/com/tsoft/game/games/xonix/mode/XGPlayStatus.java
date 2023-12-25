@@ -1,15 +1,16 @@
-package com.tsoft.game.xonix;
+package com.tsoft.game.games.xonix.mode;
 
-public class XGGameStatus {
-    private XGScreen screen;
+import com.tsoft.game.games.xonix.XGScreen;
+
+import static com.tsoft.game.games.xonix.XGGameState.screen;
+
+public class XGPlayStatus {
 
     private int level;
     private int score;
     private int life;
 
-    public XGGameStatus(XGScreen screen) {
-        this.screen = screen;
-
+    public XGPlayStatus() {
         level = 1;
         life = 5;
     }
