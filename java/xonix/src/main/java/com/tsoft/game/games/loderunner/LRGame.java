@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.tsoft.game.games.loderunner.mode.LRMenuMode;
+import com.tsoft.game.utils.GameController;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
 
@@ -54,6 +55,9 @@ public class LRGame implements ApplicationListener {
         // sound
         sound = new LRGameSound();
         sound.init();
+
+        // controller
+        controller = new GameController();
     }
 
     @Override
@@ -88,8 +92,11 @@ public class LRGame implements ApplicationListener {
         }
         batch.end();
 
-        // sound
+        // audio
         sound.play();
+
+        // controller
+        controller.update();
     }
 
     @Override

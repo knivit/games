@@ -4,7 +4,7 @@ import static com.tsoft.game.games.loderunner.LRGameState.screen;
 
 public class LRMenuStatus {
 
-    private static final String INFO_MESSAGE = "PRESS SPACE TO CONTINUE";
+    private static final String INFO_MESSAGE = "PRESS FIRE TO CONTINUE";
 
     private char[] text;
     private int pos;

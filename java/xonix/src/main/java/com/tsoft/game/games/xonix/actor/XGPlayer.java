@@ -1,7 +1,5 @@
 package com.tsoft.game.games.xonix.actor;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.tsoft.game.games.xonix.XGScreen;
 import com.tsoft.game.games.xonix.mode.XGPlayStatus;
 
@@ -59,13 +57,13 @@ public class XGPlayer {
     PlayerOffset getPlayerOffset() {
         PlayerOffset off = new PlayerOffset();
 
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))  {
+        if (controller.leftPressed)  {
             if (x > 0) off.dX = -1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))  {
+        } else if (controller.rightPressed)  {
             if (x < (screen.getWidth() - 1)) off.dX = 1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.UP))  {
+        } else if (controller.upPressed)  {
             if (y < (screen.getHeight() - 1)) off.dY = 1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))  {
+        } else if (controller.downPressed)  {
             if (y > 1) off.dY = -1;
         }
         return off;

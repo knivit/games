@@ -44,6 +44,6 @@ public class XGScreen extends TextScreen {
         print(19, 13, "XX   XX   XXXXX   XX    XX  XXXXXX  XX   XX");
 
         print(27, 10, "COPYRIGHT (C) 2011 BY TSOFT");
-        print(31, 8, "PRESS SPACE TO START");
+        print(32, 8, "PRESS FIRE TO START");
     }
 }

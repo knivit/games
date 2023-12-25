@@ -1,7 +1,5 @@
 package com.tsoft.game.games.loderunner.actor;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.tsoft.game.games.loderunner.LRScreen;
 import com.tsoft.game.games.loderunner.mode.LRPlayStatus;
 
@@ -60,13 +58,13 @@ public class LRPlayer {
     public Point getPlayerOffset() {
         Point off = new Point();
 
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))  {
+        if (controller.leftPressed)  {
             if (x > 0) off.x = -1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))  {
+        } else if (controller.rightPressed)  {
             if (x < (screen.getWidth() - 1)) off.x = 1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.UP))  {
+        } else if (controller.upPressed)  {
             if (y < (screen.getHeight() - 1) && canMoveUp()) off.y = 1;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))  {
+        } else if (controller.downPressed)  {
             if (y > 1 && canMoveDown()) off.y = -1;
         }
 
@@ -106,9 +104,9 @@ public class LRPlayer {
                 break;
             }
             case LRScreen.TREASURE_CHAR: {
-                status.addScore(10);
+                status.treasureFound();
                 screen.putChar(newX, newY, LRScreen.EMPTY_CHAR);
-                isNextLevel = getTreasureNumber() == 0;
+                isNextLevel = (status.getTreasureLeft() == 0);
 
                 sound.push(TREASURE);
                 break;
@@ -125,18 +123,6 @@ public class LRPlayer {
         }
 
         show();
-    }
-
-    private int getTreasureNumber() {
-        int count = 0;
-        for (int y = 0; y < (LRScreen.HEIGHT - 1); y ++) {
-            for (int x = 0; x < LRScreen.WIDTH; x ++) {
-                if (screen.getChar(x, y) == LRScreen.TREASURE_CHAR) {
-                    count ++;
-                }
-            }
-        }
-        return count;
     }
 
     public void removeLife() {

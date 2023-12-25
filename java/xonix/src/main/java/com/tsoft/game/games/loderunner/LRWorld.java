@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
 
@@ -22,9 +23,9 @@ public class LRWorld {
     private LRPlayer player;
     private Robots robots;
 
-    public ArrayList<Point> robotStartPlaces = new ArrayList<Point>();
+    public ArrayList<Point> robotStartPlaces = new ArrayList<>();
     public Point playerStartPlace;
-    public HashMap<String, String> properties = new HashMap<String, String>();
+    public Map<String, String> properties = new HashMap<>();
 
     public LRWorld() {
         screen = new LRScreen();
@@ -115,17 +116,15 @@ public class LRWorld {
         robotStartPlaces.add(place);
     }
 
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder("World {");
-        buf.append(screen.getLogString()).append('\n');
-        buf.append(", playerStartPlace= \n").append(playerStartPlace.toString()).append('\n');
-        buf.append(", robotStartPlaces= {\n");
-        for (Point point : robotStartPlaces) {
-            buf.append("  ").append(point.toString()).append('\n');
+    public int getTreasureNumber() {
+        int count = 0;
+        for (int y = 0; y < (LRScreen.HEIGHT - 1); y ++) {
+            for (int x = 0; x < LRScreen.WIDTH; x ++) {
+                if (screen.getChar(x, y) == LRScreen.TREASURE_CHAR) {
+                    count ++;
+                }
+            }
         }
-        buf.append(" }\n");
-        buf.append('}');
-
-        return buf.toString();
+        return count;
     }
 }

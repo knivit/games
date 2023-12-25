@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.tsoft.game.games.xonix.mode.XGMenuMode;
+import com.tsoft.game.utils.GameController;
 
 import static com.tsoft.game.games.xonix.XGGameState.*;
 
@@ -54,6 +55,9 @@ public class XGGame implements ApplicationListener {
         // audio
         sound = new XGGameSound();
         sound.init();
+
+        // controller
+        controller = new GameController();
     }
 
     @Override
@@ -84,8 +88,11 @@ public class XGGame implements ApplicationListener {
         }
         batch.end();
 
-        // sound
+        // audio
         sound.play();
+
+        // controller
+        controller.update();
     }
 
     @Override

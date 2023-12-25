@@ -1,7 +1,5 @@
 package com.tsoft.game.games.loderunner.mode;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameMode;
@@ -34,7 +32,7 @@ public class LRMenuMode implements GameMode {
 
     @Override
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+        if (controller.firePressed) {
             nextMode = new LRPlayMode();
         }
 

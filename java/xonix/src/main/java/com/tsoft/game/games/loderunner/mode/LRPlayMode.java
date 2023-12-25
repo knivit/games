@@ -1,7 +1,5 @@
 package com.tsoft.game.games.loderunner.mode;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.tsoft.game.games.loderunner.actor.LRPlayer;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
@@ -22,9 +20,9 @@ public class LRPlayMode implements GameMode {
 
     @Override
     public void init() {
-        status = new LRPlayStatus();
-
         resetLevel();
+
+        status = new LRPlayStatus(world.getTreasureNumber());
 
         nextMode = null;
     }
@@ -43,7 +41,7 @@ public class LRPlayMode implements GameMode {
 
     @Override
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
+        if (controller.escapePressed) {
             nextMode = new LRMenuMode();
         }
 

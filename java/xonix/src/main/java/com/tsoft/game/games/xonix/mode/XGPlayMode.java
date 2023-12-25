@@ -1,7 +1,5 @@
 package com.tsoft.game.games.xonix.mode;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.tsoft.game.games.xonix.XGScreen;
 import com.tsoft.game.games.xonix.actor.Flies;
 import com.tsoft.game.games.xonix.actor.Fly;
@@ -48,7 +46,7 @@ public class XGPlayMode implements GameMode {
 
     @Override
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
+        if (controller.escapePressed) {
             nextMode = new XGMenuMode();
         }
 
