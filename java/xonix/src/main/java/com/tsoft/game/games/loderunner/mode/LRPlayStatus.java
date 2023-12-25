@@ -6,12 +6,11 @@ import static com.tsoft.game.games.loderunner.LRGameState.screen;
 
 public class LRPlayStatus {
 
-    private int level;
-    private int treasureLeft;
-    private int life;
+    public int level;
+    public int treasureLeft;
+    public int life;
 
-    public LRPlayStatus(int treasureLeft) {
-        this.treasureLeft = treasureLeft;
+    public LRPlayStatus() {
         level = 0;
         life = 5;
     }
@@ -23,17 +22,9 @@ public class LRPlayStatus {
         screen.print((LRScreen.WIDTH - 12) / 2, 0, "LEFT: %05d", treasureLeft);
     }
 
-    public int getLevel() {
-        return level;
-    }
-
     public void nextLevel() {
         life ++;
         level ++;
-    }
-
-    public int getTreasureLeft() {
-        return treasureLeft;
     }
 
     public void treasureFound() {
@@ -42,9 +33,5 @@ public class LRPlayStatus {
 
     public void removeLife() {
         life --;
-    }
-
-    public int getLife() {
-        return life;
     }
 }

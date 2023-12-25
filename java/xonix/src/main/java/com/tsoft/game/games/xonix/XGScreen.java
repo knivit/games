@@ -1,6 +1,7 @@
 package com.tsoft.game.games.xonix;
 
 import com.tsoft.game.utils.TextScreen;
+import com.tsoft.game.utils.TextSprite;
 
 public class XGScreen extends TextScreen {
 
@@ -13,8 +14,28 @@ public class XGScreen extends TextScreen {
     public static final char EMPTY_CHAR = 0;
     public static final char BORDER_CHAR = 'X';
 
+    public static final char PLAYER_CHAR = 127;
+    public static final char PLAYER_PATH_CHAR = '+';
+
+    public static final char INNER_FLY_CHAR = 'O';
+    public static final char OUTER_FLY_CHAR = ' ';
+
     public XGScreen(int width, int height) {
-        super(width, height);
+        super(width, height, 96);
+
+        putColor(getCode(BORDER_CHAR), 1, 1, 1);
+        putColor(getCode(INNER_FLY_CHAR), 1, 1, 1);
+        putColor(getCode(OUTER_FLY_CHAR), 0, 0, 0);
+        putColor(getCode(PLAYER_CHAR), 1, 1, 1);
+        putColor(getCode(PLAYER_PATH_CHAR), 1, 1, 0);
+    }
+
+    @Override
+    public void update(TextSprite sprite, int x, int y) {
+        sprite.n = getCode(x, y);
+        sprite.x = x * FONT_WIDTH;
+        sprite.y = y * FONT_HEIGHT;
+        getColor(sprite.color, sprite.n);
     }
 
     public void reset() {

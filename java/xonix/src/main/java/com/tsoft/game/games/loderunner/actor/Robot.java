@@ -5,11 +5,9 @@ import com.tsoft.game.games.loderunner.LRScreen;
 import java.awt.*;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
+import static com.tsoft.game.games.loderunner.LRScreen.*;
 
 public class Robot {
-
-    public static final char START_PLACE_CHAR = 'Z';
-    public static final char ROBOT_CHAR = '@';
 
     private final RobotBehaviour behaviour;
 
@@ -27,7 +25,7 @@ public class Robot {
     }
 
     private boolean canMoveUp(char ch) {
-        return ch == LRScreen.EMPTY_CHAR || ch == LRScreen.LADDER_CHAR ||
+        return ch == EMPTY_CHAR || ch == LRScreen.LADDER_CHAR ||
                 ch == LRScreen.ROPE_CHAR || ch == LRScreen.TREASURE_CHAR;
     }
 
@@ -56,7 +54,7 @@ public class Robot {
 
         if (!isUpOrDown) {
             switch (offChar) {
-                case LRScreen.LADDER_CHAR: {
+                case LADDER_CHAR: {
                     int n = (int)(Math.random() * 100);
                     boolean useLadder;
                     if (action.actionType == RobotBehaviour.ActionType.HUNTING_PLAYER) {
@@ -84,7 +82,7 @@ public class Robot {
         int newX = x + dx;
         int newY = y + dy;
 
-        if (newX < 0 || newX >= LRScreen.WIDTH || newY < 0 || newY >= (LRScreen.HEIGHT - 1)) {
+        if (newX < 0 || newX >= LRScreen.WIDTH || newY < 1 || newY >= LRScreen.HEIGHT) {
             action = null;
         } else {
             char newChar = screen.getChar(newX, newY);
@@ -93,15 +91,15 @@ public class Robot {
             } else {
                 boolean canMove = true;
                 switch (newChar) {
-                    case LRPlayer.PLAYER_CHAR: {
+                    case PLAYER_CHAR: {
                         world.getPlayer().removeLife();
                         break;
                     }
-                    case LRScreen.WALL_CHAR: {
+                    case WALL_CHAR: case ROBOT_CHAR: {
                         action = null;
                         canMove = false;
                     }
-                    case LRScreen.EMPTY_CHAR: {
+                    case EMPTY_CHAR: {
                         if (dy > 0) {
                             action = null;
                             canMove = false;

@@ -6,11 +6,9 @@ import com.tsoft.game.games.xonix.mode.XGPlayStatus;
 import static com.tsoft.game.games.xonix.XGGameSound.REMOVE_LIFE;
 import static com.tsoft.game.games.xonix.XGGameSound.STEP;
 import static com.tsoft.game.games.xonix.XGGameState.*;
+import static com.tsoft.game.games.xonix.XGScreen.*;
 
 public class XGPlayer {
-
-    public static final char PLAYER_CHAR = 127;
-    public static final char PLAYER_PATH_CHAR = '+';
 
     private int x;
     private int y;
@@ -87,7 +85,7 @@ public class XGPlayer {
         }
 
         char ch = screen.getChar(x + off.dX, y + off.dY);
-        if (ch == PLAYER_PATH_CHAR || ch == Fly.INNER_FLY_CHAR || ch == Fly.OUTER_FLY_CHAR) {
+        if (ch == PLAYER_PATH_CHAR || ch == INNER_FLY_CHAR || ch == OUTER_FLY_CHAR) {
             removeLife();
             return;
         }
@@ -142,7 +140,7 @@ public class XGPlayer {
 
         // look left
         int col = x;
-        while (col > 0 && (screen.getChar(col, y) == XGScreen.EMPTY_CHAR || screen.getChar(col, y) == Fly.INNER_FLY_CHAR)) {
+        while (col > 0 && (screen.getChar(col, y) == XGScreen.EMPTY_CHAR || screen.getChar(col, y) == INNER_FLY_CHAR)) {
             if (screen.getChar(col, y) == XGScreen.EMPTY_CHAR) {
                 screen.putChar(col, y, FILLED_CHAR);
             } else {
@@ -160,7 +158,7 @@ public class XGPlayer {
 
         // look right
         col = x + 1;
-        while (col < screen.getWidth() && (screen.getChar(col, y) == XGScreen.EMPTY_CHAR || screen.getChar(col, y) == Fly.INNER_FLY_CHAR)) {
+        while (col < screen.getWidth() && (screen.getChar(col, y) == XGScreen.EMPTY_CHAR || screen.getChar(col, y) == INNER_FLY_CHAR)) {
             if (screen.getChar(col, y) == XGScreen.EMPTY_CHAR) {
                 screen.putChar(col, y, FILLED_CHAR);
             } else {

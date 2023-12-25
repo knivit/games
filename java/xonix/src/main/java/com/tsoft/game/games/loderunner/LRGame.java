@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.tsoft.game.games.loderunner.mode.LRMenuMode;
 import com.tsoft.game.utils.GameController;
+import com.tsoft.game.utils.TextSprite;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
 
@@ -80,14 +81,12 @@ public class LRGame implements ApplicationListener {
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        TextSprite sprite = new TextSprite();
         for (int y = 0; y < screen.getHeight(); y ++) {
             for (int x = 0; x < screen.getWidth(); x ++) {
-                int n = screen.getChar(x, y) - 32;
-                if (n < 0) {
-                    n = 0;
-                }
-
-                batch.draw(sprites[n], x*LRScreen.FONT_WIDTH, y*LRScreen.FONT_HEIGHT);
+                screen.update(sprite, x, y);
+                batch.setColor(sprite.color);
+                batch.draw(sprites[sprite.n], sprite.x, sprite.y);
             }
         }
         batch.end();

@@ -3,7 +3,6 @@ package com.tsoft.game.games.loderunner;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.tsoft.game.games.loderunner.actor.LRPhysic;
-import com.tsoft.game.games.loderunner.actor.Robot;
 import com.tsoft.game.games.loderunner.actor.LRPlayer;
 import com.tsoft.game.games.loderunner.actor.Robots;
 
@@ -15,10 +14,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
+import static com.tsoft.game.games.loderunner.LRScreen.PLAYER_START_CHAR;
+import static com.tsoft.game.games.loderunner.LRScreen.ROBOT_START_CHAR;
 
 public class LRWorld {
 
-    private LRPhysic physic;
+    private final LRPhysic physic;
 
     private LRPlayer player;
     private Robots robots;
@@ -38,10 +39,6 @@ public class LRWorld {
 
     public LRPlayer getPlayer() {
         return player;
-    }
-
-    public Robots getRobots() {
-        return robots;
     }
 
     public void setPlayer(LRPlayer player) {
@@ -93,12 +90,12 @@ public class LRWorld {
                     screen.putChar(x, y, line.charAt(x));
 
                     switch (line.charAt(x)) {
-                        case Robot.START_PLACE_CHAR: {
+                        case ROBOT_START_CHAR: {
                             addStartPlace(x, y);
                             break;
                         }
 
-                        case LRPlayer.START_PLACE_CHAR: {
+                        case PLAYER_START_CHAR: {
                             playerStartPlace = new Point(x, y);
                             break;
                         }
@@ -118,7 +115,7 @@ public class LRWorld {
 
     public int getTreasureNumber() {
         int count = 0;
-        for (int y = 0; y < (LRScreen.HEIGHT - 1); y ++) {
+        for (int y = 1; y < LRScreen.HEIGHT; y ++) {
             for (int x = 0; x < LRScreen.WIDTH; x ++) {
                 if (screen.getChar(x, y) == LRScreen.TREASURE_CHAR) {
                     count ++;

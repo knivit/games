@@ -7,11 +7,9 @@ import java.awt.*;
 
 import static com.tsoft.game.games.loderunner.LRGameSound.*;
 import static com.tsoft.game.games.loderunner.LRGameState.*;
+import static com.tsoft.game.games.loderunner.LRScreen.*;
 
 public class LRPlayer {
-
-    public static final char START_PLACE_CHAR = 'U';
-    public static final char PLAYER_CHAR = 127;
 
     public int x;
     public int y;
@@ -45,14 +43,12 @@ public class LRPlayer {
 
     private boolean canMoveUp() {
         char ch = screen.getChar(x, y);
-        return (ch == LRScreen.LADDER_CHAR || ch == LRScreen.ROPE_CHAR ||
-                ch == LRScreen.TREASURE_CHAR);
+        return (ch == LADDER_CHAR || ch == ROPE_CHAR || ch == TREASURE_CHAR);
     }
 
     private boolean canMoveDown() {
         char ch = screen.getChar(x, y);
-        return (ch == LRScreen.EMPTY_CHAR || ch == LRScreen.LADDER_CHAR ||
-                ch == LRScreen.ROPE_CHAR  || ch == LRScreen.TREASURE_CHAR);
+        return (ch == EMPTY_CHAR || ch == LADDER_CHAR || ch == ROPE_CHAR  || ch == TREASURE_CHAR);
     }
 
     public Point getPlayerOffset() {
@@ -94,19 +90,19 @@ public class LRPlayer {
 
         boolean canMove = true;
         switch (newCh) {
-            case LRScreen.WALL_CHAR: {
+            case WALL_CHAR: {
                 canMove = false;
                 break;
             }
-            case Robot.ROBOT_CHAR: {
+            case ROBOT_CHAR: {
                 removeLife();
                 canMove = false;
                 break;
             }
-            case LRScreen.TREASURE_CHAR: {
+            case TREASURE_CHAR: {
                 status.treasureFound();
                 screen.putChar(newX, newY, LRScreen.EMPTY_CHAR);
-                isNextLevel = (status.getTreasureLeft() == 0);
+                isNextLevel = (status.treasureLeft == 0);
 
                 sound.push(TREASURE);
                 break;

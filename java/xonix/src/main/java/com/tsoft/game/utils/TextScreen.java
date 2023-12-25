@@ -1,22 +1,44 @@
 package com.tsoft.game.utils;
 
-public class TextScreen {
+import com.badlogic.gdx.graphics.Color;
+
+import java.util.Arrays;
+
+public abstract class TextScreen {
 
     private final int height;
     private final int width;
 
     private final char[][] screen;
+    private final float[][] colors;
 
-    public TextScreen(int width, int height) {
+    public abstract void update(TextSprite sprite, int x, int y);
+
+    public TextScreen(int width, int height, int maxCode) {
         this.height = height;
         this.width = width;
 
+        // the play field
         screen = new char[width][height];
+
+        // create a color table and fill it with white
+        colors = new float[maxCode][3];
+        for (int i = 0; i < maxCode; i ++) {
+            colors[i][0] = colors[i][1] = colors[i][2] = 1;
+        }
     }
 
     public char getChar(int x, int y) {
         checkXY(x, y);
         return screen[x][y];
+    }
+
+    public int getCode(int x, int y) {
+        return getCode(getChar(x, y));
+    }
+
+    public int getCode(char ch) {
+        return Math.max(ch - ' ', 0);
     }
 
     public char[] getLine(int y) {
@@ -31,6 +53,22 @@ public class TextScreen {
     public void putChar(int x, int y, char ch) {
         checkXY(x, y);
         screen[x][y] = ch;
+    }
+
+    public void getColor(Color color, int code) {
+        checkCode(code);
+        float[] rgb = colors[code];
+        color.r = rgb[0];
+        color.g = rgb[1];
+        color.b = rgb[2];
+        color.a = 1f;
+    }
+
+    public void putColor(int code, float r, float g, float b) {
+        checkCode(code);
+        colors[code][0] = r;
+        colors[code][1] = g;
+        colors[code][2] = b;
     }
 
     public void fill(int x1, int y1, int x2, int y2, char ch) {
@@ -105,21 +143,6 @@ public class TextScreen {
         return width;
     }
 
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder("Screen\n");
-        for (int y = 0; y < getHeight(); y ++) {
-            for (int x = 0; x < getWidth(); x ++) {
-                char ch = getChar(x, y);
-                if (ch < 32) {
-                    ch = ' ';
-                }
-                buf.append(ch);
-            }
-            buf.append('\n');
-        }
-        return buf.toString();
-    }
-
     private void checkXY(int x, int y) {
         if (x < 0 || x >= width) {
             throw new IllegalArgumentException("Invalid argument x=" + x + ", must be in [0, " + (width - 1) + "]");
@@ -127,6 +150,12 @@ public class TextScreen {
 
         if (y < 0 || y >= height) {
             throw new IllegalArgumentException("Invalid argument y=" + y + ", must be in [0, " + (height - 1) + "]");
+        }
+    }
+
+    private void checkCode(int code) {
+        if (code < 0 || code > colors.length) {
+            throw new IllegalArgumentException("Invalid argument code = " + code + ", must be in [0 .. " + (colors.length - 1) + "]");
         }
     }
 }

@@ -20,15 +20,15 @@ public class LRPlayMode implements GameMode {
 
     @Override
     public void init() {
-        resetLevel();
+        status = new LRPlayStatus();
 
-        status = new LRPlayStatus(world.getTreasureNumber());
+        resetLevel();
 
         nextMode = null;
     }
 
     private void resetLevel() {
-        world.loadLevel(status.getLevel());
+        world.loadLevel(status.level);
 
         robots = new Robots();
         robotTimer = new ActionTimer(150);
@@ -36,6 +36,7 @@ public class LRPlayMode implements GameMode {
         player = new LRPlayer(status);
         playerTimer = new ActionTimer(100);
 
+        status.treasureLeft = world.getTreasureNumber();
         status.update();
     }
 
@@ -55,7 +56,7 @@ public class LRPlayMode implements GameMode {
 
         status.update();
 
-        if (status.getLife() < 0) {
+        if (status.life < 0) {
             nextMode = new LRMenuMode();
         }
 

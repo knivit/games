@@ -1,13 +1,9 @@
 package com.tsoft.game.games.xonix.actor;
 
-import com.tsoft.game.games.xonix.XGScreen;
-
 import static com.tsoft.game.games.xonix.XGGameState.*;
+import static com.tsoft.game.games.xonix.XGScreen.*;
 
 public class Fly {
-
-    public static final char INNER_FLY_CHAR = 'O';
-    public static final char OUTER_FLY_CHAR = ' ';
 
     private int x;
     private int y;
@@ -53,19 +49,19 @@ public class Fly {
             }
 
             boolean hitByInnerFly = (onChar == INNER_FLY_CHAR &&
-                    ((newChar == XGPlayer.PLAYER_CHAR || newChar == XGPlayer.PLAYER_PATH_CHAR)) &&
+                    ((newChar == PLAYER_CHAR || newChar == PLAYER_PATH_CHAR)) &&
                     player.isInSpace());
-            boolean hitByOuterFly = (onChar == OUTER_FLY_CHAR && (newChar == XGPlayer.PLAYER_CHAR) &&
+            boolean hitByOuterFly = (onChar == OUTER_FLY_CHAR && (newChar == PLAYER_CHAR) &&
                     (!player.isInSpace()));
             if (hitByInnerFly || hitByOuterFly) {
                 player.removeLife();
             }
 
             boolean canMoveFly = true;
-            if (onChar == INNER_FLY_CHAR && newChar != XGScreen.EMPTY_CHAR) {
+            if (onChar == INNER_FLY_CHAR && newChar != EMPTY_CHAR) {
                 canMoveFly = false;
             }
-            if (onChar == OUTER_FLY_CHAR && newChar != XGScreen.BORDER_CHAR && newChar != OUTER_FLY_CHAR) {
+            if (onChar == OUTER_FLY_CHAR && newChar != BORDER_CHAR && newChar != OUTER_FLY_CHAR) {
                 canMoveFly = false;
             }
 
@@ -140,7 +136,7 @@ public class Fly {
         if (x >= 0 && x < screen.getWidth() && y > 0 && y < screen.getHeight()) {
             return screen.getChar(x, y);
         }
-        return XGScreen.EMPTY_CHAR;
+        return EMPTY_CHAR;
     }
 
     public String toLogString() {

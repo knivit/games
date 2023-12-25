@@ -7,6 +7,7 @@ import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameMode;
 
 import static com.tsoft.game.games.xonix.XGGameState.*;
+import static com.tsoft.game.games.xonix.XGScreen.INNER_FLY_CHAR;
 
 public class XGMenuMode implements GameMode {
 
@@ -20,7 +21,7 @@ public class XGMenuMode implements GameMode {
         screen.showStartMenu();
 
         innerFlyes = new Flies();
-        innerFlyes.createFlyes(Fly.INNER_FLY_CHAR, XGScreen.EMPTY_CHAR, 2);
+        innerFlyes.createFlyes(INNER_FLY_CHAR, XGScreen.EMPTY_CHAR, 2);
         flyTimer = new ActionTimer(100);
 
         nextMode = null;

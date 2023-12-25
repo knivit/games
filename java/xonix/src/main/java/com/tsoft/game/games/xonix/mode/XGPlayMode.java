@@ -8,6 +8,8 @@ import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameMode;
 
 import static com.tsoft.game.games.xonix.XGGameState.*;
+import static com.tsoft.game.games.xonix.XGScreen.INNER_FLY_CHAR;
+import static com.tsoft.game.games.xonix.XGScreen.OUTER_FLY_CHAR;
 
 public class XGPlayMode implements GameMode {
 
@@ -36,10 +38,10 @@ public class XGPlayMode implements GameMode {
         playerTimer = new ActionTimer(100);
 
         innerFlyes = new Flies();
-        innerFlyes.createFlyes(Fly.INNER_FLY_CHAR, XGScreen.EMPTY_CHAR, status.getLevel());
+        innerFlyes.createFlyes(INNER_FLY_CHAR, XGScreen.EMPTY_CHAR, status.getLevel());
 
         outerFlyes = new Flies();
-        outerFlyes.createFlyes(Fly.OUTER_FLY_CHAR, XGScreen.BORDER_CHAR, status.getLevel());
+        outerFlyes.createFlyes(OUTER_FLY_CHAR, XGScreen.BORDER_CHAR, status.getLevel());
 
         flyTimer = new ActionTimer(100);
     }
