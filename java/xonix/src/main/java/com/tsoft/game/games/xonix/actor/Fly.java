@@ -51,8 +51,10 @@ public class Fly {
             boolean hitByInnerFly = (onChar == INNER_FLY_CHAR &&
                     ((newChar == PLAYER_CHAR || newChar == PLAYER_PATH_CHAR)) &&
                     player.isInSpace());
+
             boolean hitByOuterFly = (onChar == OUTER_FLY_CHAR && (newChar == PLAYER_CHAR) &&
                     (!player.isInSpace()));
+
             if (hitByInnerFly || hitByOuterFly) {
                 player.removeLife();
             }
@@ -61,6 +63,7 @@ public class Fly {
             if (onChar == INNER_FLY_CHAR && newChar != EMPTY_CHAR) {
                 canMoveFly = false;
             }
+
             if (onChar == OUTER_FLY_CHAR && newChar != BORDER_CHAR && newChar != OUTER_FLY_CHAR) {
                 canMoveFly = false;
             }

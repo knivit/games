@@ -1,7 +1,6 @@
 package com.tsoft.game.games.loderunner;
 
 import com.tsoft.game.utils.TextScreen;
-import com.tsoft.game.utils.TextSprite;
 
 public class LRScreen extends TextScreen {
 
@@ -24,17 +23,6 @@ public class LRScreen extends TextScreen {
     public static final int FONT_HEIGHT = 14;
 
     public LRScreen() {
-        super(WIDTH, HEIGHT, 96);
-
-        putColor(getCode(ROBOT_CHAR), 1, 0, 0);
-        putColor(getCode(TREASURE_CHAR), 1, 1, 0);
-    }
-
-    @Override
-    public void update(TextSprite sprite, int x, int y) {
-        sprite.n = getCode(x, y);
-        sprite.x = x * FONT_WIDTH;
-        sprite.y = y * FONT_HEIGHT;
-        getColor(sprite.color, sprite.n);
+        super(WIDTH, HEIGHT);
     }
 }
