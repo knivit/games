@@ -5,6 +5,7 @@ import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameScene;
 
+import static com.tsoft.game.games.xonix.Xonix.PLAY_SCENE;
 import static com.tsoft.game.games.xonix.Xonix.state;
 import static com.tsoft.game.games.xonix.misc.Screen.INNER_FLY_CHAR;
 
@@ -13,7 +14,7 @@ public class MenuScene implements GameScene {
     private FlyList innerFlyes;
     private ActionTimer flyTimer;
 
-    private GameScene next;
+    private String next;
 
     @Override
     public void create() {
@@ -29,7 +30,7 @@ public class MenuScene implements GameScene {
     @Override
     public void render() {
         if (state.controller.firePressed) {
-            next = new PlayScene();
+            next = PLAY_SCENE;
         }
 
         if (flyTimer.action(state.time)) {
@@ -38,7 +39,7 @@ public class MenuScene implements GameScene {
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return next;
     }
 }

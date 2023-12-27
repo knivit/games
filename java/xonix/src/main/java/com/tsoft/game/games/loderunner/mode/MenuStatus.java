@@ -1,8 +1,8 @@
 package com.tsoft.game.games.loderunner.mode;
 
-import static com.tsoft.game.games.loderunner.LRGameState.screen;
+import static com.tsoft.game.games.loderunner.LodeRunner.state;
 
-public class LRMenuStatus {
+public class MenuStatus {
 
     private static final String INFO_MESSAGE = "PRESS FIRE TO CONTINUE";
 
@@ -11,7 +11,7 @@ public class LRMenuStatus {
 
     public void update() {
         if (text == null) {
-            char[] line = screen.getLine(0);
+            char[] line = state.screen.getLine(0);
             text = (new String(line) + INFO_MESSAGE).toCharArray();
         }
 
@@ -20,12 +20,12 @@ public class LRMenuStatus {
             pos = 0;
         }
 
-        for (int x = 0; x < screen.getWidth(); x ++) {
+        for (int x = 0; x < state.screen.getWidth(); x ++) {
             int n = pos + x;
             if (n > text.length - 1) {
                 n = n - text.length;
             }
-            screen.putChar(x, 0, text[n]);
+            state.screen.putChar(x, 0, text[n]);
         }
     }
 }

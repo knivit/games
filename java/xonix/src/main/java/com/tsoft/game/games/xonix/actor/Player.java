@@ -3,8 +3,8 @@ package com.tsoft.game.games.xonix.actor;
 import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.games.xonix.scene.PlayStatus;
 
-import static com.tsoft.game.games.xonix.misc.Sound.REMOVE_LIFE;
-import static com.tsoft.game.games.xonix.misc.Sound.STEP;
+import static com.tsoft.game.games.xonix.misc.Sound.REMOVE_LIFE_SOUND;
+import static com.tsoft.game.games.xonix.misc.Sound.STEP_SOUND;
 import static com.tsoft.game.games.xonix.Xonix.state;
 import static com.tsoft.game.games.xonix.misc.Screen.*;
 
@@ -93,7 +93,7 @@ public class Player {
         if (ch == Screen.EMPTY_CHAR || ch == Screen.BORDER_CHAR) {
             if (ch == Screen.EMPTY_CHAR) {
                 inSpace = true;
-                state.sound.push(STEP);
+                state.sound.push(STEP_SOUND);
             } else {
                 if (inSpace) {
                     inSpace = false;
@@ -207,7 +207,7 @@ public class Player {
 
         reset();
 
-        state.sound.push(REMOVE_LIFE);
+        state.sound.push(REMOVE_LIFE_SOUND);
     }
 
     public boolean isNextLevel() {

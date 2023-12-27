@@ -1,4 +1,4 @@
-package com.tsoft.game.games.snake.mode;
+package com.tsoft.game.games.snake.scene;
 
 import com.tsoft.game.games.snake.misc.Screen;
 import com.tsoft.game.utils.GameScene;
@@ -6,13 +6,14 @@ import com.tsoft.game.utils.GameMenu;
 
 import java.util.function.Consumer;
 
+import static com.tsoft.game.games.snake.Snake.PLAY_SCENE;
 import static com.tsoft.game.games.snake.Snake.state;
 
 public class MenuScene implements GameScene {
 
     private GameMenu menu;
 
-    private GameScene next;
+    private String next;
 
     @Override
     public void create() {
@@ -28,15 +29,11 @@ public class MenuScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.firePressed) {
-            next = new PlayScene();
-        }
-
         menu.render(state);
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return next;
     }
 
@@ -57,6 +54,8 @@ public class MenuScene implements GameScene {
             } else if (state.speed > 9) {
                 state.speed = 1;
             }
+
+            state.screen.putChar(49, 8, (char)('0' + state.speed));
         }
     }
 
@@ -64,7 +63,7 @@ public class MenuScene implements GameScene {
 
         @Override
         public void accept(GameMenu.Action action) {
-            next = new PlayScene();
+            next = PLAY_SCENE;
         }
     }
 }

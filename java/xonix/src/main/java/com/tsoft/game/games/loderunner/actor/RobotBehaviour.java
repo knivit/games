@@ -6,7 +6,7 @@ public class RobotBehaviour {
     public int probabilityLadderAffectsGoAction = 50;
 
     // actions must be ordered by AccountType enums
-    private Action[] actions = new Action[] {
+    private final Action[] actions = new Action[] {
         new Action(ActionType.GO_LEFT, 10, 40),
         new Action(ActionType.GO_RIGHT, 10, 40),
         new Action(ActionType.GO_UP, 10, 10),
@@ -23,7 +23,7 @@ public class RobotBehaviour {
         WAIT(false),
         HUNTING_PLAYER(true);
 
-        private boolean isRelatedToPlayer;
+        private final boolean isRelatedToPlayer;
 
         ActionType(boolean isRelatedToPlayer) {
             this.isRelatedToPlayer = isRelatedToPlayer;
@@ -150,18 +150,5 @@ public class RobotBehaviour {
         }
 
         return actions[n].getInitializedClone();
-    }
-
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder("RobotBehaviour {\n");
-        buf.append("probabilityLadderAffectsHuntingAction=").append(probabilityLadderAffectsHuntingAction).append('\n');
-        buf.append(", probabilityLadderAffectsGoAction=").append(probabilityLadderAffectsGoAction).append('\n');
-        buf.append(", actions= {\n");
-        for (Action action : actions) {
-            buf.append("  ").append(action.getLogString()).append('\n');
-        }
-        buf.append(" }\n");
-        buf.append('}');
-        return buf.toString();
     }
 }

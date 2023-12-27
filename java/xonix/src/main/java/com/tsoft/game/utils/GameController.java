@@ -16,7 +16,7 @@ public class GameController {
     public boolean firePressed;
     public boolean escapePressed;
 
-    public void update() {
+    public void render() {
         leftPressed = false;
         rightPressed = false;
         upPressed = false;
@@ -38,7 +38,7 @@ public class GameController {
             if (controller.getButton(ControllerButton.DPAD_DOWN.ordinal())) {
                 downPressed = true;
             }
-            if (controller.getButton(ControllerButton.A.ordinal())) {
+            if (controller.getButton(ControllerButton.A.ordinal()) || controller.getButton(ControllerButton.B.ordinal())) {
                 firePressed = true;
             }
             if (controller.getButton(ControllerButton.GUIDE.ordinal())) {

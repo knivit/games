@@ -3,20 +3,21 @@ package com.tsoft.game.games.loderunner.actor;
 import java.awt.*;
 import java.util.ArrayList;
 
-import static com.tsoft.game.games.loderunner.LRGameState.world;
+import static com.tsoft.game.games.loderunner.LodeRunner.state;
 
 public class Robots {
 
-    private ArrayList<Robot> robots = new ArrayList<>();
+    private final ArrayList<Robot> robots = new ArrayList<>();
+
+    private final RobotBehaviour behaviour = new RobotBehaviour();
 
     private int numberOfRobots = 4;
-    private RobotBehaviour behaviour = new RobotBehaviour();
 
     public Robots() {
-        world.setRobots(this);
+        state.world.setRobots(this);
 
-        for (String propertyName : world.properties.keySet()) {
-            loadProperty(propertyName, world.properties.get(propertyName));
+        for (String propertyName : state.world.properties.keySet()) {
+            loadProperty(propertyName, state.world.properties.get(propertyName));
         }
     }
 
@@ -31,8 +32,8 @@ public class Robots {
     }
 
     private void addRobot() {
-        int n = (int)(Math.random() * world.robotStartPlaces.size());
-        Point startPlace = world.robotStartPlaces.get(n);
+        int n = (int)(Math.random() * state.world.robotStartPlaces.size());
+        Point startPlace = state.world.robotStartPlaces.get(n);
 
         Robot robot = new Robot(startPlace.x, startPlace.y, behaviour);
         robots.add(robot);
@@ -45,19 +46,5 @@ public class Robots {
         }
 
         return behaviour.loadProperty(name, value);
-    }
-
-    public String getLogString() {
-        StringBuilder buf = new StringBuilder("Robots {");
-        buf.append("numberOfRobots=").append(numberOfRobots).append('\n');
-        buf.append(", behaviour=").append(behaviour.getLogString()).append('\n');
-        buf.append(", robots= {\n");
-        for (Robot robot : robots) {
-            buf.append("  ").append(robot.getLogString()).append('\n');
-        }
-        buf.append(" }\n");
-        buf.append('}');
-
-        return buf.toString();
     }
 }

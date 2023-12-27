@@ -1,10 +1,10 @@
-package com.tsoft.game.games.snake.mode;
+package com.tsoft.game.games.snake.scene;
 
 import com.tsoft.game.utils.GameScene;
 
 public class PlayScene implements GameScene {
 
-    private GameScene nextMode;
+    private String nextMode;
 
     @Override
     public void create() {
@@ -17,7 +17,7 @@ public class PlayScene implements GameScene {
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return nextMode;
     }
 }

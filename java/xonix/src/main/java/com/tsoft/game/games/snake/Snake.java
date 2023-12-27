@@ -7,20 +7,28 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.tsoft.game.games.snake.misc.Sound;
 import com.tsoft.game.games.snake.misc.Screen;
 import com.tsoft.game.games.snake.misc.State;
-import com.tsoft.game.games.snake.mode.MenuScene;
+import com.tsoft.game.games.snake.scene.MenuScene;
+import com.tsoft.game.games.snake.scene.PlayScene;
 import com.tsoft.game.utils.GameController;
+import com.tsoft.game.utils.GameSceneManager;
 import com.tsoft.game.utils.GdxScreen;
+
+import java.util.Map;
 
 public class Snake implements ApplicationListener {
 
+    public static final String MENU_SCENE = "MENU_SCENE";
+    public static final String PLAY_SCENE = "PLAY_SCENE";
+
     public static final State state = new State();
 
+    private GameSceneManager sceneManager;
     private GdxScreen gdxScreen;
 
     public static void main(String[] args) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setTitle("Snake");
-        config.setWindowedMode(800, 600);
+        config.setWindowedMode(1024, 768);
         config.useVsync(true);
         config.setForegroundFPS(60);
 
@@ -29,10 +37,8 @@ public class Snake implements ApplicationListener {
 
     @Override
     public void create() {
-        // game
+        // screen
         state.screen = new Screen();
-        state.scene = new MenuScene();
-        state.scene.create();
 
         // graphics
         gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
@@ -44,6 +50,12 @@ public class Snake implements ApplicationListener {
 
         // controller
         state.controller = new GameController();
+
+        // scenes
+        sceneManager = new GameSceneManager(Map.of(
+            MENU_SCENE, MenuScene::new,
+            PLAY_SCENE, PlayScene::new));
+        sceneManager.create(MENU_SCENE);
     }
 
     @Override
@@ -53,23 +65,20 @@ public class Snake implements ApplicationListener {
 
     @Override
     public void render() {
-        // game
+        // clock
         state.time = TimeUtils.millis();
-        if (state.scene.next() != null) {
-            state.scene = state.scene.next();
-            state.scene.create();
-        } else {
-            state.scene.render();
-        }
 
         // graphics
         gdxScreen.render(state.screen);
 
         // audio
-        state.sound.play();
+        state.sound.render();
 
         // controller
-        state.controller.update();
+        state.controller.render();
+
+        // scenes
+        sceneManager.render();
     }
 
     @Override

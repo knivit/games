@@ -1,11 +1,11 @@
 package com.tsoft.game.games.loderunner.actor;
 
-import com.tsoft.game.games.loderunner.LRScreen;
+import com.tsoft.game.games.loderunner.misc.Screen;
 
 import java.awt.*;
 
-import static com.tsoft.game.games.loderunner.LRGameState.*;
-import static com.tsoft.game.games.loderunner.LRScreen.*;
+import static com.tsoft.game.games.loderunner.misc.Screen.*;
+import static com.tsoft.game.games.loderunner.LodeRunner.state;
 
 public class Robot {
 
@@ -25,8 +25,8 @@ public class Robot {
     }
 
     private boolean canMoveUp(char ch) {
-        return ch == EMPTY_CHAR || ch == LRScreen.LADDER_CHAR ||
-                ch == LRScreen.ROPE_CHAR || ch == LRScreen.TREASURE_CHAR;
+        return ch == EMPTY_CHAR || ch == Screen.LADDER_CHAR ||
+                ch == Screen.ROPE_CHAR || ch == Screen.TREASURE_CHAR;
     }
 
     public void move() {
@@ -36,15 +36,15 @@ public class Robot {
 
         // falling
         int dx = 0, dy;
-        if (world.getPhysic().isFalling(x, y)) {
+        if (state.world.getPhysics().isFalling(x, y)) {
             priorAction = null;
             dy = -1;
         } else {
             if (action == null || action.duration < 0) {
-                action = behaviour.getRandomAction(world.getPlayer() != null);
+                action = behaviour.getRandomAction(state.world.getPlayer() != null);
             }
 
-            Point off = getOff(world.getPlayer());
+            Point off = getOff(state.world.getPlayer());
             dx = off.x;
             dy = off.y;
         }
@@ -70,7 +70,7 @@ public class Robot {
                         } else {
                             action = behaviour.getAction(RobotBehaviour.ActionType.GO_DOWN);
                         }
-                        Point off = getOff(world.getPlayer());
+                        Point off = getOff(state.world.getPlayer());
                         dx = off.x;
                         dy = off.y;
                     }
@@ -82,17 +82,18 @@ public class Robot {
         int newX = x + dx;
         int newY = y + dy;
 
-        if (newX < 0 || newX >= LRScreen.WIDTH || newY < 1 || newY >= LRScreen.HEIGHT) {
+        if (newX < 0 || newX >= Screen.WIDTH || newY < 1 || newY >= Screen.HEIGHT) {
             action = null;
         } else {
-            char newChar = screen.getChar(newX, newY);
+            char newChar = state.screen.getChar(newX, newY);
+
             if (dx == 0 && dy == 1 && !canMoveUp(newChar)) {
                 action = null;
             } else {
                 boolean canMove = true;
                 switch (newChar) {
                     case PLAYER_CHAR: {
-                        world.getPlayer().removeLife();
+                        state.world.getPlayer().removeLife();
                         break;
                     }
                     case WALL_CHAR: case ROBOT_CHAR: {
@@ -117,7 +118,7 @@ public class Robot {
         show();
     }
 
-    private Point getOff(LRPlayer player) {
+    private Point getOff(Player player) {
         int dx = 0, dy = 0;
 
         switch (action.actionType) {
@@ -164,21 +165,12 @@ public class Robot {
 
     private void hide() {
         if (offChar != ROBOT_CHAR) {
-            screen.putChar(x, y, offChar);
+            state.screen.putChar(x, y, offChar);
         }
     }
 
     private void show() {
-        offChar = screen.getChar(x, y);
-        screen.putChar(x, y, ROBOT_CHAR);
-    }
-
-    public String getLogString() {
-        return "Robot {" +
-                "x=" + x +
-                ", y=" + y +
-                ", action=" + (action == null ? "null" : action.getLogString()) +
-                ", offChar='" + offChar + '\'' +
-                '}';
+        offChar = state.screen.getChar(x, y);
+        state.screen.putChar(x, y, ROBOT_CHAR);
     }
 }

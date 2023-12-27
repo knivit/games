@@ -6,5 +6,5 @@ public interface GameScene {
 
     void render();
 
-    GameScene next();
+    String next();
 }

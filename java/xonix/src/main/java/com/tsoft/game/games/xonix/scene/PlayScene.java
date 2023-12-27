@@ -6,6 +6,7 @@ import com.tsoft.game.games.xonix.actor.Player;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameScene;
 
+import static com.tsoft.game.games.xonix.Xonix.MENU_SCENE;
 import static com.tsoft.game.games.xonix.Xonix.state;
 import static com.tsoft.game.games.xonix.misc.Screen.*;
 
@@ -18,7 +19,7 @@ public class PlayScene implements GameScene {
     private ActionTimer playerTimer;
     private PlayStatus status;
 
-    private GameScene next;
+    private String next;
 
     @Override
     public void create() {
@@ -32,7 +33,7 @@ public class PlayScene implements GameScene {
     @Override
     public void render() {
         if (state.controller.escapePressed) {
-            next = new MenuScene();
+            next = MENU_SCENE;
         }
 
         if (playerTimer.action(state.time)) {
@@ -47,7 +48,7 @@ public class PlayScene implements GameScene {
         status.update();
 
         if (status.getLife() < 0) {
-            next = new MenuScene();
+            next = MENU_SCENE;
         }
 
         if (state.player.isNextLevel()) {
@@ -57,7 +58,7 @@ public class PlayScene implements GameScene {
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return next;
     }
 

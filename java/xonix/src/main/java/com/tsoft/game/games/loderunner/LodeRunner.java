@@ -4,20 +4,32 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.tsoft.game.games.loderunner.mode.LRMenuMode;
+import com.tsoft.game.games.loderunner.actor.World;
+import com.tsoft.game.games.loderunner.misc.Screen;
+import com.tsoft.game.games.loderunner.misc.Sound;
+import com.tsoft.game.games.loderunner.mode.MenuScene;
+import com.tsoft.game.games.loderunner.mode.PlayScene;
+import com.tsoft.game.games.loderunner.misc.State;
 import com.tsoft.game.utils.GameController;
+import com.tsoft.game.utils.GameSceneManager;
 import com.tsoft.game.utils.GdxScreen;
 
-import static com.tsoft.game.games.loderunner.LRGameState.*;
+import java.util.Map;
 
 public class LodeRunner implements ApplicationListener {
 
+    public static final String MENU_SCENE = "MENU_SCENE";
+    public static final String PLAY_SCENE = "PLAY_SCENE";
+
+    public static final State state = new State();
+
+    private GameSceneManager sceneManager;
     private GdxScreen gdxScreen;
 
     public static void main(String[] args) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setTitle("Lode Runner");
-        config.setWindowedMode(800, 600);
+        config.setWindowedMode(1024, 768);
         config.useVsync(true);
         config.setForegroundFPS(60);
 
@@ -26,21 +38,26 @@ public class LodeRunner implements ApplicationListener {
 
     @Override
     public void create() {
-        // game
-        world = new LRWorld();
-        mode = new LRMenuMode();
-        mode.create();
+        // screen
+        state.screen = new Screen();
 
-        // sprites
-        gdxScreen = new GdxScreen(LRScreen.WIDTH, LRScreen.HEIGHT);
-        gdxScreen.create("assets/sprites.gif", LRScreen.FONT_WIDTH, LRScreen.FONT_HEIGHT);
+        // graphics
+        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
+        gdxScreen.create("assets/sprites.gif", Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
 
         // sound
-        sound = new LRGameSound();
-        sound.create();
+        state.sound = new Sound();
+        state.sound.create();
 
         // controller
-        controller = new GameController();
+        state.controller = new GameController();
+
+        // scenes
+        state.world = new World();
+        sceneManager = new GameSceneManager(Map.of(
+            MENU_SCENE, MenuScene::new,
+            PLAY_SCENE, PlayScene::new));
+        sceneManager.create(MENU_SCENE);
     }
 
     @Override
@@ -50,23 +67,20 @@ public class LodeRunner implements ApplicationListener {
 
     @Override
     public void render() {
-        // game
-        time = TimeUtils.millis();
-        if (mode.next() != null) {
-            mode = mode.next();
-            mode.create();
-        } else {
-            mode.render();
-        }
+        // clock
+        state.time = TimeUtils.millis();
 
-        // render
-        gdxScreen.render(screen);
+        // graphics
+        gdxScreen.render(state.screen);
 
         // audio
-        sound.play();
+        state.sound.render();
 
         // controller
-        controller.update();
+        state.controller.render();
+
+        // scenes
+        sceneManager.render();
     }
 
     @Override

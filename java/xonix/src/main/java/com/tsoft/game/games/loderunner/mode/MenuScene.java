@@ -4,27 +4,28 @@ import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameScene;
 
-import static com.tsoft.game.games.loderunner.LRGameState.*;
+import static com.tsoft.game.games.loderunner.LodeRunner.PLAY_SCENE;
+import static com.tsoft.game.games.loderunner.LodeRunner.state;
 
-public class LRMenuMode implements GameScene {
+public class MenuScene implements GameScene {
 
     private Robots robots;
     private ActionTimer robotTimer;
 
-    private LRMenuStatus status;
+    private MenuStatus status;
     private ActionTimer statusTimer;
 
-    private GameScene next;
+    private String next;
 
     @Override
     public void create() {
-        world.loadLevel(0);
+        state.world.loadLevel(0);
 
         robots = new Robots();
-        robotTimer = new ActionTimer(300);
-        world.setRobots(robots);
+        robotTimer = new ActionTimer(150);
+        state.world.setRobots(robots);
 
-        status = new LRMenuStatus();
+        status = new MenuStatus();
         statusTimer = new ActionTimer(100);
 
         next = null;
@@ -32,21 +33,21 @@ public class LRMenuMode implements GameScene {
 
     @Override
     public void render() {
-        if (controller.firePressed) {
-            next = new LRPlayMode();
+        if (state.controller.firePressed) {
+            next = PLAY_SCENE;
         }
 
-        if (robotTimer.action(time)) {
+        if (robotTimer.action(state.time)) {
             robots.move();
         }
 
-        if (statusTimer.action(time)) {
+        if (statusTimer.action(state.time)) {
             status.update();
         }
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return next;
     }
 }

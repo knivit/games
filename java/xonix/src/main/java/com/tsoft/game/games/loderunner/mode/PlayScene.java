@@ -1,26 +1,26 @@
 package com.tsoft.game.games.loderunner.mode;
 
-import com.tsoft.game.games.loderunner.actor.LRPlayer;
+import com.tsoft.game.games.loderunner.actor.Player;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
 import com.tsoft.game.utils.GameScene;
 
-import static com.tsoft.game.games.loderunner.LRGameState.*;
+import static com.tsoft.game.games.loderunner.LodeRunner.*;
 
-public class LRPlayMode implements GameScene {
+public class PlayScene implements GameScene {
 
     private Robots robots;
     private ActionTimer robotTimer;
 
-    private LRPlayer player;
+    private Player player;
     private ActionTimer playerTimer;
-    private LRPlayStatus status;
+    private PlayStatus status;
 
-    private GameScene next;
+    private String next;
 
     @Override
     public void create() {
-        status = new LRPlayStatus();
+        status = new PlayStatus();
 
         resetLevel();
 
@@ -28,36 +28,36 @@ public class LRPlayMode implements GameScene {
     }
 
     private void resetLevel() {
-        world.loadLevel(status.level);
+        state.world.loadLevel(status.level);
 
         robots = new Robots();
         robotTimer = new ActionTimer(150);
 
-        player = new LRPlayer(status);
+        player = new Player(status);
         playerTimer = new ActionTimer(100);
 
-        status.treasureLeft = world.getTreasureNumber();
+        status.treasureLeft = state.world.getTreasureNumber();
         status.update();
     }
 
     @Override
     public void render() {
-        if (controller.escapePressed) {
-            next = new LRMenuMode();
+        if (state.controller.escapePressed) {
+            next = MENU_SCENE;
         }
 
-        if (playerTimer.action(time)) {
+        if (playerTimer.action(state.time)) {
             player.move();
         }
 
-        if (robotTimer.action(time)) {
+        if (robotTimer.action(state.time)) {
             robots.move();
         }
 
         status.update();
 
         if (status.life < 0) {
-            next = new LRMenuMode();
+            next = MENU_SCENE;
         }
 
         if (player.isNextLevel()) {
@@ -67,7 +67,7 @@ public class LRPlayMode implements GameScene {
     }
 
     @Override
-    public GameScene next() {
+    public String next() {
         return next;
     }
 }

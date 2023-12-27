@@ -1,8 +1,8 @@
-package com.tsoft.game.games.loderunner;
+package com.tsoft.game.games.loderunner.misc;
 
 import com.tsoft.game.utils.TextScreen;
 
-public class LRScreen extends TextScreen {
+public class Screen extends TextScreen {
 
     public static final char EMPTY_CHAR = ' ';
     public static final char LADDER_CHAR = 'H';
@@ -22,7 +22,7 @@ public class LRScreen extends TextScreen {
     public static final int FONT_WIDTH = 7;
     public static final int FONT_HEIGHT = 14;
 
-    public LRScreen() {
+    public Screen() {
         super(WIDTH, HEIGHT);
     }
 }

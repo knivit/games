@@ -9,14 +9,14 @@ import java.util.Stack;
 
 public abstract class GameSound {
 
-    private Map<String, Sound> sounds = new HashMap<>();
+    private final Map<String, Sound> sounds = new HashMap<>();
 
-    private Stack<Sound> stack = new Stack<>();
+    private final Stack<Sound> stack = new Stack<>();
 
     public abstract void create();
 
-    public void add(String file) {
-        sounds.put(file, Gdx.audio.newSound(Gdx.files.internal("assets/" + file)));
+    public void put(String file) {
+        sounds.put(file, Gdx.audio.newSound(Gdx.files.internal("assets/sound/" + file)));
     }
 
     public void push(String file) {
@@ -24,7 +24,7 @@ public abstract class GameSound {
         stack.push(sound);
     }
 
-    public void play() {
+    public void render() {
         while (!stack.isEmpty()) {
             stack.pop().play();
         }
