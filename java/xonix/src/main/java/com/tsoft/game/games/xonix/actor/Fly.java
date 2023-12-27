@@ -1,18 +1,18 @@
 package com.tsoft.game.games.xonix.actor;
 
-import static com.tsoft.game.games.xonix.XGGameState.*;
-import static com.tsoft.game.games.xonix.XGScreen.*;
+import static com.tsoft.game.games.xonix.Xonix.state;
+import static com.tsoft.game.games.xonix.misc.Screen.*;
 
 public class Fly {
 
     private int x;
     private int y;
-    private FlyDirection dir;
+    private FlyDir dir;
 
-    private char onChar;
-    private char offChar;
+    private final char onChar;
+    private final char offChar;
 
-    public Fly(int x, int y, FlyDirection dir, char onChar, char offChar) {
+    public Fly(int x, int y, FlyDir dir, char onChar, char offChar) {
         this.x = x;
         this.y = y;
         this.dir = dir;
@@ -23,26 +23,25 @@ public class Fly {
     public static Fly getRandom(char onChar, char offChar) {
         int x, y;
         do {
-            x = (int)(Math.random() * screen.getWidth());
-            y = (int)(Math.random() * (screen.getHeight() - 1)) + 1;
-        } while (screen.getChar(x, y) != offChar);
-        screen.putChar(x, y, onChar);
+            x = (int)(Math.random() * state.screen.getWidth());
+            y = (int)(Math.random() * (state.screen.getHeight() - 1)) + 1;
+        } while (state.screen.getChar(x, y) != offChar);
+        state.screen.putChar(x, y, onChar);
 
-        Fly fly = new Fly(x, y, FlyDirection.getRandom(), onChar, offChar);
-        return fly;
+        return new Fly(x, y, FlyDir.getRandom(), onChar, offChar);
     }
 
     public void move() {
-        screen.putChar(x, y, offChar);
+        state.screen.putChar(x, y, offChar);
 
-        FlyDirection newDir = dir;
-        for (int i = 0; i < FlyDirection.values().length; i ++) {
+        FlyDir newDir = dir;
+        for (int i = 0; i < FlyDir.values().length; i ++) {
             int newX = x + newDir.getdX();
             int newY = y + newDir.getdY();
             char newChar;
 
-            if (newX > -1 && newX < screen.getWidth() && newY > 0 && newY < screen.getHeight()) {
-                newChar = screen.getChar(newX, newY);
+            if (newX > -1 && newX < state.screen.getWidth() && newY > 0 && newY < state.screen.getHeight()) {
+                newChar = state.screen.getChar(newX, newY);
             } else {
                 newDir = changeDir(newX, newY, newDir);
                 continue;
@@ -50,13 +49,13 @@ public class Fly {
 
             boolean hitByInnerFly = (onChar == INNER_FLY_CHAR &&
                     ((newChar == PLAYER_CHAR || newChar == PLAYER_PATH_CHAR)) &&
-                    player.isInSpace());
+                    state.player.isInSpace());
 
             boolean hitByOuterFly = (onChar == OUTER_FLY_CHAR && (newChar == PLAYER_CHAR) &&
-                    (!player.isInSpace()));
+                    (!state.player.isInSpace()));
 
             if (hitByInnerFly || hitByOuterFly) {
-                player.removeLife();
+                state.player.removeLife();
             }
 
             boolean canMoveFly = true;
@@ -78,57 +77,57 @@ public class Fly {
             }
         }
 
-        screen.putChar(x, y, onChar);
+        state.screen.putChar(x, y, onChar);
     }
 
-    private FlyDirection changeDir(int x, int y, FlyDirection dir) {
+    private FlyDir changeDir(int x, int y, FlyDir dir) {
         switch (dir) {
             case LEFT_UP: {
                 char ch1 = getChar(x, y + 1);
                 char ch2 = getChar(x + 1, y);
                 if (ch1 == offChar) {
-                    return FlyDirection.LEFT_DOWN;
+                    return FlyDir.LEFT_DOWN;
                 }
                 if (ch2 == offChar) {
-                    return FlyDirection.RIGHT_UP;
+                    return FlyDir.RIGHT_UP;
                 }
-                return FlyDirection.RIGHT_DOWN;
+                return FlyDir.RIGHT_DOWN;
             }
 
             case RIGHT_UP: {
                 char ch1 = getChar(x - 1, y);
                 char ch2 = getChar(x, y + 1);
                 if (ch1 == offChar) {
-                    return FlyDirection.LEFT_UP;
+                    return FlyDir.LEFT_UP;
                 }
                 if (ch2 == offChar) {
-                    return FlyDirection.RIGHT_DOWN;
+                    return FlyDir.RIGHT_DOWN;
                 }
-                return FlyDirection.LEFT_DOWN;
+                return FlyDir.LEFT_DOWN;
             }
 
             case LEFT_DOWN: {
                 char ch1 = getChar(x + 1, y);
                 char ch2 = getChar(x, y - 1);
                 if (ch1 == offChar) {
-                    return FlyDirection.RIGHT_DOWN;
+                    return FlyDir.RIGHT_DOWN;
                 }
                 if (ch2 == offChar) {
-                    return FlyDirection.LEFT_UP;
+                    return FlyDir.LEFT_UP;
                 }
-                return FlyDirection.RIGHT_UP;
+                return FlyDir.RIGHT_UP;
             }
 
             case RIGHT_DOWN: {
                 char ch1 = getChar(x, y - 1);
                 char ch2 = getChar(x - 1, y);
                 if (ch1 == offChar) {
-                    return FlyDirection.RIGHT_UP;
+                    return FlyDir.RIGHT_UP;
                 }
                 if (ch2 == offChar) {
-                    return FlyDirection.LEFT_DOWN;
+                    return FlyDir.LEFT_DOWN;
                 }
-                return FlyDirection.LEFT_UP;
+                return FlyDir.LEFT_UP;
             }
         }
 
@@ -136,19 +135,9 @@ public class Fly {
     }
 
     private char getChar(int x, int y) {
-        if (x >= 0 && x < screen.getWidth() && y > 0 && y < screen.getHeight()) {
-            return screen.getChar(x, y);
+        if (x >= 0 && x < state.screen.getWidth() && y > 0 && y < state.screen.getHeight()) {
+            return state.screen.getChar(x, y);
         }
         return EMPTY_CHAR;
-    }
-
-    public String toLogString() {
-        return "Fly {" +
-                "x=" + x +
-                ", y=" + y +
-                ", dir=" + dir +
-                ", onChar=" + onChar +
-                ", offChar=" + offChar +
-                '}';
     }
 }

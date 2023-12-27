@@ -4,13 +4,16 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.tsoft.game.games.xonix.mode.XGMenuMode;
+import com.tsoft.game.games.xonix.misc.Sound;
+import com.tsoft.game.games.xonix.misc.Screen;
+import com.tsoft.game.games.xonix.misc.State;
+import com.tsoft.game.games.xonix.scene.MenuScene;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GdxScreen;
 
-import static com.tsoft.game.games.xonix.XGGameState.*;
-
 public class Xonix implements ApplicationListener {
+
+    public static final State state = new State();
 
     private GdxScreen gdxScreen;
 
@@ -27,20 +30,20 @@ public class Xonix implements ApplicationListener {
     @Override
     public void create() {
         // game
-        screen = new XGScreen();
-        mode = new XGMenuMode();
-        mode.init();
+        state.screen = new Screen();
+        state.scene = new MenuScene();
+        state.scene.create();
 
         // graphics
-        gdxScreen = new GdxScreen(XGScreen.WIDTH, XGScreen.HEIGHT);
-        gdxScreen.create("assets/sprites.gif", XGScreen.FONT_WIDTH, XGScreen.FONT_HEIGHT);
+        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
+        gdxScreen.create("assets/sprites.gif", Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
 
         // audio
-        sound = new XGGameSound();
-        sound.init();
+        state.sound = new Sound();
+        state.sound.create();
 
         // controller
-        controller = new GameController();
+        state.controller = new GameController();
     }
 
     @Override
@@ -51,22 +54,22 @@ public class Xonix implements ApplicationListener {
     @Override
     public void render() {
         // game
-        time = TimeUtils.millis();
-        if (mode.nextMode() != null) {
-            mode = mode.nextMode();
-            mode.init();
+        state.time = TimeUtils.millis();
+        if (state.scene.next() != null) {
+            state.scene = state.scene.next();
+            state.scene.create();
         } else {
-            mode.update();
+            state.scene.render();
         }
 
         // graphics
-        gdxScreen.render(screen);
+        gdxScreen.render(state.screen);
 
         // audio
-        sound.play();
+        state.sound.play();
 
         // controller
-        controller.update();
+        state.controller.update();
     }
 
     @Override

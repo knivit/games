@@ -9,7 +9,7 @@ public class LRGameSound extends GameSound {
     public static final String REMOVE_LIFE = "remove_life.ogg";
 
     @Override
-    public void init() {
+    public void create() {
         add(STEP);
         add(TREASURE);
         add(REMOVE_LIFE);

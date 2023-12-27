@@ -1,8 +1,8 @@
-package com.tsoft.game.games.snake;
+package com.tsoft.game.games.snake.misc;
 
 import com.tsoft.game.utils.TextScreen;
 
-public class SNScreen extends TextScreen {
+public class Screen extends TextScreen {
 
     public static final int WIDTH = 80;
     public static final int HEIGHT = 25;
@@ -16,7 +16,7 @@ public class SNScreen extends TextScreen {
     public static final char SNAKE_HEAD_CHAR = 'S';
     public static final char SNAKE_TAIL_CHAR = '*';
 
-    public SNScreen() {
+    public Screen() {
         super(WIDTH, HEIGHT);
     }
 
@@ -32,7 +32,7 @@ public class SNScreen extends TextScreen {
 
         print(27, 10, "COPYRIGHT (C) 2011 BY TSOFT");
         print(36, 8, "SPEED (1-9): 1");
-        print(42, 6, "START");
+        print(36, 7, "START");
     }
 
     private void showBorder() {

@@ -3,11 +3,11 @@ package com.tsoft.game.games.loderunner.mode;
 import com.tsoft.game.games.loderunner.actor.LRPlayer;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
-import com.tsoft.game.utils.GameMode;
+import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
 
-public class LRPlayMode implements GameMode {
+public class LRPlayMode implements GameScene {
 
     private Robots robots;
     private ActionTimer robotTimer;
@@ -16,15 +16,15 @@ public class LRPlayMode implements GameMode {
     private ActionTimer playerTimer;
     private LRPlayStatus status;
 
-    private GameMode nextMode;
+    private GameScene next;
 
     @Override
-    public void init() {
+    public void create() {
         status = new LRPlayStatus();
 
         resetLevel();
 
-        nextMode = null;
+        next = null;
     }
 
     private void resetLevel() {
@@ -41,9 +41,9 @@ public class LRPlayMode implements GameMode {
     }
 
     @Override
-    public void update() {
+    public void render() {
         if (controller.escapePressed) {
-            nextMode = new LRMenuMode();
+            next = new LRMenuMode();
         }
 
         if (playerTimer.action(time)) {
@@ -57,7 +57,7 @@ public class LRPlayMode implements GameMode {
         status.update();
 
         if (status.life < 0) {
-            nextMode = new LRMenuMode();
+            next = new LRMenuMode();
         }
 
         if (player.isNextLevel()) {
@@ -67,7 +67,7 @@ public class LRPlayMode implements GameMode {
     }
 
     @Override
-    public GameMode nextMode() {
-        return nextMode;
+    public GameScene next() {
+        return next;
     }
 }

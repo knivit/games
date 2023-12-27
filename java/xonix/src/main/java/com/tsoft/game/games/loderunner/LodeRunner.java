@@ -29,7 +29,7 @@ public class LodeRunner implements ApplicationListener {
         // game
         world = new LRWorld();
         mode = new LRMenuMode();
-        mode.init();
+        mode.create();
 
         // sprites
         gdxScreen = new GdxScreen(LRScreen.WIDTH, LRScreen.HEIGHT);
@@ -37,7 +37,7 @@ public class LodeRunner implements ApplicationListener {
 
         // sound
         sound = new LRGameSound();
-        sound.init();
+        sound.create();
 
         // controller
         controller = new GameController();
@@ -52,11 +52,11 @@ public class LodeRunner implements ApplicationListener {
     public void render() {
         // game
         time = TimeUtils.millis();
-        if (mode.nextMode() != null) {
-            mode = mode.nextMode();
-            mode.init();
+        if (mode.next() != null) {
+            mode = mode.next();
+            mode.create();
         } else {
-            mode.update();
+            mode.render();
         }
 
         // render

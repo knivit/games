@@ -1,23 +1,23 @@
 package com.tsoft.game.games.xonix.actor;
 
-public enum FlyDirection {
+public enum FlyDir {
 
     LEFT_UP(-1, -1),
     LEFT_DOWN(-1, 1),
     RIGHT_UP(1, -1),
     RIGHT_DOWN(1, 1);
 
-    private int dX;
-    private int dY;
+    private final int dX;
+    private final int dY;
 
-    FlyDirection(int dX, int dY) {
+    FlyDir(int dX, int dY) {
         this.dX = dX;
         this.dY = dY;
     }
 
-    public static FlyDirection getRandom() {
-        int index = (int)(Math.random() * FlyDirection.values().length);
-        return FlyDirection.values()[index];
+    public static FlyDir getRandom() {
+        int index = (int)(Math.random() * FlyDir.values().length);
+        return FlyDir.values()[index];
     }
 
     public int getdX() {

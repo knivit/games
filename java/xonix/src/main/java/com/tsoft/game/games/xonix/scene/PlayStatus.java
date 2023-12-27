@@ -1,24 +1,24 @@
-package com.tsoft.game.games.xonix.mode;
+package com.tsoft.game.games.xonix.scene;
 
-import com.tsoft.game.games.xonix.XGScreen;
+import com.tsoft.game.games.xonix.misc.Screen;
 
-import static com.tsoft.game.games.xonix.XGGameState.screen;
+import static com.tsoft.game.games.xonix.Xonix.state;
 
-public class XGPlayStatus {
+public class PlayStatus {
 
     private int level;
     private int score;
     private int life;
 
-    public XGPlayStatus() {
+    public PlayStatus() {
         level = 1;
         life = 5;
     }
 
     public void update() {
-        screen.print(0, 0, "LEVEL: %02d", level);
-        screen.print((XGScreen.WIDTH - 8), 0, "LIFE: %02d", life);
-        screen.print((XGScreen.WIDTH - 12) / 2, 0, "SCORE: %05d", score);
+        state.screen.print(0, 0, "LEVEL: %02d", level);
+        state.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
+        state.screen.print((Screen.WIDTH - 12) / 2, 0, "SCORE: %05d", score);
     }
 
     public int getLevel() {

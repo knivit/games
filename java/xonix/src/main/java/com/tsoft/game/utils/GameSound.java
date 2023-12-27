@@ -13,7 +13,7 @@ public abstract class GameSound {
 
     private Stack<Sound> stack = new Stack<>();
 
-    public abstract void init();
+    public abstract void create();
 
     public void add(String file) {
         sounds.put(file, Gdx.audio.newSound(Gdx.files.internal("assets/" + file)));

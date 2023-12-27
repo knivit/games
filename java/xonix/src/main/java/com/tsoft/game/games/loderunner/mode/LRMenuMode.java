@@ -2,11 +2,11 @@ package com.tsoft.game.games.loderunner.mode;
 
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
-import com.tsoft.game.utils.GameMode;
+import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.loderunner.LRGameState.*;
 
-public class LRMenuMode implements GameMode {
+public class LRMenuMode implements GameScene {
 
     private Robots robots;
     private ActionTimer robotTimer;
@@ -14,10 +14,10 @@ public class LRMenuMode implements GameMode {
     private LRMenuStatus status;
     private ActionTimer statusTimer;
 
-    private GameMode nextMode;
+    private GameScene next;
 
     @Override
-    public void init() {
+    public void create() {
         world.loadLevel(0);
 
         robots = new Robots();
@@ -27,13 +27,13 @@ public class LRMenuMode implements GameMode {
         status = new LRMenuStatus();
         statusTimer = new ActionTimer(100);
 
-        nextMode = null;
+        next = null;
     }
 
     @Override
-    public void update() {
+    public void render() {
         if (controller.firePressed) {
-            nextMode = new LRPlayMode();
+            next = new LRPlayMode();
         }
 
         if (robotTimer.action(time)) {
@@ -46,7 +46,7 @@ public class LRMenuMode implements GameMode {
     }
 
     @Override
-    public GameMode nextMode() {
-        return nextMode;
+    public GameScene next() {
+        return next;
     }
 }

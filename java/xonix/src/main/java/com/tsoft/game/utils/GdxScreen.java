@@ -55,7 +55,7 @@ public class GdxScreen {
                 sprites[n] = sprite;
 
                 Sprite invSprite = new Sprite(invTexture, x, y, fontWidth, fontHeight);
-                sprites[n] = invSprite;
+                invSprites[n] = invSprite;
 
                 n ++;
             }
@@ -91,10 +91,12 @@ public class GdxScreen {
     }
 
     private Pixmap inverse(Pixmap pixmap) {
+        int black = pixmap.getPixel(0, 0);
+
         for (int x = 0; x < pixmap.getWidth(); x ++) {
             for (int y = 0; y < pixmap.getHeight(); y ++) {
                 int rgba = pixmap.getPixel(x, y);
-                int inv = (Color.BLACK.toIntBits() == rgba) ? Color.WHITE.toIntBits() : rgba;
+                int inv = (rgba == black) ? Color.WHITE.toIntBits() : rgba;
                 pixmap.drawPixel(x, y, inv);
             }
         }

@@ -1,8 +1,8 @@
-package com.tsoft.game.games.xonix;
+package com.tsoft.game.games.xonix.misc;
 
 import com.tsoft.game.utils.TextScreen;
 
-public class XGScreen extends TextScreen {
+public class Screen extends TextScreen {
 
     public static final int WIDTH = 80;
     public static final int HEIGHT = 25;
@@ -19,7 +19,7 @@ public class XGScreen extends TextScreen {
     public static final char INNER_FLY_CHAR = 'O';
     public static final char OUTER_FLY_CHAR = ' ';
 
-    public XGScreen() {
+    public Screen() {
         super(WIDTH, HEIGHT);
     }
 
