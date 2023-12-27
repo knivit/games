@@ -1,6 +1,11 @@
 package com.tsoft.game.utils;
 
 import com.badlogic.gdx.graphics.Color;
+import com.tsoft.game.utils.geom.Point;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class TextScreen {
 
@@ -37,8 +42,7 @@ public class TextScreen {
         checkXY(0, y);
         char[] clone = new char[width];
         for (int x = 0; x < width; x ++) {
-            TextSprite sprite = screen[x][y];
-            clone[x] = (sprite == null) ? ' ' : sprite.ch;
+            clone[x] = screen[x][y].ch;
         }
         return clone;
     }
@@ -66,8 +70,20 @@ public class TextScreen {
         }
     }
 
+    public void fill(int x1, int y1, int x2, int y2, Color color) {
+        for (int y = y1; y < y2; y ++) {
+            for (int x = x1; x < x2; x ++) {
+                putColor(x, y, color.toIntBits());
+            }
+        }
+    }
+
     public void fill(char ch) {
         fill(0, 0, width, height, ch);
+    }
+
+    public void fill(Color color) {
+        fill(0, 0, width, height, color);
     }
 
     public void line(int x1, int y1, int x2, int y2, char ch) {
@@ -111,6 +127,22 @@ public class TextScreen {
         }
 
         return count;
+    }
+
+    public List<Point> findChar(int x1, int y1, int x2, int y2, char src) {
+        List<Point> result = null;
+        for (int y = y1; y < y2; y ++) {
+            for (int x = x1; x < x2; x ++) {
+                if (getChar(x, y) == src) {
+                    if (result == null) {
+                        result = new ArrayList<>();
+                    }
+                    result.add(new Point(x, y));
+                }
+            }
+        }
+
+        return (result == null) ? Collections.emptyList() : result;
     }
 
     public int getCharCount(int x1, int y1, int x2, int y2, char src) {

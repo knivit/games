@@ -1,5 +1,6 @@
 package com.tsoft.game.games.snake.misc;
 
+import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.utils.TextScreen;
 
 public class Screen extends TextScreen {
@@ -10,7 +11,7 @@ public class Screen extends TextScreen {
     public static final int FONT_WIDTH = 7;
     public static final int FONT_HEIGHT = 14;
 
-    public static final char EMPTY_CHAR = 0;
+    public static final char EMPTY_CHAR = ' ';
     public static final char BORDER_CHAR = 'X';
     public static final char MOUSE_CHAR = '@';
     public static final char SNAKE_HEAD_CHAR = 'S';
@@ -33,6 +34,12 @@ public class Screen extends TextScreen {
         print(27, 10, "COPYRIGHT (C) 2011 BY TSOFT");
         print(36, 8, "SPEED (1-9): 1");
         print(36, 7, "START");
+    }
+
+    public void reset() {
+        fill(EMPTY_CHAR);
+        fill(Color.WHITE);
+        showBorder();
     }
 
     private void showBorder() {

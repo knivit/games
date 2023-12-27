@@ -63,6 +63,7 @@ public class MenuScene implements GameScene {
 
         @Override
         public void accept(GameMenu.Action action) {
+            menu.dispose();
             next = PLAY_SCENE;
         }
     }
