@@ -15,7 +15,7 @@ public class Mouse {
 
     private static final Random random = new Random();
 
-    public void move() {
+    public void appear() {
         Point p = findPlace();
 
         TextSprite sp = state.screen.sprite(p.x, p.y);

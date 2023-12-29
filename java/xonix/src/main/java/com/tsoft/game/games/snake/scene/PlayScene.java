@@ -15,19 +15,13 @@ public class PlayScene implements GameScene {
     private Player player;
     private ActionTimer playerTimer;
 
-    private Mouse mouse;
-    private ActionTimer mouseTimer;
-
     private PlayStatus status;
     private String next;
-
-    private int level;
 
     @Override
     public void create() {
         status = new PlayStatus();
 
-        level = 0;
         resetLevel();
 
         next = null;
@@ -44,13 +38,9 @@ public class PlayScene implements GameScene {
             player.move(controller);
         }
 
-        if (mouseTimer.action(state.time)) {
-            mouse.move();
-        }
-
         status.update();
 
-        if (status.getLife() < 0) {
+        if (status.life < 0) {
             next = MENU_SCENE;
         }
 
@@ -66,13 +56,12 @@ public class PlayScene implements GameScene {
     }
 
     private void resetLevel() {
-        Level.load(level);
+        Level.load(status.level);
 
         player = new Player(status);
-        player.create(level);
-        playerTimer = new ActionTimer(200);
+        player.create(status.level);
+        playerTimer = new ActionTimer(200 - state.speed * 10 - status.level * 4);
 
-        mouse = new Mouse();
-        mouseTimer = new ActionTimer(10_000);
+        new Mouse().appear();
     }
 }

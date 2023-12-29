@@ -1,6 +1,8 @@
 package com.tsoft.game.games.loderunner.actor;
 
+import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.loderunner.misc.Screen;
+import com.tsoft.game.utils.TextSprite;
 
 import java.awt.*;
 
@@ -10,11 +12,11 @@ import static com.tsoft.game.games.loderunner.LodeRunner.state;
 public class Robot {
 
     private final RobotBehaviour behaviour;
+    private final TextSprite sub = new TextSprite();
 
     private int x;
     private int y;
     private RobotBehaviour.Action action;
-    private char offChar;
 
     public Robot(int x, int y, RobotBehaviour behaviour) {
         this.x = x;
@@ -26,7 +28,7 @@ public class Robot {
 
     private boolean canMoveUp(char ch) {
         return ch == EMPTY_CHAR || ch == Screen.LADDER_CHAR ||
-                ch == Screen.ROPE_CHAR || ch == Screen.TREASURE_CHAR;
+            ch == Screen.ROPE_CHAR || ch == Screen.TREASURE_CHAR;
     }
 
     public void move() {
@@ -53,7 +55,7 @@ public class Robot {
                 ((priorAction.actionType == RobotBehaviour.ActionType.GO_UP) || (priorAction.actionType == RobotBehaviour.ActionType.GO_DOWN)));
 
         if (!isUpOrDown) {
-            switch (offChar) {
+            switch (sub.ch) {
                 case LADDER_CHAR: {
                     int n = (int)(Math.random() * 100);
                     boolean useLadder;
@@ -164,13 +166,19 @@ public class Robot {
     }
 
     private void hide() {
-        if (offChar != ROBOT_CHAR) {
-            state.screen.putChar(x, y, offChar);
+        if (sub.ch != ROBOT_CHAR) {
+            TextSprite sp = state.screen.sprite(x, y);
+            sp.ch = sub.ch;
+            sp.color = sub.color;
         }
     }
 
     private void show() {
-        offChar = state.screen.getChar(x, y);
-        state.screen.putChar(x, y, ROBOT_CHAR);
+        TextSprite sp = state.screen.sprite(x, y);
+        sub.ch = sp.ch;
+        sub.color = sp.color;
+
+        sp.ch = ROBOT_CHAR;
+        sp.color = Color.RED;
     }
 }

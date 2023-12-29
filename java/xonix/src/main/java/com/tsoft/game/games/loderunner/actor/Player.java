@@ -1,8 +1,10 @@
 package com.tsoft.game.games.loderunner.actor;
 
+import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.loderunner.misc.Screen;
 import com.tsoft.game.games.loderunner.mode.PlayStatus;
 import com.tsoft.game.utils.GameController;
+import com.tsoft.game.utils.TextSprite;
 
 import static com.tsoft.game.games.loderunner.misc.Sound.*;
 import static com.tsoft.game.games.loderunner.misc.Screen.*;
@@ -68,7 +70,11 @@ public class Player {
             }
             case TREASURE_CHAR: {
                 status.treasureFound();
-                state.screen.putChar(nx, ny, Screen.EMPTY_CHAR);
+
+                TextSprite sp = state.screen.sprite(nx, ny);
+                sp.ch = Screen.EMPTY_CHAR;
+                sp.color = Color.WHITE;
+
                 isNextLevel = (status.treasureLeft == 0);
 
                 state.sound.push(TREASURE_SOUND);

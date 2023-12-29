@@ -3,6 +3,8 @@ package com.tsoft.game.games.snake.misc;
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.utils.TextScreen;
 
+import static com.tsoft.game.games.snake.Snake.state;
+
 public class Screen extends TextScreen {
 
     public static final int WIDTH = 80;
@@ -12,7 +14,6 @@ public class Screen extends TextScreen {
     public static final int FONT_HEIGHT = 14;
 
     public static final char EMPTY_CHAR = ' ';
-    public static final char BORDER_CHAR = 'X';
     public static final char MOUSE_CHAR = '$';
     public static final char SNAKE_HEAD_CHAR = 'O';
 
@@ -30,7 +31,7 @@ public class Screen extends TextScreen {
         print(19, 13,  " XXXXX   XX   XX  XX    XX  XX  XX  XXXXXXX");
 
         print(27, 10, "COPYRIGHT (C) 2011 BY TSOFT");
-        print(36, 8, "SPEED (1-9): 1");
+        print(36, 8, "SPEED (1-9): " + state.speed);
         print(36, 7, "START");
     }
 

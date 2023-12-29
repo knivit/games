@@ -4,5 +4,5 @@ import com.tsoft.game.utils.GameState;
 
 public class State extends GameState {
 
-    public int speed = 1;
+    public int speed = 5;
 }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.loderunner.misc.Screen;
+import com.tsoft.game.utils.TextSprite;
 import com.tsoft.game.utils.geom.Point;
 
 import java.io.BufferedReader;
@@ -76,7 +77,9 @@ public class World {
 
                 for (int x = 0; x < Screen.WIDTH && x < line.length(); x ++) {
                     char ch = line.charAt(x);
-                    state.screen.putChar(x, y, ch);
+                    TextSprite sp = state.screen.sprite(x, y);
+                    sp.ch = ch;
+                    sp.color = Color.WHITE;
 
                     switch (ch) {
                         case ROBOT_START_CHAR: {

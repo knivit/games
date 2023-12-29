@@ -49,7 +49,7 @@ public class MenuScene implements GameScene {
             }
 
             state.speed += off;
-            if (state.speed < 0) {
+            if (state.speed < 1) {
                 state.speed = 9;
             } else if (state.speed > 9) {
                 state.speed = 1;

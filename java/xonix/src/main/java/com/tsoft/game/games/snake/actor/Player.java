@@ -50,8 +50,6 @@ public class Player {
     }
 
     public void move(GameController.State controller) {
-        hide();
-
         if (controller.dx != 0) {
             dx = controller.dx;
             dy = 0;
@@ -65,6 +63,8 @@ public class Player {
 
         char ch = state.screen.getChar(nx, ny);
 
+        hide();
+
         if (ch == MOUSE_CHAR) {
             grow();
             x[0] = nx;
@@ -77,6 +77,8 @@ public class Player {
 
             state.sound.push(TREASURE_SOUND);
             status.addScore(1);
+
+            new Mouse().appear();
         } else if (ch != EMPTY_CHAR) {
             status.removeLife();
             state.sound.push(REMOVE_LIFE_SOUND);
@@ -97,7 +99,7 @@ public class Player {
 
     private void grow() {
         shift(len);
-        len ++;
+        len += level;
     }
 
     private void shift(int len) {
