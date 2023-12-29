@@ -1,6 +1,7 @@
 package com.tsoft.game.games.loderunner.actor;
 
-import java.awt.*;
+import com.tsoft.game.utils.geom.Point;
+
 import java.util.ArrayList;
 
 import static com.tsoft.game.games.loderunner.LodeRunner.state;
@@ -14,8 +15,6 @@ public class Robots {
     private int numberOfRobots = 4;
 
     public Robots() {
-        state.world.setRobots(this);
-
         for (String propertyName : state.world.properties.keySet()) {
             loadProperty(propertyName, state.world.properties.get(propertyName));
         }

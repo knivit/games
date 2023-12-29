@@ -2,6 +2,7 @@ package com.tsoft.game.games.loderunner.mode;
 
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.loderunner.LodeRunner.PLAY_SCENE;
@@ -23,7 +24,6 @@ public class MenuScene implements GameScene {
 
         robots = new Robots();
         robotTimer = new ActionTimer(150);
-        state.world.setRobots(robots);
 
         status = new MenuStatus();
         statusTimer = new ActionTimer(100);
@@ -33,7 +33,8 @@ public class MenuScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.firePressed) {
+        GameController.State controller = state.controller.state();
+        if (controller.firePressed) {
             next = PLAY_SCENE;
         }
 

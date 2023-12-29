@@ -75,7 +75,7 @@ public class GdxScreen {
                 int n = Math.max(ts.ch - ' ', 0);
                 Sprite sprite = ts.inverse ? invSprites[n] : sprites[n];
 
-                color.set(ts.rgba);
+                color.set(ts.color);
                 batch.setColor(color);
                 batch.draw(sprite, x * fontWidth, y * fontHeight);
             }

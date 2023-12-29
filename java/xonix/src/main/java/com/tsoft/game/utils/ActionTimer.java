@@ -11,7 +11,7 @@ public class ActionTimer {
     }
 
     public boolean action(long time) {
-        if (time - lastTime > interval) {
+        if (time - lastTime >= interval) {
             lastTime = time;
             return true;
         }

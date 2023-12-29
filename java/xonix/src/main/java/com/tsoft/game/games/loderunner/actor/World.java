@@ -2,9 +2,10 @@ package com.tsoft.game.games.loderunner.actor;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.loderunner.misc.Screen;
+import com.tsoft.game.utils.geom.Point;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,15 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.tsoft.game.games.loderunner.LodeRunner.state;
-import static com.tsoft.game.games.loderunner.misc.Screen.PLAYER_START_CHAR;
-import static com.tsoft.game.games.loderunner.misc.Screen.ROBOT_START_CHAR;
+import static com.tsoft.game.games.loderunner.misc.Screen.*;
 
 public class World {
 
     private final Physics physics = new Physics();
 
     private Player player;
-    private Robots robots;
 
     public ArrayList<Point> robotStartPlaces = new ArrayList<>();
     public Point playerStartPlace;
@@ -38,17 +37,12 @@ public class World {
         this.player = player;
     }
 
-    public void setRobots(Robots robots) {
-        this.robots = robots;
-    }
-
     private void clearWorld() {
         state.screen.fill(Screen.EMPTY_CHAR);
 
         robotStartPlaces.clear();
         playerStartPlace = null;
         player = null;
-        robots = null;
     }
 
     public void loadLevel(int n) {
@@ -81,16 +75,23 @@ public class World {
                 }
 
                 for (int x = 0; x < Screen.WIDTH && x < line.length(); x ++) {
-                    state.screen.putChar(x, y, line.charAt(x));
+                    char ch = line.charAt(x);
+                    state.screen.putChar(x, y, ch);
 
-                    switch (line.charAt(x)) {
+                    switch (ch) {
                         case ROBOT_START_CHAR: {
                             addStartPlace(x, y);
+                            state.screen.putColor(x, y, Color.RED);
                             break;
                         }
 
                         case PLAYER_START_CHAR: {
                             playerStartPlace = new Point(x, y);
+                            break;
+                        }
+
+                        case TREASURE_CHAR: {
+                            state.screen.putColor(x, y, Color.YELLOW);
                             break;
                         }
                     }

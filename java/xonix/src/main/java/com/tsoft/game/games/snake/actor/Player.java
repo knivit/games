@@ -3,6 +3,7 @@ package com.tsoft.game.games.snake.actor;
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.snake.misc.Screen;
 import com.tsoft.game.games.snake.scene.PlayStatus;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.TextSprite;
 import com.tsoft.game.utils.geom.Point;
 
@@ -18,11 +19,13 @@ public class Player {
 
     private final PlayStatus status;
 
-    private final int[] xPos = new int[1024];
-    private final int[] yPos = new int[1024];
-    private final Point dir = new Point(0, 0);
+    private final int[] x = new int[1024];
+    private final int[] y = new int[1024];
 
+    private int dx;
+    private int dy;
     private int len;
+
     private int level;
     private int mouseCount;
 
@@ -36,45 +39,36 @@ public class Player {
         this.level = level;
 
         List<Point> head = state.screen.findChar(0, 1, Screen.WIDTH, Screen.HEIGHT, SNAKE_HEAD_CHAR);
-        xPos[0] = head.get(0).x;
-        yPos[0] = head.get(0).y;
+        x[0] = head.get(0).x;
+        y[0] = head.get(0).y;
         len = 1;
 
-        dir.x = 0;
-        dir.y = 1;
+        dx = 0;
+        dy = 1;
 
         isNextLevel = false;
     }
 
-    public void move() {
+    public void move(GameController.State controller) {
         hide();
 
-        // find out move direction
-        Point off = state.controller.offset;
-        if (off.x != 0 || off.y != 0) {
-            if (off.x != 0) {
-                dir.x = off.x;
-                dir.y = 0;
-            } else {
-                dir.x = 0;
-                dir.y = off.y;
-            }
+        if (controller.dx != 0) {
+            dx = controller.dx;
+            dy = 0;
+        } else if (controller.dy != 0) {
+            dx = 0;
+            dy = controller.dy;
         }
 
-        // move head
-        int hX = xPos[0];
-        int hY = yPos[0];
-        xPos[0] += dir.x;
-        yPos[0] += dir.y;
+        int nx = Math.min(Math.max(x[0] + dx, 0), state.screen.getWidth() - 1);
+        int ny = Math.min(Math.max(y[0] + dy, 1), state.screen.getHeight() - 1);
 
-        // collision check
-        char ch = state.screen.getChar(xPos[0], yPos[0]);
+        char ch = state.screen.getChar(nx, ny);
 
         if (ch == MOUSE_CHAR) {
-            // eat the mouse and grow
-            len ++;
-            xPos[len] = hX;
-            yPos[len] = hY;
+            grow();
+            x[0] = nx;
+            y[0] = ny;
 
             mouseCount ++;
             if (mouseCount > 10 + level*3) {
@@ -87,10 +81,30 @@ public class Player {
             status.removeLife();
             state.sound.push(REMOVE_LIFE_SOUND);
         } else {
+            if (len < 5 + level*2) {
+                grow();
+            } else {
+                shift(len - 1);
+            }
+            x[0] = nx;
+            y[0] = ny;
+
             state.sound.push(STEP_SOUND);
         }
 
         show();
+    }
+
+    private void grow() {
+        shift(len);
+        len ++;
+    }
+
+    private void shift(int len) {
+        for (int i = len; i > 0; i --) {
+            x[i] = x[i - 1];
+            y[i] = y[i - 1];
+        }
     }
 
     public boolean isNextLevel() {
@@ -99,22 +113,15 @@ public class Player {
 
     private void hide() {
         for (int i = 0; i < len; i ++) {
-            TextSprite sp = state.screen.sprite(xPos[i], yPos[i]);
+            TextSprite sp = state.screen.sprite(x[i], y[i]);
             sp.ch = EMPTY_CHAR;
-            sp.rgba = Color.BLACK.toIntBits();
+            sp.color = Color.WHITE;
         }
     }
 
     private void show() {
         for (int i = 0; i < len; i ++) {
-            TextSprite sp = state.screen.sprite(xPos[i], yPos[i]);
-            if (i == 0) {
-                sp.ch = SNAKE_HEAD_CHAR;
-                sp.rgba = Color.RED.toIntBits();
-            } else {
-                sp.ch = SNAKE_TAIL_CHAR;
-                sp.rgba = Color.GREEN.toIntBits();
-            }
+            state.screen.putChar(x[i], y[i], SNAKE_HEAD_CHAR);
         }
     }
 }

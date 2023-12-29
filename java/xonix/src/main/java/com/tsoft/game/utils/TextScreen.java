@@ -23,7 +23,7 @@ public class TextScreen {
         for (int y = 0; y < height; y ++) {
             for (int x = 0; x < width; x ++) {
                 screen[x][y] = new TextSprite();
-                screen[x][y].rgba = Color.WHITE.toIntBits();
+                screen[x][y].color = Color.WHITE;
             }
         }
     }
@@ -52,14 +52,14 @@ public class TextScreen {
         screen[x][y].ch = ch;
     }
 
-    public int getColor(int x, int y) {
+    public Color getColor(int x, int y) {
         checkXY(x, y);
-        return screen[x][y].rgba;
+        return screen[x][y].color;
     }
 
-    public void putColor(int x, int y, int rgba) {
+    public void putColor(int x, int y, Color color) {
         checkXY(x, y);
-        screen[x][y].rgba = rgba;
+        screen[x][y].color = color;
     }
 
     public void fill(int x1, int y1, int x2, int y2, char ch) {
@@ -73,7 +73,7 @@ public class TextScreen {
     public void fill(int x1, int y1, int x2, int y2, Color color) {
         for (int y = y1; y < y2; y ++) {
             for (int x = x1; x < x2; x ++) {
-                putColor(x, y, color.toIntBits());
+                putColor(x, y, color);
             }
         }
     }

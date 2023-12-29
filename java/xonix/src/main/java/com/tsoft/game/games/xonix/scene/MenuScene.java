@@ -3,6 +3,7 @@ package com.tsoft.game.games.xonix.scene;
 import com.tsoft.game.games.xonix.actor.FlyList;
 import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.xonix.Xonix.PLAY_SCENE;
@@ -29,7 +30,8 @@ public class MenuScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.firePressed) {
+        GameController.State controller = state.controller.state();
+        if (controller.firePressed) {
             next = PLAY_SCENE;
         }
 

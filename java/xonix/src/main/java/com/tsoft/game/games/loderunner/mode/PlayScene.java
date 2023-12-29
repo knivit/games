@@ -3,6 +3,7 @@ package com.tsoft.game.games.loderunner.mode;
 import com.tsoft.game.games.loderunner.actor.Player;
 import com.tsoft.game.games.loderunner.actor.Robots;
 import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.loderunner.LodeRunner.*;
@@ -42,12 +43,13 @@ public class PlayScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.escapePressed) {
+        GameController.State controller = state.controller.state();
+        if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
         if (playerTimer.action(state.time)) {
-            player.move();
+            player.move(controller);
         }
 
         if (robotTimer.action(state.time)) {

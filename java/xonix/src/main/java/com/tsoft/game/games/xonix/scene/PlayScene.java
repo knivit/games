@@ -4,6 +4,7 @@ import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.games.xonix.actor.FlyList;
 import com.tsoft.game.games.xonix.actor.Player;
 import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.xonix.Xonix.MENU_SCENE;
@@ -32,12 +33,13 @@ public class PlayScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.escapePressed) {
+        GameController.State controller = state.controller.state();
+        if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
         if (playerTimer.action(state.time)) {
-            state.player.move();
+            state.player.move(controller);
         }
 
         if (flyTimer.action(state.time)) {

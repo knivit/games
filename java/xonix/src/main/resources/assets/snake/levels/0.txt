@@ -9,7 +9,6 @@ X                                                                              X
 X                                                                              X
 X                                                                              X
 X                                                                              X
-X                                     S                                        X
 X                                                                              X
 X                                                                              X
 X                                                                              X
@@ -19,6 +18,7 @@ X                                                                              X
 X                                                                              X
 X                                                                              X
 X                                                                              X
+X                                      O                                       X
 X                                                                              X
 X                                                                              X
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

@@ -2,6 +2,7 @@ package com.tsoft.game.games.xonix.actor;
 
 import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.games.xonix.scene.PlayStatus;
+import com.tsoft.game.utils.GameController;
 
 import static com.tsoft.game.games.xonix.misc.Sound.REMOVE_LIFE_SOUND;
 import static com.tsoft.game.games.xonix.misc.Sound.STEP_SOUND;
@@ -27,51 +28,10 @@ public class Player {
         reset();
     }
 
-    private void reset() {
-        x = state.screen.getWidth() / 2;
-        y = state.screen.getHeight() - 1;
-        offChar = Screen.BORDER_CHAR;
-        inSpace = false;
-        isNextLevel = false;
-    }
-
-    private void show() {
-        offChar = state.screen.getChar(x, y);
-        state.screen.putChar(x, y, PLAYER_CHAR);
-    }
-
-    private void hide() {
-        state.screen.putChar(x, y, offChar);
-    }
-
-    static class PlayerOffset {
-        public int dX, dY;
-
-        public boolean isMoved() {
-            return dX != 0 || dY != 0;
-        }
-    }
-
-    PlayerOffset getPlayerOffset() {
-        PlayerOffset off = new PlayerOffset();
-
-        if (state.controller.leftPressed)  {
-            if (x > 0) off.dX = -1;
-        } else if (state.controller.rightPressed)  {
-            if (x < (state.screen.getWidth() - 1)) off.dX = 1;
-        } else if (state.controller.upPressed)  {
-            if (y < (state.screen.getHeight() - 1)) off.dY = 1;
-        } else if (state.controller.downPressed)  {
-            if (y > 1) off.dY = -1;
-        }
-        return off;
-    }
-
-    public void move() {
+    public void move(GameController.State controller) {
         hide();
 
-        PlayerOffset off = getPlayerOffset();
-        if (!off.isMoved()) {
+        if (controller.dx == 0 && controller.dy == 0) {
             show();
             return;
         }
@@ -84,7 +44,10 @@ public class Player {
             state.screen.putChar(x, y, Screen.BORDER_CHAR);
         }
 
-        char ch = state.screen.getChar(x + off.dX, y + off.dY);
+        int nx = Math.min(Math.max(x + controller.dx, 0), state.screen.getWidth() - 1);
+        int ny = Math.min(Math.max(y + controller.dy, 1), state.screen.getHeight() - 1);
+
+        char ch = state.screen.getChar(nx, ny);
         if (ch == PLAYER_PATH_CHAR || ch == INNER_FLY_CHAR || ch == OUTER_FLY_CHAR) {
             removeLife();
             return;
@@ -106,11 +69,28 @@ public class Player {
                 }
             }
 
-            x += off.dX;
-            y += off.dY;
+            x = nx;
+            y = ny;
         }
 
         show();
+    }
+
+    private void reset() {
+        x = state.screen.getWidth() / 2;
+        y = state.screen.getHeight() - 1;
+        offChar = Screen.BORDER_CHAR;
+        inSpace = false;
+        isNextLevel = false;
+    }
+
+    private void show() {
+        offChar = state.screen.getChar(x, y);
+        state.screen.putChar(x, y, PLAYER_CHAR);
+    }
+
+    private void hide() {
+        state.screen.putChar(x, y, offChar);
     }
 
     private void fillArea() {

@@ -4,6 +4,7 @@ import com.tsoft.game.games.snake.actor.Level;
 import com.tsoft.game.games.snake.actor.Mouse;
 import com.tsoft.game.games.snake.actor.Player;
 import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.snake.Snake.MENU_SCENE;
@@ -34,12 +35,13 @@ public class PlayScene implements GameScene {
 
     @Override
     public void render() {
-        if (state.controller.escapePressed) {
+        GameController.State controller = state.controller.state();
+        if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
         if (playerTimer.action(state.time)) {
-            player.move();
+            player.move(controller);
         }
 
         if (mouseTimer.action(state.time)) {

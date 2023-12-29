@@ -13,17 +13,15 @@ public class Screen extends TextScreen {
 
     public static final char EMPTY_CHAR = ' ';
     public static final char BORDER_CHAR = 'X';
-    public static final char MOUSE_CHAR = '@';
-    public static final char SNAKE_HEAD_CHAR = 'S';
-    public static final char SNAKE_TAIL_CHAR = '*';
+    public static final char MOUSE_CHAR = '$';
+    public static final char SNAKE_HEAD_CHAR = 'O';
 
     public Screen() {
         super(WIDTH, HEIGHT);
     }
 
     public void showStartMenu() {
-        fill(EMPTY_CHAR);
-        showBorder();
+        reset();
 
         print(19, 17,  " XXXXX   XX   XX    XXXX    XX  XX  XXXXXXX");
         print(19, 16,  "XX    X  XXX  XX  XX    XX  XX XX   XX     ");
@@ -39,13 +37,5 @@ public class Screen extends TextScreen {
     public void reset() {
         fill(EMPTY_CHAR);
         fill(Color.WHITE);
-        showBorder();
-    }
-
-    private void showBorder() {
-        line(0, 0, 0, getHeight(), BORDER_CHAR);
-        line(getWidth() - 1, 0, getWidth() - 1, getHeight(), BORDER_CHAR);
-        line(0, 0, getWidth(), 0, BORDER_CHAR);
-        line(0, getHeight() - 1, getWidth(), getHeight() - 1, BORDER_CHAR);
     }
 }

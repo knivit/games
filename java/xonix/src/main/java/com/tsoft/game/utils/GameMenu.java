@@ -18,7 +18,7 @@ public class GameMenu {
     private GameState state;
 
     private final ActionTimer blinkTimer = new ActionTimer(300);
-    private final ActionTimer controlTimer = new ActionTimer(100);
+    private final ActionTimer controlTimer = new ActionTimer(400);
 
     private Item[] items;
 
@@ -52,45 +52,46 @@ public class GameMenu {
         }
 
         // menu actions
+        GameController.State controller = state.controller.state();
+
         Action action = null;
-        if (state.controller.leftPressed) {
+        if (controller.leftPressed) {
             action = Action.LEFT;
-        } else if (state.controller.rightPressed) {
+        } else if (controller.rightPressed) {
             action = Action.RIGHT;
-        } else if (state.controller.firePressed) {
+        } else if (controller.firePressed) {
             action = Action.FIRE;
         }
 
         if (action != null) {
             state.sound.push(MENU_ACTION_CLICK_SOUND);
             items[selected].action.accept(action);
-            return;
-        }
-
-        // menu up or down
-        int off = 0;
-        if (state.controller.upPressed) {
-            off = -1;
-        } else if (state.controller.downPressed) {
-            off = 1;
-        }
-
-        if (off != 0) {
-            state.sound.push(MENU_SELECTION_CLICK_SOUND);
-
-            if (inverse) {
-                blink(false);
+        } else {
+            // menu up or down
+            int off = 0;
+            if (controller.upPressed) {
+                off = -1;
+            } else if (controller.downPressed) {
+                off = 1;
             }
 
-            selected += off;
-            if (selected < 0) {
-                selected = items.length - 1;
-            } else if (selected > (items.length - 1)) {
-                selected = 0;
-            }
+            if (off != 0) {
+                state.sound.push(MENU_SELECTION_CLICK_SOUND);
 
-            if (inverse) {
-                blink(true);
+                if (inverse) {
+                    blink(false);
+                }
+
+                selected += off;
+                if (selected < 0) {
+                    selected = items.length - 1;
+                } else if (selected > (items.length - 1)) {
+                    selected = 0;
+                }
+
+                if (inverse) {
+                    blink(true);
+                }
             }
         }
     }

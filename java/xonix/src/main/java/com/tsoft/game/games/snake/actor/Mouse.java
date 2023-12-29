@@ -20,7 +20,7 @@ public class Mouse {
 
         TextSprite sp = state.screen.sprite(p.x, p.y);
         sp.ch = MOUSE_CHAR;
-        sp.rgba = Color.YELLOW.toIntBits();
+        sp.color = Color.YELLOW;
     }
 
     private Point findPlace() {

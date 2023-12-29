@@ -2,8 +2,7 @@ package com.tsoft.game.games.loderunner.actor;
 
 import com.tsoft.game.games.loderunner.misc.Screen;
 import com.tsoft.game.games.loderunner.mode.PlayStatus;
-
-import java.awt.*;
+import com.tsoft.game.utils.GameController;
 
 import static com.tsoft.game.games.loderunner.misc.Sound.*;
 import static com.tsoft.game.games.loderunner.misc.Screen.*;
@@ -25,71 +24,39 @@ public class Player {
         reset();
     }
 
-    private void reset() {
-        x = state.world.playerStartPlace.x;
-        y = state.world.playerStartPlace.y;
-        offChar = state.screen.getChar(x, y);
-        isNextLevel = false;
-    }
-
-    private void show() {
-        offChar = state.screen.getChar(x, y);
-        state.screen.putChar(x, y, PLAYER_CHAR);
-    }
-
-    private void hide() {
-        state.screen.putChar(x, y, offChar);
-    }
-
-    private boolean canMoveUp() {
-        char ch = state.screen.getChar(x, y);
-        return (ch == LADDER_CHAR || ch == ROPE_CHAR || ch == TREASURE_CHAR);
-    }
-
-    private boolean canMoveDown() {
-        char ch = state.screen.getChar(x, y);
-        return (ch == EMPTY_CHAR || ch == LADDER_CHAR || ch == ROPE_CHAR  || ch == TREASURE_CHAR);
-    }
-
-    public Point getPlayerOffset() {
-        Point off = new Point();
-
-        if (state.controller.leftPressed)  {
-            if (x > 0) off.x = -1;
-        } else if (state.controller.rightPressed)  {
-            if (x < (state.screen.getWidth() - 1)) off.x = 1;
-        } else if (state.controller.upPressed)  {
-            if (y < (state.screen.getHeight() - 1) && canMoveUp()) off.y = 1;
-        } else if (state.controller.downPressed)  {
-            if (y > 1 && canMoveDown()) off.y = -1;
-        }
-
-        return off;
-    }
-
-    public void move() {
+    public void move(GameController.State controller) {
         hide();
 
-        Point off;
+        int dx = 0;
+        int dy = 0;
         boolean falling = false;
         if (state.world.getPhysics().isFalling(x, y)) {
-            off = new Point(0, -1);
+            dy = -1;
             falling = true;
         } else {
-            off = getPlayerOffset();
+            if (controller.dx == -1 && canMoveLeft()) {
+                dx = -1;
+            } else if (controller.dx == 1 && canMoveRight()) {
+                dx = 1;
+            } if (controller.dy == 1 && canMoveUp()) {
+                dy = 1;
+            } else if (controller.dy == -1 && canMoveDown()) {
+                dy = -1;
+            }
         }
 
-        if (off.x == 0 && off.y == 0) {
+        if (dx == 0 && dy == 0) {
             show();
             return;
         }
 
-        int newX = x + off.x;
-        int newY = y + off.y;
-        char newCh = state.screen.getChar(newX, newY);
+        int nx = x + dx;
+        int ny = y + dy;
+
+        char nch = state.screen.getChar(nx, ny);
 
         boolean canMove = true;
-        switch (newCh) {
+        switch (nch) {
             case WALL_CHAR: {
                 canMove = false;
                 break;
@@ -101,7 +68,7 @@ public class Player {
             }
             case TREASURE_CHAR: {
                 status.treasureFound();
-                state.screen.putChar(newX, newY, Screen.EMPTY_CHAR);
+                state.screen.putChar(nx, ny, Screen.EMPTY_CHAR);
                 isNextLevel = (status.treasureLeft == 0);
 
                 state.sound.push(TREASURE_SOUND);
@@ -110,8 +77,8 @@ public class Player {
         }
 
         if (canMove) {
-            x = newX;
-            y = newY;
+            x = nx;
+            y = ny;
 
             if (!falling) {
                 state.sound.push(STEP_SOUND);
@@ -133,5 +100,39 @@ public class Player {
 
     public boolean isNextLevel() {
         return isNextLevel;
+    }
+
+    private void reset() {
+        x = state.world.playerStartPlace.x;
+        y = state.world.playerStartPlace.y;
+        offChar = state.screen.getChar(x, y);
+        isNextLevel = false;
+    }
+
+    private void show() {
+        offChar = state.screen.getChar(x, y);
+        state.screen.putChar(x, y, PLAYER_CHAR);
+    }
+
+    private void hide() {
+        state.screen.putChar(x, y, offChar);
+    }
+
+    private boolean canMoveLeft() {
+        return x > 0;
+    }
+
+    private boolean canMoveRight() {
+        return x < state.screen.getWidth();
+    }
+
+    private boolean canMoveUp() {
+        char ch = state.screen.getChar(x, y);
+        return (y < state.screen.getHeight()) && (ch == LADDER_CHAR || ch == ROPE_CHAR || ch == TREASURE_CHAR);
+    }
+
+    private boolean canMoveDown() {
+        char ch = state.screen.getChar(x, y);
+        return (y > 1) && (ch == EMPTY_CHAR || ch == LADDER_CHAR || ch == ROPE_CHAR  || ch == TREASURE_CHAR);
     }
 }
