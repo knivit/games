@@ -1,6 +1,6 @@
 package com.tsoft.game.utils;
 
-public class GameState {
+public class GameGlobal {
 
     public long time;
     public TextScreen screen;

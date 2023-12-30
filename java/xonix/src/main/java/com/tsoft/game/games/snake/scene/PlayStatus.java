@@ -2,7 +2,7 @@ package com.tsoft.game.games.snake.scene;
 
 import com.tsoft.game.games.snake.misc.Screen;
 
-import static com.tsoft.game.games.snake.Snake.state;
+import static com.tsoft.game.games.snake.Snake.global;
 
 public class PlayStatus {
 
@@ -16,9 +16,9 @@ public class PlayStatus {
     }
 
     public void update() {
-        state.screen.print(0, 0, "LEVEL: %02d", level);
-        state.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
-        state.screen.print((Screen.WIDTH - 12) / 2, 0, "SCORE: %05d", score);
+        global.screen.print(0, 0, "LEVEL: %02d", level);
+        global.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
+        global.screen.print((Screen.WIDTH - 12) / 2, 0, "SCORE: %05d", score);
     }
 
     public void nextLevel() {

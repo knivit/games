@@ -29,7 +29,7 @@ public class PlayScene implements GameScene {
     }
 
     private void resetLevel() {
-        state.world.loadLevel(status.level);
+        global.world.loadLevel(status.level);
 
         robots = new Robots();
         robotTimer = new ActionTimer(150);
@@ -37,22 +37,22 @@ public class PlayScene implements GameScene {
         player = new Player(status);
         playerTimer = new ActionTimer(100);
 
-        status.treasureLeft = state.world.getTreasureNumber();
+        status.treasureLeft = global.world.getTreasureNumber();
         status.update();
     }
 
     @Override
     public void render() {
-        GameController.State controller = state.controller.state();
+        GameController.State controller = global.controller.state(10);
         if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
-        if (playerTimer.action(state.time)) {
+        if (playerTimer.action(global.time)) {
             player.move(controller);
         }
 
-        if (robotTimer.action(state.time)) {
+        if (robotTimer.action(global.time)) {
             robots.move();
         }
 

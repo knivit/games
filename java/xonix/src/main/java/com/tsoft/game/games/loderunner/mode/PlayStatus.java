@@ -2,7 +2,7 @@ package com.tsoft.game.games.loderunner.mode;
 
 import com.tsoft.game.games.loderunner.misc.Screen;
 
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 
 public class PlayStatus {
 
@@ -16,10 +16,10 @@ public class PlayStatus {
     }
 
     public void update() {
-        state.screen.fill(0, 0, Screen.WIDTH, 1, ' ');
-        state.screen.print(0, 0, "LEVEL: %02d", level);
-        state.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
-        state.screen.print((Screen.WIDTH - 12) / 2, 0, "LEFT: %05d", treasureLeft);
+        global.screen.fill(0, 0, Screen.WIDTH, 1, ' ');
+        global.screen.print(0, 0, "LEVEL: %02d", level);
+        global.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
+        global.screen.print((Screen.WIDTH - 12) / 2, 0, "LEFT: %05d", treasureLeft);
     }
 
     public void nextLevel() {

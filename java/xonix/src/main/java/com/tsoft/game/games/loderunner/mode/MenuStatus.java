@@ -1,6 +1,6 @@
 package com.tsoft.game.games.loderunner.mode;
 
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 
 public class MenuStatus {
 
@@ -11,7 +11,7 @@ public class MenuStatus {
 
     public void update() {
         if (text == null) {
-            char[] line = state.screen.getLine(0);
+            char[] line = global.screen.getLine(0);
             text = (new String(line) + INFO_MESSAGE).toCharArray();
         }
 
@@ -20,12 +20,12 @@ public class MenuStatus {
             pos = 0;
         }
 
-        for (int x = 0; x < state.screen.getWidth(); x ++) {
+        for (int x = 0; x < global.screen.getWidth(); x ++) {
             int n = pos + x;
             if (n > text.length - 1) {
                 n = n - text.length;
             }
-            state.screen.putChar(x, 0, text[n]);
+            global.screen.putChar(x, 0, text[n]);
         }
     }
 }

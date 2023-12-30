@@ -5,11 +5,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.studiohartman.jamepad.ControllerButton;
 
 public class GameController {
 
     public static class State {
+        private long throttle;
+
         public boolean leftPressed;
         public boolean rightPressed;
         public boolean upPressed;
@@ -24,6 +27,10 @@ public class GameController {
     private State state = new State();
 
     public void render() {
+        if (TimeUtils.millis() < state.throttle) {
+            return;
+        }
+
         Array<Controller> controllers = Controllers.getControllers();
         for (Controller controller : controllers) {
             if (controller.getButton(ControllerButton.DPAD_LEFT.ordinal())) {
@@ -76,9 +83,10 @@ public class GameController {
         }
     }
 
-    public State state() {
+    public State state(int throttle) {
         State current = state;
         state = new State();
+        state.throttle = TimeUtils.millis() + throttle;
         return current;
     }
 }

@@ -7,7 +7,7 @@ import com.tsoft.game.utils.TextSprite;
 import java.awt.*;
 
 import static com.tsoft.game.games.loderunner.misc.Screen.*;
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 
 public class Robot {
 
@@ -38,15 +38,15 @@ public class Robot {
 
         // falling
         int dx = 0, dy;
-        if (state.world.getPhysics().isFalling(x, y)) {
+        if (global.world.getPhysics().isFalling(x, y)) {
             priorAction = null;
             dy = -1;
         } else {
             if (action == null || action.duration < 0) {
-                action = behaviour.getRandomAction(state.world.getPlayer() != null);
+                action = behaviour.getRandomAction(global.world.getPlayer() != null);
             }
 
-            Point off = getOff(state.world.getPlayer());
+            Point off = getOff(global.world.getPlayer());
             dx = off.x;
             dy = off.y;
         }
@@ -72,7 +72,7 @@ public class Robot {
                         } else {
                             action = behaviour.getAction(RobotBehaviour.ActionType.GO_DOWN);
                         }
-                        Point off = getOff(state.world.getPlayer());
+                        Point off = getOff(global.world.getPlayer());
                         dx = off.x;
                         dy = off.y;
                     }
@@ -87,7 +87,7 @@ public class Robot {
         if (newX < 0 || newX >= Screen.WIDTH || newY < 1 || newY >= Screen.HEIGHT) {
             action = null;
         } else {
-            char newChar = state.screen.getChar(newX, newY);
+            char newChar = global.screen.getChar(newX, newY);
 
             if (dx == 0 && dy == 1 && !canMoveUp(newChar)) {
                 action = null;
@@ -95,7 +95,7 @@ public class Robot {
                 boolean canMove = true;
                 switch (newChar) {
                     case PLAYER_CHAR: {
-                        state.world.getPlayer().removeLife();
+                        global.world.getPlayer().removeLife();
                         break;
                     }
                     case WALL_CHAR: case ROBOT_CHAR: {
@@ -167,14 +167,14 @@ public class Robot {
 
     private void hide() {
         if (sub.ch != ROBOT_CHAR) {
-            TextSprite sp = state.screen.sprite(x, y);
+            TextSprite sp = global.screen.sprite(x, y);
             sp.ch = sub.ch;
             sp.color = sub.color;
         }
     }
 
     private void show() {
-        TextSprite sp = state.screen.sprite(x, y);
+        TextSprite sp = global.screen.sprite(x, y);
         sub.ch = sp.ch;
         sub.color = sp.color;
 

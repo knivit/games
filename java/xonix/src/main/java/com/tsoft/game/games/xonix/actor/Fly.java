@@ -1,6 +1,6 @@
 package com.tsoft.game.games.xonix.actor;
 
-import static com.tsoft.game.games.xonix.Xonix.state;
+import static com.tsoft.game.games.xonix.Xonix.global;
 import static com.tsoft.game.games.xonix.misc.Screen.*;
 
 public class Fly {
@@ -23,16 +23,16 @@ public class Fly {
     public static Fly getRandom(char onChar, char offChar) {
         int x, y;
         do {
-            x = (int)(Math.random() * state.screen.getWidth());
-            y = (int)(Math.random() * (state.screen.getHeight() - 1)) + 1;
-        } while (state.screen.getChar(x, y) != offChar);
-        state.screen.putChar(x, y, onChar);
+            x = (int)(Math.random() * global.screen.getWidth());
+            y = (int)(Math.random() * (global.screen.getHeight() - 1)) + 1;
+        } while (global.screen.getChar(x, y) != offChar);
+        global.screen.putChar(x, y, onChar);
 
         return new Fly(x, y, FlyDir.getRandom(), onChar, offChar);
     }
 
     public void move() {
-        state.screen.putChar(x, y, offChar);
+        global.screen.putChar(x, y, offChar);
 
         FlyDir newDir = dir;
         for (int i = 0; i < FlyDir.values().length; i ++) {
@@ -40,8 +40,8 @@ public class Fly {
             int newY = y + newDir.getdY();
             char newChar;
 
-            if (newX > -1 && newX < state.screen.getWidth() && newY > 0 && newY < state.screen.getHeight()) {
-                newChar = state.screen.getChar(newX, newY);
+            if (newX > -1 && newX < global.screen.getWidth() && newY > 0 && newY < global.screen.getHeight()) {
+                newChar = global.screen.getChar(newX, newY);
             } else {
                 newDir = changeDir(newX, newY, newDir);
                 continue;
@@ -49,13 +49,13 @@ public class Fly {
 
             boolean hitByInnerFly = (onChar == INNER_FLY_CHAR &&
                     ((newChar == PLAYER_CHAR || newChar == PLAYER_PATH_CHAR)) &&
-                    state.player.isInSpace());
+                    global.player.isInSpace());
 
             boolean hitByOuterFly = (onChar == OUTER_FLY_CHAR && (newChar == PLAYER_CHAR) &&
-                    (!state.player.isInSpace()));
+                    (!global.player.isInSpace()));
 
             if (hitByInnerFly || hitByOuterFly) {
-                state.player.removeLife();
+                global.player.removeLife();
             }
 
             boolean canMoveFly = true;
@@ -77,7 +77,7 @@ public class Fly {
             }
         }
 
-        state.screen.putChar(x, y, onChar);
+        global.screen.putChar(x, y, onChar);
     }
 
     private FlyDir changeDir(int x, int y, FlyDir dir) {
@@ -135,8 +135,8 @@ public class Fly {
     }
 
     private char getChar(int x, int y) {
-        if (x >= 0 && x < state.screen.getWidth() && y > 0 && y < state.screen.getHeight()) {
-            return state.screen.getChar(x, y);
+        if (x >= 0 && x < global.screen.getWidth() && y > 0 && y < global.screen.getHeight()) {
+            return global.screen.getChar(x, y);
         }
         return EMPTY_CHAR;
     }

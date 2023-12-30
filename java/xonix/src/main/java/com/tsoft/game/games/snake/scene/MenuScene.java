@@ -7,7 +7,7 @@ import com.tsoft.game.utils.GameMenu;
 import java.util.function.Consumer;
 
 import static com.tsoft.game.games.snake.Snake.PLAY_SCENE;
-import static com.tsoft.game.games.snake.Snake.state;
+import static com.tsoft.game.games.snake.Snake.global;
 
 public class MenuScene implements GameScene {
 
@@ -17,10 +17,10 @@ public class MenuScene implements GameScene {
 
     @Override
     public void create() {
-        ((Screen)state.screen).showStartMenu();
+        ((Screen) global.screen).showStartMenu();
 
         menu = new GameMenu();
-        menu.create(state,
+        menu.create(global,
             new GameMenu.Item(36, 8, 5, new ChangeSpeedAction()),
             new GameMenu.Item(36, 7, 5, new StartAction()));
 
@@ -29,7 +29,7 @@ public class MenuScene implements GameScene {
 
     @Override
     public void render() {
-        menu.render(state);
+        menu.render(global);
     }
 
     @Override
@@ -48,14 +48,14 @@ public class MenuScene implements GameScene {
                 off = -1;
             }
 
-            state.speed += off;
-            if (state.speed < 1) {
-                state.speed = 9;
-            } else if (state.speed > 9) {
-                state.speed = 1;
+            global.speed += off;
+            if (global.speed < 1) {
+                global.speed = 9;
+            } else if (global.speed > 9) {
+                global.speed = 1;
             }
 
-            state.screen.putChar(49, 8, (char)('0' + state.speed));
+            global.screen.putChar(49, 8, (char)('0' + global.speed));
         }
     }
 

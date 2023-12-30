@@ -10,7 +10,7 @@ import com.tsoft.game.utils.geom.Point;
 import java.util.List;
 
 import static com.tsoft.game.games.snake.misc.Sound.TREASURE_SOUND;
-import static com.tsoft.game.games.snake.Snake.state;
+import static com.tsoft.game.games.snake.Snake.global;
 import static com.tsoft.game.games.snake.misc.Screen.*;
 import static com.tsoft.game.games.snake.misc.Sound.STEP_SOUND;
 import static com.tsoft.game.games.snake.misc.Sound.REMOVE_LIFE_SOUND;
@@ -29,7 +29,8 @@ public class Player {
     private int level;
     private int mouseCount;
 
-    private boolean isNextLevel;
+    public boolean isResetLevel;
+    public boolean isNextLevel;
 
     public Player(PlayStatus status) {
         this.status = status;
@@ -38,7 +39,7 @@ public class Player {
     public void create(int level) {
         this.level = level;
 
-        List<Point> head = state.screen.findChar(0, 1, Screen.WIDTH, Screen.HEIGHT, SNAKE_HEAD_CHAR);
+        List<Point> head = global.screen.findChar(0, 1, Screen.WIDTH, Screen.HEIGHT, SNAKE_HEAD_CHAR);
         x[0] = head.get(0).x;
         y[0] = head.get(0).y;
         len = 1;
@@ -58,10 +59,10 @@ public class Player {
             dy = controller.dy;
         }
 
-        int nx = Math.min(Math.max(x[0] + dx, 0), state.screen.getWidth() - 1);
-        int ny = Math.min(Math.max(y[0] + dy, 1), state.screen.getHeight() - 1);
+        int nx = Math.min(Math.max(x[0] + dx, 0), global.screen.getWidth() - 1);
+        int ny = Math.min(Math.max(y[0] + dy, 1), global.screen.getHeight() - 1);
 
-        char ch = state.screen.getChar(nx, ny);
+        char ch = global.screen.getChar(nx, ny);
 
         hide();
 
@@ -75,13 +76,14 @@ public class Player {
                 isNextLevel = true;
             }
 
-            state.sound.push(TREASURE_SOUND);
+            global.sound.push(TREASURE_SOUND);
             status.addScore(1);
 
             new Mouse().appear();
         } else if (ch != EMPTY_CHAR) {
+            isResetLevel = true;
             status.removeLife();
-            state.sound.push(REMOVE_LIFE_SOUND);
+            global.sound.push(REMOVE_LIFE_SOUND);
         } else {
             if (len < 5 + level*2) {
                 grow();
@@ -91,7 +93,7 @@ public class Player {
             x[0] = nx;
             y[0] = ny;
 
-            state.sound.push(STEP_SOUND);
+            global.sound.push(STEP_SOUND);
         }
 
         show();
@@ -99,7 +101,7 @@ public class Player {
 
     private void grow() {
         shift(len);
-        len += level;
+        len += 3 + level;
     }
 
     private void shift(int len) {
@@ -109,13 +111,9 @@ public class Player {
         }
     }
 
-    public boolean isNextLevel() {
-        return isNextLevel;
-    }
-
     private void hide() {
         for (int i = 0; i < len; i ++) {
-            TextSprite sp = state.screen.sprite(x[i], y[i]);
+            TextSprite sp = global.screen.sprite(x[i], y[i]);
             sp.ch = EMPTY_CHAR;
             sp.color = Color.WHITE;
         }
@@ -123,7 +121,7 @@ public class Player {
 
     private void show() {
         for (int i = 0; i < len; i ++) {
-            state.screen.putChar(x[i], y[i], SNAKE_HEAD_CHAR);
+            global.screen.putChar(x[i], y[i], SNAKE_HEAD_CHAR);
         }
     }
 }

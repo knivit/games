@@ -1,9 +1,9 @@
 package com.tsoft.game.games.loderunner.misc;
 
 import com.tsoft.game.games.loderunner.actor.World;
-import com.tsoft.game.utils.GameState;
+import com.tsoft.game.utils.GameGlobal;
 
-public class State extends GameState {
+public class Global extends GameGlobal {
 
     public World world;
 }

@@ -4,7 +4,7 @@ import com.tsoft.game.utils.geom.Point;
 
 import java.util.ArrayList;
 
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 
 public class Robots {
 
@@ -15,8 +15,8 @@ public class Robots {
     private int numberOfRobots = 4;
 
     public Robots() {
-        for (String propertyName : state.world.properties.keySet()) {
-            loadProperty(propertyName, state.world.properties.get(propertyName));
+        for (String propertyName : global.world.properties.keySet()) {
+            loadProperty(propertyName, global.world.properties.get(propertyName));
         }
     }
 
@@ -31,8 +31,8 @@ public class Robots {
     }
 
     private void addRobot() {
-        int n = (int)(Math.random() * state.world.robotStartPlaces.size());
-        Point startPlace = state.world.robotStartPlaces.get(n);
+        int n = (int)(Math.random() * global.world.robotStartPlaces.size());
+        Point startPlace = global.world.robotStartPlaces.get(n);
 
         Robot robot = new Robot(startPlace.x, startPlace.y, behaviour);
         robots.add(robot);

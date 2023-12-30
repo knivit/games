@@ -9,7 +9,7 @@ import com.tsoft.game.games.loderunner.misc.Screen;
 import com.tsoft.game.games.loderunner.misc.Sound;
 import com.tsoft.game.games.loderunner.mode.MenuScene;
 import com.tsoft.game.games.loderunner.mode.PlayScene;
-import com.tsoft.game.games.loderunner.misc.State;
+import com.tsoft.game.games.loderunner.misc.Global;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameSceneManager;
 import com.tsoft.game.utils.GdxScreen;
@@ -21,7 +21,7 @@ public class LodeRunner implements ApplicationListener {
     public static final String MENU_SCENE = "MENU_SCENE";
     public static final String PLAY_SCENE = "PLAY_SCENE";
 
-    public static final State state = new State();
+    public static final Global global = new Global();
 
     private GameSceneManager sceneManager;
     private GdxScreen gdxScreen;
@@ -39,21 +39,21 @@ public class LodeRunner implements ApplicationListener {
     @Override
     public void create() {
         // screen
-        state.screen = new Screen();
+        global.screen = new Screen();
 
         // graphics
         gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
         gdxScreen.create("assets/sprites.gif", Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
 
         // sound
-        state.sound = new Sound();
-        state.sound.create();
+        global.sound = new Sound();
+        global.sound.create();
 
         // controller
-        state.controller = new GameController();
+        global.controller = new GameController();
 
         // scenes
-        state.world = new World();
+        global.world = new World();
         sceneManager = new GameSceneManager(Map.of(
             MENU_SCENE, MenuScene::new,
             PLAY_SCENE, PlayScene::new));
@@ -68,16 +68,16 @@ public class LodeRunner implements ApplicationListener {
     @Override
     public void render() {
         // clock
-        state.time = TimeUtils.millis();
+        global.time = TimeUtils.millis();
 
         // graphics
-        gdxScreen.render(state.screen);
+        gdxScreen.render(global.screen);
 
         // audio
-        state.sound.render();
+        global.sound.render();
 
         // controller
-        state.controller.render();
+        global.controller.render();
 
         // scenes
         sceneManager.render();

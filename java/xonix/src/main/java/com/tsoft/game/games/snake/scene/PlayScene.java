@@ -8,7 +8,7 @@ import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.snake.Snake.MENU_SCENE;
-import static com.tsoft.game.games.snake.Snake.state;
+import static com.tsoft.game.games.snake.Snake.global;
 
 public class PlayScene implements GameScene {
 
@@ -29,12 +29,12 @@ public class PlayScene implements GameScene {
 
     @Override
     public void render() {
-        GameController.State controller = state.controller.state();
+        GameController.State controller = global.controller.state(10);
         if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
-        if (playerTimer.action(state.time)) {
+        if (playerTimer.action(global.time)) {
             player.move(controller);
         }
 
@@ -44,7 +44,9 @@ public class PlayScene implements GameScene {
             next = MENU_SCENE;
         }
 
-        if (player.isNextLevel()) {
+        if (player.isResetLevel) {
+            resetLevel();
+        } else if (player.isNextLevel) {
             status.nextLevel();
             resetLevel();
         }
@@ -60,7 +62,7 @@ public class PlayScene implements GameScene {
 
         player = new Player(status);
         player.create(status.level);
-        playerTimer = new ActionTimer(200 - state.speed * 10 - status.level * 4);
+        playerTimer = new ActionTimer(150 - global.speed * 10 - status.level * 4);
 
         new Mouse().appear();
     }

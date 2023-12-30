@@ -96,7 +96,7 @@ public class GdxScreen {
         for (int x = 0; x < pixmap.getWidth(); x ++) {
             for (int y = 0; y < pixmap.getHeight(); y ++) {
                 int rgba = pixmap.getPixel(x, y);
-                int inv = (rgba == black) ? Color.WHITE.toIntBits() : rgba;
+                int inv = (rgba == black) ? Color.rgba8888(Color.WHITE) : rgba;
                 pixmap.drawPixel(x, y, inv);
             }
         }

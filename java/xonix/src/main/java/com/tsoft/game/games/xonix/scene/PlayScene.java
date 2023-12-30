@@ -8,7 +8,7 @@ import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
 import static com.tsoft.game.games.xonix.Xonix.MENU_SCENE;
-import static com.tsoft.game.games.xonix.Xonix.state;
+import static com.tsoft.game.games.xonix.Xonix.global;
 import static com.tsoft.game.games.xonix.misc.Screen.*;
 
 public class PlayScene implements GameScene {
@@ -33,16 +33,16 @@ public class PlayScene implements GameScene {
 
     @Override
     public void render() {
-        GameController.State controller = state.controller.state();
+        GameController.State controller = global.controller.state(10);
         if (controller.escapePressed) {
             next = MENU_SCENE;
         }
 
-        if (playerTimer.action(state.time)) {
-            state.player.move(controller);
+        if (playerTimer.action(global.time)) {
+            global.player.move(controller);
         }
 
-        if (flyTimer.action(state.time)) {
+        if (flyTimer.action(global.time)) {
             innerFlyes.move();
             outerFlyes.move();
         }
@@ -53,7 +53,7 @@ public class PlayScene implements GameScene {
             next = MENU_SCENE;
         }
 
-        if (state.player.isNextLevel()) {
+        if (global.player.isNextLevel()) {
             status.nextLevel();
             resetLevel();
         }
@@ -65,9 +65,9 @@ public class PlayScene implements GameScene {
     }
 
     private void resetLevel() {
-        ((Screen)state.screen).reset();
+        ((Screen) global.screen).reset();
 
-        state.player = new Player(status);
+        global.player = new Player(status);
         playerTimer = new ActionTimer(100);
 
         innerFlyes = new FlyList();

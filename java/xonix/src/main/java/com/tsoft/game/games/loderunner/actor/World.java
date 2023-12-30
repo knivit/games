@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 import static com.tsoft.game.games.loderunner.misc.Screen.*;
 
 public class World {
@@ -39,7 +39,7 @@ public class World {
     }
 
     private void clearWorld() {
-        state.screen.fill(Screen.EMPTY_CHAR);
+        global.screen.fill(Screen.EMPTY_CHAR);
 
         robotStartPlaces.clear();
         playerStartPlace = null;
@@ -77,14 +77,14 @@ public class World {
 
                 for (int x = 0; x < Screen.WIDTH && x < line.length(); x ++) {
                     char ch = line.charAt(x);
-                    TextSprite sp = state.screen.sprite(x, y);
+                    TextSprite sp = global.screen.sprite(x, y);
                     sp.ch = ch;
                     sp.color = Color.WHITE;
 
                     switch (ch) {
                         case ROBOT_START_CHAR: {
                             addStartPlace(x, y);
-                            state.screen.putColor(x, y, Color.RED);
+                            global.screen.putColor(x, y, Color.RED);
                             break;
                         }
 
@@ -94,7 +94,7 @@ public class World {
                         }
 
                         case TREASURE_CHAR: {
-                            state.screen.putColor(x, y, Color.YELLOW);
+                            global.screen.putColor(x, y, Color.YELLOW);
                             break;
                         }
                     }
@@ -116,7 +116,7 @@ public class World {
         int count = 0;
         for (int y = 1; y < Screen.HEIGHT; y ++) {
             for (int x = 0; x < Screen.WIDTH; x ++) {
-                if (state.screen.getChar(x, y) == Screen.TREASURE_CHAR) {
+                if (global.screen.getChar(x, y) == Screen.TREASURE_CHAR) {
                     count ++;
                 }
             }

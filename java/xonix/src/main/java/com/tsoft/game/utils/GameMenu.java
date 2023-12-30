@@ -15,7 +15,7 @@ public class GameMenu {
     private static final String MENU_SELECTION_CLICK_SOUND = "menu_selection_click.ogg";
     private static final String MENU_ACTION_CLICK_SOUND = "menu_action_click.ogg";
 
-    private GameState state;
+    private GameGlobal state;
 
     private final ActionTimer blinkTimer = new ActionTimer(300);
     private final ActionTimer controlTimer = new ActionTimer(400);
@@ -26,7 +26,7 @@ public class GameMenu {
     private boolean inverse;
     private boolean disposed;
 
-    public void create(GameState state, Item ... items) {
+    public void create(GameGlobal state, Item ... items) {
         this.state = state;
         this.items = items;
 
@@ -36,23 +36,25 @@ public class GameMenu {
         }
     }
 
-    public void render(GameState state) {
+    public void render(GameGlobal global) {
         if (disposed) {
             return;
         }
 
-        if (blinkTimer.action(state.time)) {
+        if (blinkTimer.action(global.time)) {
             inverse = !inverse;
             blink(inverse);
         }
 
         // controller
-        if (!controlTimer.action(state.time)) {
+        global.controller.render();
+
+        if (!controlTimer.action(global.time)) {
             return;
         }
 
         // menu actions
-        GameController.State controller = state.controller.state();
+        GameController.State controller = global.controller.state(50);
 
         Action action = null;
         if (controller.leftPressed) {
@@ -64,7 +66,7 @@ public class GameMenu {
         }
 
         if (action != null) {
-            state.sound.push(MENU_ACTION_CLICK_SOUND);
+            global.sound.push(MENU_ACTION_CLICK_SOUND);
             items[selected].action.accept(action);
         } else {
             // menu up or down
@@ -76,7 +78,7 @@ public class GameMenu {
             }
 
             if (off != 0) {
-                state.sound.push(MENU_SELECTION_CLICK_SOUND);
+                global.sound.push(MENU_SELECTION_CLICK_SOUND);
 
                 if (inverse) {
                     blink(false);

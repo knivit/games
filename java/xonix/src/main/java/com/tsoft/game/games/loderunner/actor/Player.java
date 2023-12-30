@@ -8,7 +8,7 @@ import com.tsoft.game.utils.TextSprite;
 
 import static com.tsoft.game.games.loderunner.misc.Sound.*;
 import static com.tsoft.game.games.loderunner.misc.Screen.*;
-import static com.tsoft.game.games.loderunner.LodeRunner.state;
+import static com.tsoft.game.games.loderunner.LodeRunner.global;
 
 public class Player {
 
@@ -21,7 +21,7 @@ public class Player {
 
     public Player(PlayStatus status) {
         this.status = status;
-        state.world.setPlayer(this);
+        global.world.setPlayer(this);
 
         reset();
     }
@@ -32,7 +32,7 @@ public class Player {
         int dx = 0;
         int dy = 0;
         boolean falling = false;
-        if (state.world.getPhysics().isFalling(x, y)) {
+        if (global.world.getPhysics().isFalling(x, y)) {
             dy = -1;
             falling = true;
         } else {
@@ -55,7 +55,7 @@ public class Player {
         int nx = x + dx;
         int ny = y + dy;
 
-        char nch = state.screen.getChar(nx, ny);
+        char nch = global.screen.getChar(nx, ny);
 
         boolean canMove = true;
         switch (nch) {
@@ -71,13 +71,13 @@ public class Player {
             case TREASURE_CHAR: {
                 status.treasureFound();
 
-                TextSprite sp = state.screen.sprite(nx, ny);
+                TextSprite sp = global.screen.sprite(nx, ny);
                 sp.ch = Screen.EMPTY_CHAR;
                 sp.color = Color.WHITE;
 
                 isNextLevel = (status.treasureLeft == 0);
 
-                state.sound.push(TREASURE_SOUND);
+                global.sound.push(TREASURE_SOUND);
                 break;
             }
         }
@@ -87,7 +87,7 @@ public class Player {
             y = ny;
 
             if (!falling) {
-                state.sound.push(STEP_SOUND);
+                global.sound.push(STEP_SOUND);
             }
         }
 
@@ -101,7 +101,7 @@ public class Player {
 
         reset();
 
-        state.sound.push(REMOVE_LIFE_SOUND);
+        global.sound.push(REMOVE_LIFE_SOUND);
     }
 
     public boolean isNextLevel() {
@@ -109,19 +109,19 @@ public class Player {
     }
 
     private void reset() {
-        x = state.world.playerStartPlace.x;
-        y = state.world.playerStartPlace.y;
-        offChar = state.screen.getChar(x, y);
+        x = global.world.playerStartPlace.x;
+        y = global.world.playerStartPlace.y;
+        offChar = global.screen.getChar(x, y);
         isNextLevel = false;
     }
 
     private void show() {
-        offChar = state.screen.getChar(x, y);
-        state.screen.putChar(x, y, PLAYER_CHAR);
+        offChar = global.screen.getChar(x, y);
+        global.screen.putChar(x, y, PLAYER_CHAR);
     }
 
     private void hide() {
-        state.screen.putChar(x, y, offChar);
+        global.screen.putChar(x, y, offChar);
     }
 
     private boolean canMoveLeft() {
@@ -129,16 +129,16 @@ public class Player {
     }
 
     private boolean canMoveRight() {
-        return x < state.screen.getWidth();
+        return x < global.screen.getWidth();
     }
 
     private boolean canMoveUp() {
-        char ch = state.screen.getChar(x, y);
-        return (y < state.screen.getHeight()) && (ch == LADDER_CHAR || ch == ROPE_CHAR || ch == TREASURE_CHAR);
+        char ch = global.screen.getChar(x, y);
+        return (y < global.screen.getHeight()) && (ch == LADDER_CHAR || ch == ROPE_CHAR || ch == TREASURE_CHAR);
     }
 
     private boolean canMoveDown() {
-        char ch = state.screen.getChar(x, y);
+        char ch = global.screen.getChar(x, y);
         return (y > 1) && (ch == EMPTY_CHAR || ch == LADDER_CHAR || ch == ROPE_CHAR  || ch == TREASURE_CHAR);
     }
 }
