@@ -1,0 +1,32 @@
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X . . . . . . . . . . . . X X . . . . . . . . . . . . X
+X . XXXXXXX . XXXXXXXXX . X X . XXXXXXXXX . XXXXXXX . X
+X O X     X . X       X . X X . X       X . X     X O X
+X . XXXXXXX . XXXXXXXXX . XXX . XXXXXXXXX . XXXXXXX . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . X
+X . XXXXXXX . XXX . XXXXXXXXXXXXXXX . XXX . XXXXXXX . X
+X . XXXXXXX . X X . XXXXXXX XXXXXXX . X X . XXXXXXX . X
+X . . . . . . X X . . . . X X . . . . X X . . . . . . X
+X XXXXXXXXX . X XXXXXXX . X X . XXXXXXX X . XXXXXXXXX X
+X         X . X XXXXXXX . XXX . XXXXXXX X . X         X
+X         X . X X . . . . . . . . . . X X . X         X
+X         X . X X . XXXXXX   XXXXXX . X X . X         X
+X XXXXXXXXX . XXX . X             X . XXX . XXXXXXXXX X
+X . . . . . . . . . X   @ @ @ @   X . . . . . . . . . X
+X XXXXXXXXX . XXX . X             X . XXX . XXXXXXXXX X
+X         X . X X . XXXXXXXXXXXXXXX . X X . X         X
+X         X . X X . . . . . . . . . . X X . X         X
+X         X . X X . XXXXXXXXXXXXXXX . X X . X         X
+X XXXXXXXXX . XXX . XXXXXXX XXXXXXX . XXX . XXXXXXXXX X
+X . . . . . . . . . . . . X X . . . . . . . . . . . . X
+X . XXXXXXX . XXXXXXXXX . X X . XXXXXXXXX . XXXXXXX . X
+X . XXXXX X . XXXXXXXXX . XXX . XXXXXXXXX . X XXXXX . X
+X O . . X X . . . . . . . P . . . . . . . . X X . . O X
+X XXX . X X . XXX . XXXXXXXXXXXXXXX . XXX . X X . XXX X
+X XXX . XXX . X X . XXXXXXX XXXXXXX . X X . XXX . XXX X
+X . . . . . . X X . . . . X X . . . . X X . . . . . . X
+X . XXXXXXXXXXX XXXXXXX . X X . XXXXXXX XXXXXXXXXXX . X
+X . XXXXXXXXXXXXXXXXXXX . XXX . XXXXXXXXXXXXXXXXXXX . X
+X . . . . . . . . . . . . . . . . . . . . . . . . . . X
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+

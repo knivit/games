@@ -1,5 +1,7 @@
 package com.tsoft.game.utils;
 
+import com.tsoft.game.utils.timer.ActionTimer;
+
 import java.util.function.Consumer;
 
 public class GameMenu {

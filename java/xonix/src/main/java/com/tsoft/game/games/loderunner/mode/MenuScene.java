@@ -1,7 +1,7 @@
 package com.tsoft.game.games.loderunner.mode;
 
 import com.tsoft.game.games.loderunner.actor.Robots;
-import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.timer.ActionTimer;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 

@@ -30,13 +30,12 @@ public class Screen extends TextScreen {
         print(19, 14,  "X    XX  XX  XXX  XX    XX  XX XX   XX     ");
         print(19, 13,  " XXXXX   XX   XX  XX    XX  XX  XX  XXXXXXX");
 
-        print(27, 10, "COPYRIGHT (C) 2011 BY TSOFT");
+        print(27, 10, "COPYRIGHT (C) 2023 BY TSOFT");
         print(36, 8, "SPEED (1-9): " + global.speed);
         print(36, 7, "START");
     }
 
     public void reset() {
-        fill(EMPTY_CHAR);
-        fill(Color.WHITE);
+        fill(EMPTY_CHAR, Color.WHITE);
     }
 }

@@ -6,9 +6,9 @@ import static com.tsoft.game.games.xonix.Xonix.global;
 
 public class PlayStatus {
 
-    private int level;
-    private int score;
-    private int life;
+    public int level;
+    public int score;
+    public int life;
 
     public PlayStatus() {
         level = 1;
@@ -19,10 +19,6 @@ public class PlayStatus {
         global.screen.print(0, 0, "LEVEL: %02d", level);
         global.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
         global.screen.print((Screen.WIDTH - 12) / 2, 0, "SCORE: %05d", score);
-    }
-
-    public int getLevel() {
-        return level;
     }
 
     public void nextLevel() {
@@ -36,9 +32,5 @@ public class PlayStatus {
 
     public void removeLife() {
         life --;
-    }
-
-    public int getLife() {
-        return life;
     }
 }

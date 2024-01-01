@@ -2,7 +2,7 @@ package com.tsoft.game.games.xonix.scene;
 
 import com.tsoft.game.games.xonix.actor.FlyList;
 import com.tsoft.game.games.xonix.misc.Screen;
-import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.timer.ActionTimer;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 

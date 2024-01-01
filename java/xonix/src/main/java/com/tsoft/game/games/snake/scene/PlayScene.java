@@ -3,7 +3,7 @@ package com.tsoft.game.games.snake.scene;
 import com.tsoft.game.games.snake.actor.Level;
 import com.tsoft.game.games.snake.actor.Mouse;
 import com.tsoft.game.games.snake.actor.Player;
-import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.timer.ActionTimer;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 

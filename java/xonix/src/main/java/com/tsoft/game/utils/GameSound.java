@@ -21,6 +21,9 @@ public abstract class GameSound {
 
     public void push(String file) {
         Sound sound = sounds.get(file);
+        if (sound == null) {
+            throw new IllegalArgumentException("Sound " + file + " not found");
+        }
         stack.push(sound);
     }
 

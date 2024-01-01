@@ -33,6 +33,11 @@ public class TextScreen {
         return screen[x][y].ch;
     }
 
+    public Color getColor(int x, int y) {
+        checkXY(x, y);
+        return screen[x][y].color;
+    }
+
     public TextSprite sprite(int x, int y) {
         checkXY(x, y);
         return screen[x][y];
@@ -48,13 +53,15 @@ public class TextScreen {
     }
 
     public void putChar(int x, int y, char ch) {
-        checkXY(x, y);
-        screen[x][y].ch = ch;
+        putChar(x, y, ch, null);
     }
 
-    public Color getColor(int x, int y) {
+    public void putChar(int x, int y, char ch, Color color) {
         checkXY(x, y);
-        return screen[x][y].color;
+        screen[x][y].ch = ch;
+        if (color != null) {
+            screen[x][y].color = color;
+        }
     }
 
     public void putColor(int x, int y, Color color) {
@@ -63,17 +70,13 @@ public class TextScreen {
     }
 
     public void fill(int x1, int y1, int x2, int y2, char ch) {
-        for (int y = y1; y < y2; y ++) {
-            for (int x = x1; x < x2; x ++) {
-                putChar(x, y, ch);
-            }
-        }
+        fill(x1, y1, x2, y2, ch, null);
     }
 
-    public void fill(int x1, int y1, int x2, int y2, Color color) {
+    public void fill(int x1, int y1, int x2, int y2, char ch, Color color) {
         for (int y = y1; y < y2; y ++) {
             for (int x = x1; x < x2; x ++) {
-                putColor(x, y, color);
+                putChar(x, y, ch, color);
             }
         }
     }
@@ -82,18 +85,22 @@ public class TextScreen {
         fill(0, 0, width, height, ch);
     }
 
-    public void fill(Color color) {
-        fill(0, 0, width, height, color);
+    public void fill(char ch, Color color) {
+        fill(0, 0, width, height, ch, color);
     }
 
     public void line(int x1, int y1, int x2, int y2, char ch) {
+        line(x1, y1, x2, y2, ch, null);
+    }
+
+    public void line(int x1, int y1, int x2, int y2, char ch, Color color) {
         if (x1 == x2) {
             for (int y = y1; y < y2; y++) {
-                putChar(x1, y, ch);
+                putChar(x1, y, ch, color);
             }
         } else {
             for (int x = x1; x < x2; x ++) {
-                putChar(x, y1, ch);
+                putChar(x, y1, ch, color);
             }
         }
     }
@@ -129,11 +136,15 @@ public class TextScreen {
         return count;
     }
 
-    public List<Point> findChar(int x1, int y1, int x2, int y2, char src) {
+    public List<Point> findChar(char ch) {
+        return findChar(0, 0, width, height, ch);
+    }
+
+    public List<Point> findChar(int x1, int y1, int x2, int y2, char ch) {
         List<Point> result = null;
         for (int y = y1; y < y2; y ++) {
             for (int x = x1; x < x2; x ++) {
-                if (getChar(x, y) == src) {
+                if (getChar(x, y) == ch) {
                     if (result == null) {
                         result = new ArrayList<>();
                     }
@@ -145,12 +156,16 @@ public class TextScreen {
         return (result == null) ? Collections.emptyList() : result;
     }
 
-    public int getCharCount(int x1, int y1, int x2, int y2, char src) {
+    public int getCharCount(char ch) {
+        return getCharCount(0, 0, width, height, ch);
+    }
+
+    public int getCharCount(int x1, int y1, int x2, int y2, char ch) {
         int count = 0;
 
         for (int y = y1; y < y2; y ++) {
             for (int x = x1; x < x2; x ++) {
-                if (getChar(x, y) == src) {
+                if (getChar(x, y) == ch) {
                     count ++;
                 }
             }

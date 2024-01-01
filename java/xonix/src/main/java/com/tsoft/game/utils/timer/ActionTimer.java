@@ -1,4 +1,4 @@
-package com.tsoft.game.utils;
+package com.tsoft.game.utils.timer;
 
 public class ActionTimer {
 

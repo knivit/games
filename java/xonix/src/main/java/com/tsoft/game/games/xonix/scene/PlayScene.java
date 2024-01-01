@@ -3,7 +3,7 @@ package com.tsoft.game.games.xonix.scene;
 import com.tsoft.game.games.xonix.misc.Screen;
 import com.tsoft.game.games.xonix.actor.FlyList;
 import com.tsoft.game.games.xonix.actor.Player;
-import com.tsoft.game.utils.ActionTimer;
+import com.tsoft.game.utils.timer.ActionTimer;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.GameScene;
 
@@ -49,7 +49,7 @@ public class PlayScene implements GameScene {
 
         status.update();
 
-        if (status.getLife() < 0) {
+        if (status.life < 0) {
             next = MENU_SCENE;
         }
 
@@ -71,10 +71,10 @@ public class PlayScene implements GameScene {
         playerTimer = new ActionTimer(100);
 
         innerFlyes = new FlyList();
-        innerFlyes.create(INNER_FLY_CHAR, Screen.EMPTY_CHAR, status.getLevel());
+        innerFlyes.create(INNER_FLY_CHAR, Screen.EMPTY_CHAR, status.level);
 
         outerFlyes = new FlyList();
-        outerFlyes.create(OUTER_FLY_CHAR, Screen.BORDER_CHAR, status.getLevel());
+        outerFlyes.create(OUTER_FLY_CHAR, Screen.BORDER_CHAR, status.level);
 
         flyTimer = new ActionTimer(100);
     }
