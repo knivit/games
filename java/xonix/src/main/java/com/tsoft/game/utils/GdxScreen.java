@@ -11,27 +11,21 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class GdxScreen {
 
-    private OrthographicCamera camera;
-    private SpriteBatch batch;
+    // char's size in pixels
+    private final int fontWidth;
+    private final int fontHeight;
 
-    // screen dimensions in chars
-    private final int width;
-    private final int height;
+    // start char
+    private char startChar;
 
-    // char dimensions in pixels
-    private int fontWidth;
-    private int fontHeight;
+    private final OrthographicCamera camera;
+    private final SpriteBatch batch;
 
     private Sprite[] sprites;
     private Sprite[] invSprites;
 
-    /** width, height - text screen dimensions (in chars) */
-    public GdxScreen(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-
-    public void create(String fontAssetsName, int fontWidth, int fontHeight) {
+    /** width, height - screen size (in chars) */
+    public GdxScreen(int width, int height, int fontWidth, int fontHeight) {
         this.fontWidth = fontWidth;
         this.fontHeight = fontHeight;
 
@@ -39,18 +33,45 @@ public class GdxScreen {
         camera.setToOrtho(false, width * fontWidth, height * fontHeight);
 
         batch = new SpriteBatch();
+    }
 
-        // sprites
+    // sprites in the pixmap
+    public void create(Pixmap pixmap, char startChar) {
+        this.startChar = startChar;
+
+        Texture texture = new Texture(pixmap);
+
+        int hy = texture.getHeight() / fontHeight;
+        int hx = texture.getWidth() / fontWidth;
+        sprites = new Sprite[hx * hy];
+
+        int n = 0;
+        for (int y = 0; y < texture.getHeight(); y += fontHeight) {
+            for (int x = 0; x < texture.getWidth(); x += fontWidth) {
+                Sprite sprite = new Sprite(texture, x, y, fontWidth, fontHeight);
+                sprites[n] = sprite;
+                n ++;
+            }
+        }
+    }
+
+    // sprites in a file
+    public void create(String fontAssetsName, char startChar) {
+        this.startChar = startChar;
+
         FileHandle assets = Gdx.files.internal(fontAssetsName);
+
         Texture texture = new Texture(assets);
         Texture invTexture = new Texture(inverse(new Pixmap(assets)));
 
-        sprites = new Sprite[16 * 6];
-        invSprites = new Sprite[16 * 6];
+        int hy = texture.getHeight() / fontHeight;
+        int hx = texture.getWidth() / fontWidth;
+        sprites = new Sprite[hx * hy];
+        invSprites = new Sprite[hx * hy];
 
         int n = 0;
-        for (int y = 0; y < 6 * fontHeight; y += fontHeight) {
-            for (int x = 0; x < 16 * fontWidth; x += fontWidth) {
+        for (int y = 0; y < hy * fontHeight; y += fontHeight) {
+            for (int x = 0; x < hx * fontWidth; x += fontWidth) {
                 Sprite sprite = new Sprite(texture, x, y, fontWidth, fontHeight);
                 sprites[n] = sprite;
 
@@ -72,7 +93,7 @@ public class GdxScreen {
         for (int y = 0; y < screen.getHeight(); y ++) {
             for (int x = 0; x < screen.getWidth(); x ++) {
                 TextSprite ts = screen.sprite(x, y);
-                int n = Math.max(ts.ch - ' ', 0);
+                int n = Math.max(ts.ch - startChar, 0);
                 Sprite sprite = ts.inverse ? invSprites[n] : sprites[n];
 
                 color.set(ts.color);
@@ -82,12 +103,6 @@ public class GdxScreen {
         }
 
         batch.end();
-    }
-
-    public void dispose() {
-        if (batch != null) {
-            batch.dispose();
-        }
     }
 
     private Pixmap inverse(Pixmap pixmap) {
@@ -102,5 +117,11 @@ public class GdxScreen {
         }
 
         return pixmap;
+    }
+
+    public void dispose() {
+        if (batch != null) {
+            batch.dispose();
+        }
     }
 }

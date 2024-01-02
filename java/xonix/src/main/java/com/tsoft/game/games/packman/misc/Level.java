@@ -3,7 +3,6 @@ package com.tsoft.game.games.packman.misc;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
-import com.tsoft.game.games.packman.misc.Screen;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,9 +22,8 @@ public class Level {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                int off = (Screen.WIDTH - line.length()) / 2;
-                for (int x = 0; x < Screen.WIDTH && x < line.length(); x ++) {
-                    global.screen.putChar(x + off, y, line.charAt(x), Color.WHITE);
+                for (int x = 0; x < global.screen.getWidth() && x < line.length(); x ++) {
+                    global.screen.putChar(x, y, line.charAt(x), Color.WHITE);
                 }
 
                 y --;

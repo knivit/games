@@ -41,8 +41,8 @@ public class Snake implements ApplicationListener {
         global.screen = new Screen();
 
         // graphics
-        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
-        gdxScreen.create("assets/sprites.gif", Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
+        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT, Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
+        gdxScreen.create("assets/sprites.gif", ' ');
 
         // audio
         global.sound = new Sound();

@@ -13,6 +13,9 @@ import com.tsoft.game.utils.GdxScreen;
 
 import com.tsoft.game.games.packman.scene.MenuScene;
 import com.tsoft.game.games.packman.scene.PlayScene;
+import com.tsoft.game.utils.console.nes.ChrTable;
+import com.tsoft.game.utils.console.nes.ChrTableLoader;
+import com.tsoft.game.utils.console.nes.PPU;
 
 import java.util.Map;
 
@@ -41,9 +44,14 @@ public class Packman implements ApplicationListener {
         // screen
         global.screen = new Screen();
 
+        // NES sprites
+        ChrTable[] chrTables = ChrTableLoader.load("assets/packman/alpha.chr");
+        PPU ppu = new PPU();
+        ppu.draw(chrTables[0], new int[] { 63, 16, 32, 48 });
+
         // graphics
-        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT);
-        gdxScreen.create("assets/sprites.gif", Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
+        gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT, Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
+        gdxScreen.create(ppu.pixmap, (char) 0);
 
         // audio
         global.sound = new Sound();

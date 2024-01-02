@@ -47,25 +47,25 @@ public class Player {
     }
 
     public void move(GameController.State controller) {
+        int ndx = dx;
+        int ndy = dy;
         if (controller.dx != 0) {
-            dx = controller.dx;
-            dy = 0;
-        } else if (controller.dy != 0) {
-            dx = 0;
-            dy = controller.dy;
+            ndx = controller.dx;
+            ndy = 0;
+        } else if (controller.dy != 0 && (x % 2) == 0) {
+            ndx = 0;
+            ndy = controller.dy;
         }
 
-        int nx = Math.min(Math.max(x + dx, 0), global.screen.getWidth() - 1);
-        int ny = Math.min(Math.max(y + dy, 1), global.screen.getHeight() - 1);
+        int nx = Math.min(Math.max(x + ndx, 0), global.screen.getWidth() - 1);
+        int ny = Math.min(Math.max(y + ndy, 1), global.screen.getHeight() - 1);
 
         char ch = global.screen.getChar(nx, ny);
 
         hide();
 
+        boolean moved = true;
         if (ch == DOT_CHAR) {
-            x = nx;
-            y = ny;
-
             dotCount --;
             if (dotCount == 0) {
                 isNextLevel = true;
@@ -74,21 +74,26 @@ public class Player {
             global.sound.push(DOT_SOUND);
             global.status.addScore(10);
         } else if (ch == MAGIC_CHAR) {
-            x = nx;
-            y = ny;
-
             global.enemies.startEscaping();
 
             global.sound.push(MAGIC_SOUND);
             global.status.addScore(50);
         } else if (ch == ENEMY_CHAR) {
+            moved = false;
             isResetLevel = true;
 
             global.status.removeLife();
             global.sound.push(REMOVE_LIFE_SOUND);
-        } else if (ch == EMPTY_CHAR) {
+        } else if (ch != EMPTY_CHAR) {
+            moved = false;
+        }
+
+        if (moved) {
             x = nx;
             y = ny;
+
+            dx = ndx;
+            dy = ndy;
         }
 
         show();
