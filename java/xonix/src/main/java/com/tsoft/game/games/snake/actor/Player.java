@@ -5,7 +5,7 @@ import com.tsoft.game.games.snake.misc.Screen;
 import com.tsoft.game.games.snake.scene.PlayStatus;
 import com.tsoft.game.utils.GameController;
 import com.tsoft.game.utils.TextSprite;
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.util.List;
 

@@ -26,6 +26,7 @@ public class PPU {
         0x000000,
         0x000000,
         0x000000,
+
         0xBCBCBC,
         0x0078F8,
         0x0058F8,
@@ -42,6 +43,7 @@ public class PPU {
         0x000000,
         0x000000,
         0x000000,
+
         0xF8F8F8,
         0x3CBCFC,
         0x6888FC,
@@ -58,6 +60,7 @@ public class PPU {
         0x787878,
         0x000000,
         0x000000,
+
         0xFCFCFC,
         0xA4E4FC,
         0xB8B8F8,
@@ -95,7 +98,7 @@ public class PPU {
                     int x = cx * 8;
                     int y = cy * 8 + ny;
                     for (int i = 7; i >= 0; i--) {
-                        int index = ((b1 >> (i - 1)) & (byte) 0x02) | ((b2 >> i) & (byte) 0x01);
+                        int index = ((b2 >> (i - 1)) & (byte) 0x02) | ((b1 >> i) & (byte) 0x01);
                         int colorIndex = paletteIndexes[index];
                         Color.rgb888ToColor(color, PALETTE[colorIndex]);
                         pixmap.drawPixel(x ++, y, Color.rgba8888(color));

@@ -1,6 +1,6 @@
 package com.tsoft.game.games.loderunner.actor;
 
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.util.ArrayList;
 

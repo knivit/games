@@ -2,7 +2,7 @@ package com.tsoft.game.games.packman.actor;
 
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.utils.GameController;
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.util.List;
 
@@ -15,13 +15,16 @@ public class Player {
     public boolean isNextLevel;
     public boolean isResetLevel;
 
+    // start position
+    private int sx;
+    private int sy;
+
+    // current position and move direction
     private int x;
     private int y;
     private int dx;
     private int dy;
 
-    private int sx;
-    private int sy;
     private int dotCount;
 
     public void create() {
@@ -46,21 +49,23 @@ public class Player {
         show();
     }
 
+    private static final char[] ALLOWED_CHARS = new char[] { EMPTY_CHAR, DOT_CHAR, MAGIC_CHAR, GHOST_CHAR};
+
     public void move(GameController.State controller) {
-        int ndx = dx;
-        int ndy = dy;
-        if (controller.dx != 0) {
-            ndx = controller.dx;
-            ndy = 0;
-        } else if (controller.dy != 0 && (x % 2) == 0) {
-            ndx = 0;
-            ndy = controller.dy;
+        FieldPos pos = new FieldPos();
+        boolean useController = false;
+        if (controller.dx != 0 || controller.dy != 0) {
+            pos.move(x, y, controller.dx, controller.dy);
+            if (pos.in(ALLOWED_CHARS)) {
+                useController = true;
+            }
         }
 
-        int nx = Math.min(Math.max(x + ndx, 0), global.screen.getWidth() - 1);
-        int ny = Math.min(Math.max(y + ndy, 1), global.screen.getHeight() - 1);
+        if (!useController) {
+            pos.move(x, y, dx, dy);
+        }
 
-        char ch = global.screen.getChar(nx, ny);
+        char ch = pos.ch;
 
         hide();
 
@@ -71,32 +76,42 @@ public class Player {
                 isNextLevel = true;
             }
 
-            global.sound.push(DOT_SOUND);
             global.status.addScore(10);
+
+            global.sound.push(DOT_SOUND);
         } else if (ch == MAGIC_CHAR) {
             global.enemies.startEscaping();
 
-            global.sound.push(MAGIC_SOUND);
             global.status.addScore(50);
-        } else if (ch == ENEMY_CHAR) {
+
+            global.sound.push(MAGIC_SOUND);
+        } else if (ch == GHOST_CHAR) {
             moved = false;
             isResetLevel = true;
 
             global.status.removeLife();
+
             global.sound.push(REMOVE_LIFE_SOUND);
         } else if (ch != EMPTY_CHAR) {
             moved = false;
         }
 
         if (moved) {
-            x = nx;
-            y = ny;
-
-            dx = ndx;
-            dy = ndy;
+            x = pos.x;
+            y = pos.y;
+            dx = pos.dx;
+            dy = pos.dy;
         }
 
         show();
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     private void hide() {

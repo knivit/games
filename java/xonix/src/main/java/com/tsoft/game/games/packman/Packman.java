@@ -45,13 +45,14 @@ public class Packman implements ApplicationListener {
         global.screen = new Screen();
 
         // NES sprites
-        ChrTable[] chrTables = ChrTableLoader.load("assets/packman/alpha.chr");
-        PPU ppu = new PPU();
-        ppu.draw(chrTables[0], new int[] { 63, 16, 32, 48 });
+        //ChrTable[] chrTables = ChrTableLoader.load("assets/packman/alpha.chr");
+        //PPU ppu = new PPU();
+        //ppu.draw(chrTables[0], new int[] { 63, 16, 32, 48 });
 
         // graphics
         gdxScreen = new GdxScreen(Screen.WIDTH, Screen.HEIGHT, Screen.FONT_WIDTH, Screen.FONT_HEIGHT);
-        gdxScreen.create(ppu.pixmap, (char) 0);
+        //gdxScreen.create(ppu.pixmap, (char) 0);
+        gdxScreen.create("assets/sprites.gif", ' ');
 
         // audio
         global.sound = new Sound();

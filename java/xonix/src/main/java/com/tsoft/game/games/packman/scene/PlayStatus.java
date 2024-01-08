@@ -34,8 +34,8 @@ public class PlayStatus {
     }
 
     private void update() {
-        global.screen.print(0, 0, "LEVEL: %02d", level);
-        global.screen.print((Screen.WIDTH - 10) / 2, 0, "SCORE: %05d", score);
-        global.screen.print((Screen.WIDTH - 8), 0, "LIFE: %02d", life);
+        global.screen.print(0, 0, "LEVEL:%02d", level);
+        global.screen.print((Screen.WIDTH - 10) / 2, 0, "SCORE:%05d", score);
+        global.screen.print((Screen.WIDTH - 8), 0, "LIFE:%02d", life);
     }
 }

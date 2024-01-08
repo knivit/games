@@ -5,16 +5,17 @@ import com.tsoft.game.utils.TextScreen;
 
 public class Screen extends TextScreen {
 
-    public static final int WIDTH = 55;
+    public static final int WIDTH = 29;
     public static final int HEIGHT = 32;
 
-    public static final int FONT_WIDTH = 8;
-    public static final int FONT_HEIGHT = 8;
+    public static final int FONT_WIDTH = 7;//8;
+    public static final int FONT_HEIGHT = 14;//8;
 
     public static final char EMPTY_CHAR = ' ';
     public static final char DOT_CHAR = '.';
     public static final char MAGIC_CHAR = 'O';
-    public static final char ENEMY_CHAR = '@';
+    public static final char GHOST_CHAR = '@';
+    public static final char GATE_CHAR = '_';
     public static final char PLAYER_CHAR = 127;
 
     public Screen() {

@@ -3,7 +3,7 @@ package com.tsoft.game.games.snake.actor;
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.snake.misc.Screen;
 import com.tsoft.game.utils.TextSprite;
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.util.Random;
 

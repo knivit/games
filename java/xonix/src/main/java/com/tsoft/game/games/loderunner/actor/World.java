@@ -5,7 +5,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.tsoft.game.games.loderunner.misc.Screen;
 import com.tsoft.game.utils.TextSprite;
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -14,7 +14,6 @@ public class PlayScene implements GameScene {
 
     private ActionTimer enemyTimer;
 
-    private Player player;
     private ActionTimer playerTimer;
 
     private String next;
@@ -34,7 +33,7 @@ public class PlayScene implements GameScene {
         }
 
         if (playerTimer.action(global.time)) {
-            player.move(controller);
+            global.player.move(controller);
         }
 
         if (enemyTimer.action(global.time)) {
@@ -45,11 +44,11 @@ public class PlayScene implements GameScene {
             next = MENU_SCENE;
         }
 
-        if (player.isResetLevel) {
+        if (global.player.isResetLevel) {
             resetLevel();
         }
 
-        if (player.isNextLevel) {
+        if (global.player.isNextLevel) {
             global.status.nextLevel();
             loadLevel();
         }
@@ -63,8 +62,8 @@ public class PlayScene implements GameScene {
     private void loadLevel() {
         Level.load(global.status.level);
 
-        player = new Player();
-        player.create();
+        global.player = new Player();
+        global.player.create();
         playerTimer = new ActionTimer(100);
 
         global.enemies = new Enemies();
@@ -73,7 +72,7 @@ public class PlayScene implements GameScene {
     }
 
     private void resetLevel() {
-        player.reset();
+        global.player.reset();
         global.enemies.reset();
     }
 }

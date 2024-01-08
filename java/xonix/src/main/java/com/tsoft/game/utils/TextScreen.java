@@ -1,7 +1,7 @@
 package com.tsoft.game.utils;
 
 import com.badlogic.gdx.graphics.Color;
-import com.tsoft.game.utils.geom.Point;
+import com.tsoft.game.utils.base.Point;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,9 +113,9 @@ public class TextScreen {
             x ++;
             if (x >= width) {
                 x = 0;
-                y ++;
-                if (y >= height) {
-                    y = 0;
+                y --;
+                if (y < 0) {
+                    y = height - 1;
                 }
             }
         }
