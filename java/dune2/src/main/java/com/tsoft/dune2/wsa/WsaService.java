@@ -1,14 +1,19 @@
 package com.tsoft.dune2.wsa;
 
+import static com.tsoft.dune2.file.FileService.*;
+import static com.tsoft.dune2.gfx.GfxService.*;
+import static com.tsoft.dune2.gui.widget.WidgetService.g_widgetProperties;
 import static com.tsoft.dune2.utils.CFunc.READ_LE_long;
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 public class WsaService {
 
     /**
      * Get the amount of frames a WSA has.
      */
-    static int WSA_GetFrameCount(void *wsa) {
-        WSAHeader *header = (WSAHeader *)wsa;
+    static int WSA_GetFrameCount(byte[] wsa) {
+        WSAHeader header = WSAHeader.from(wsa);
 
         if (header == null) return 0;
         return header.frames;
@@ -61,11 +66,10 @@ public class WsaService {
      * @param dst Destination buffer to write the animation to.
      * @return 1 on success, 0 on failure.
      */
-    static int WSA_GotoNextFrame(void *wsa, int frame, uint8 *dst)
-    {
-        WSAHeader *header = (WSAHeader *)wsa;
+    static int WSA_GotoNextFrame(byte[] wsa, int frame, byte[] dst) {
+        WSAHeader header = WSAHeader.from(wsa);
         int lengthPalette;
-        uint8 *buffer;
+        byte[] buffer;
 
         lengthPalette = (header.flags.hasPalette) ? 0x300 : 0;
 
@@ -75,7 +79,7 @@ public class WsaService {
             long positionStart;
             long positionEnd;
             long length;
-            uint8 *positionFrame;
+            byte[] positionFrame;
 
             positionStart = WSA_GetFrameOffset_FromMemory(header, frame);
             positionEnd = WSA_GetFrameOffset_FromMemory(header, frame + 1);
@@ -86,7 +90,7 @@ public class WsaService {
 
             memmove(buffer, positionFrame, length);
         } else if (header.flags.dataOnDisk) {
-            uint8 fileno;
+            int fileno;
             long positionStart;
             long positionEnd;
             long length;
@@ -123,31 +127,28 @@ public class WsaService {
         return 1;
     }
 
-/**
- * Load a WSA file.
- * @param filename Name of the file.
- * @param wsa Data buffer for the WSA.
- * @param wsaSize Current size of buffer.
- * @param reserveDisplayFrame True if we need to reserve the display frame.
- * @return Address of loaded WSA file, or null.
- */
-    void *WSA_LoadFile(const char *filename, void *wsa, long wsaSize, boolean reserveDisplayFrame)
-    {
+    /**
+     * Load a WSA file.
+     * @param filename Name of the file.
+     * @param wsa Data buffer for the WSA.
+     * @param wsaSize Current size of buffer.
+     * @param reserveDisplayFrame True if we need to reserve the display frame.
+     * @return Address of loaded WSA file, or null.
+     */
+    static byte[] WSA_LoadFile(String filename, byte[] wsa, long wsaSize, boolean reserveDisplayFrame) {
         WSAFlags flags;
-        WSAFileHeader fileheader;
-        WSAHeader *header;
+        WSAFileHeader fileheader = new WSAFileHeader();
+        WSAHeader header;
         long bufferSizeMinimal;
         long bufferSizeOptimal;
         int lengthHeader = 10;
         int lengthOffsets;
-        uint8 fileno;
+        int fileno;
         int lengthPalette;
         int lengthFirstFrame;
         long lengthFileContent;
-        long displaySize;
-        uint8 *buffer;
-
-        memset(&flags, 0, sizeof(flags));
+        int displaySize;
+        byte[] buffer;
 
         fileno = File_Open(filename, FILE_MODE_READ);
         fileheader.frames = File_Read_LE16(fileno);
@@ -156,21 +157,21 @@ public class WsaService {
         fileheader.requiredBufferSize = File_Read_LE16(fileno);
         fileheader.hasPalette = File_Read_LE16(fileno);		/* has palette */
         Debug("%s : %u %ux%u %u %x\n", filename, fileheader.frames, fileheader.width, fileheader.height, fileheader.requiredBufferSize, fileheader.hasPalette);
-        fileheader.firstFrameOffset = File_Read_LE32(fileno);	/* Offset of 1st frame */
-        fileheader.secondFrameOffset = File_Read_LE32(fileno);	/* Offset of 2nd frame (end of 1st frame) */
+        fileheader.firstFrameOffset = (int)File_Read_LE32(fileno);	/* Offset of 1st frame */
+        fileheader.secondFrameOffset = (int)File_Read_LE32(fileno);	/* Offset of 2nd frame (end of 1st frame) */
         if (fileheader.firstFrameOffset != (long)lengthHeader + 8 + 4 * fileheader.frames
             && fileheader.secondFrameOffset != (long)lengthHeader + 8 + 4 * fileheader.frames) {
             /* Old format from Dune v1.0 */
             lengthHeader = 8;
             fileheader.hasPalette = 0;
             File_Seek(fileno, -10, 1);
-            fileheader.firstFrameOffset = File_Read_LE32(fileno);
-            fileheader.secondFrameOffset = File_Read_LE32(fileno);
+            fileheader.firstFrameOffset = (int)File_Read_LE32(fileno);
+            fileheader.secondFrameOffset = (int)File_Read_LE32(fileno);
         }
         Debug("               %08x %08x\n", fileheader.firstFrameOffset, fileheader.secondFrameOffset);
 
         lengthPalette = 0;
-        if (fileheader.hasPalette) {
+        if (fileheader.hasPalette != 0) {
             flags.hasPalette = true;
 
             lengthPalette = 0x300;	/* length of a 256 color RGB palette */
@@ -221,7 +222,7 @@ public class WsaService {
             flags.notmalloced = true;
         }
 
-        header = (WSAHeader *)wsa;
+        header = WSAHeader.from(wsa);
         buffer = (uint8 *)wsa + sizeof(WSAHeader);
 
         header.flags = flags;
@@ -264,7 +265,7 @@ public class WsaService {
         }
 
         {
-            uint8 *b;
+            byte[] b;
             b = buffer + header.bufferLength - lengthFirstFrame;
 
             File_Seek(fileno, lengthHeader + lengthOffsets + lengthPalette, 0);
@@ -280,9 +281,8 @@ public class WsaService {
      * Unload the WSA.
      * @param wsa The pointer to the WSA.
      */
-    void WSA_Unload(void *wsa)
-    {
-        WSAHeader *header = (WSAHeader *)wsa;
+    static void WSA_Unload(byte[] wsa) {
+        WSAHeader header = WSAHeader.from(wsa);
 
         if (wsa == null) return;
         if (!header.flags.malloced) return;
@@ -300,15 +300,14 @@ public class WsaService {
      * @param screenID the screen to write to
      * @param src The source for the frame.
      */
-    static void WSA_DrawFrame(int x, int y, int width, int height, int windowID, uint8 *src, Screen screenID)
-    {
+    static void WSA_DrawFrame(int x, int y, int width, int height, int windowID, byte[] src, int screenID) {
         int left;
         int right;
         int top;
         int bottom;
         int skipBefore;
         int skipAfter;
-        uint8 *dst;
+        byte[] dst;
 
         dst = GFX_Screen_Get_ByIndex(screenID);
 
@@ -317,10 +316,11 @@ public class WsaService {
         top    = g_widgetProperties[windowID].yBase;
         bottom = top + g_widgetProperties[windowID].height;
 
+        int srcOff = 0;
         if (y - top < 0) {
             if (y - top + height <= 0) return;
             height += y - top;
-            src += (top - y) * width;
+            srcOff += (top - y) * width;
             y += top - y;
         }
 
@@ -341,13 +341,13 @@ public class WsaService {
             width = right - x;
         }
 
-        dst += y * SCREEN_WIDTH + x;
+        int dstOff = y * SCREEN_WIDTH + x;
 
         while (height-- != 0) {
-            src += skipBefore;
-            memcpy(dst, src, width);
-            src += width + skipAfter;
-            dst += SCREEN_WIDTH;
+            srcOff += skipBefore;
+            System.arraycopy(src, srcOff, dst, dstOff, width);
+            srcOff += width + skipAfter;
+            dstOff += SCREEN_WIDTH;
         }
     }
 
@@ -360,10 +360,9 @@ public class WsaService {
      * @param screenID The screenID to draw on.
      * @return False on failure, true on success.
      */
-    boolean WSA_DisplayFrame(void *wsa, int frameNext, int posX, int posY, Screen screenID)
-    {
-        WSAHeader *header = (WSAHeader *)wsa;
-        uint8 *dst;
+    boolean WSA_DisplayFrame(byte[] wsa, int frameNext, int posX, int posY, int screenID) {
+        WSAHeader header = WSAHeader.from(wsa);
+        byte[] dst;
 
         int i;
         int frame;
@@ -374,11 +373,13 @@ public class WsaService {
         if (wsa == null) return false;
         if (frameNext >= header.frames) return false;
 
+        int dstOff = 0;
         if (header.flags.displayInBuffer) {
-            dst = (uint8 *)wsa + sizeof(WSAHeader);
+            dst = wsa;
+            dstOff = WSAHeader.sizeof();
         } else {
             dst = GFX_Screen_Get_ByIndex(screenID);
-            dst += posX + posY * SCREEN_WIDTH;
+            dstOff += posX + posY * SCREEN_WIDTH;
         }
 
         if (header.frameCurrent == header.frames) {
@@ -442,5 +443,4 @@ public class WsaService {
         GFX_Screen_SetDirty(screenID, posX, posY, posX + header.width, posY + header.height);
         return true;
     }
-
 }

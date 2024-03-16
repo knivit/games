@@ -33,13 +33,23 @@ public class CFunc {
         return Integer.compare(uint8(a), uint8(b));
     }
 
-    /** Read 2 byte from the given offset and converts them to int */
+    /** Read 2 bytes from the given offset and converts them to int */
     public static int READ_LE_int(byte[] buf, int off) {
         return uint8(buf[off]) + (uint8(buf[off + 1]) << 8);
     }
 
-    /** Read 2 byte from the given offset and converts them to int */
+    /** Write 2 bytes from val to buf */
+    public static void WRITE_LE_int(byte[] buf, int val) {
+        buf[0] = (byte) (val & 0xFF);
+        buf[1] = (byte) ((val >> 8) & 0xFF);
+    }
+
+    /** Read 4 bytes from the given offset and converts them to int */
     public static int READ_LE_long(byte[] buf, int off) {
         return uint8(buf[off]) + (uint8(buf[off + 1]) << 8) + (uint8(buf[off + 2]) << 16) + (uint8(buf[off + 3]) << 24);
+    }
+
+    public static boolean isBitSet(byte b, int bit) {
+        return ((b >> bit) & 1) != 0;
     }
 }

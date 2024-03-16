@@ -5,26 +5,28 @@ import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.team.Team;
 import com.tsoft.dune2.unit.Unit;
 
+import static com.tsoft.dune2.file.FileService.*;
+import static com.tsoft.dune2.os.EndianService.HTOBE32;
 import static com.tsoft.dune2.script.ScriptCommand.*;
 
 public class ScriptService {
 
-    GObject g_scriptCurrentObject;
-    Structure g_scriptCurrentStructure;
-    Unit g_scriptCurrentUnit;
-    Team g_scriptCurrentTeam;
+    static GObject g_scriptCurrentObject;
+    static Structure g_scriptCurrentStructure;
+    public static Unit g_scriptCurrentUnit;
+    static Team g_scriptCurrentTeam;
 
     static ScriptInfo s_scriptStructure;
     static ScriptInfo s_scriptTeam;
     static ScriptInfo s_scriptUnit;
-    static ScriptInfo g_scriptStructure = s_scriptStructure;
+    public static ScriptInfo g_scriptStructure = s_scriptStructure;
     static ScriptInfo g_scriptTeam = s_scriptTeam;
     public static ScriptInfo g_scriptUnit = s_scriptUnit;
 
     /**
      * Converted script functions for Structures.
      */
-    ScriptFunction[] g_scriptFunctionsStructure = new ScriptFunction[] {
+    static ScriptFunction[] g_scriptFunctionsStructure = new ScriptFunction[] {
         /* 00 */ General::Script_General_Delay,
         /* 01 */ General::Script_General_NoOperation,
         /* 02 */ General::Script_Structure_Unknown0A81,
@@ -55,7 +57,7 @@ public class ScriptService {
     /**
      * Converted script functions for Units.
     */
-    ScriptFunction[] g_scriptFunctionsUnit = new ScriptFunction[] {
+    public static ScriptFunction[] g_scriptFunctionsUnit = new ScriptFunction[] {
         /* 00 */ General::Script_Unit_GetInfo,
         /* 01 */ General::Script_Unit_SetAction,
         /* 02 */ General::Script_General_DisplayText,
@@ -122,10 +124,10 @@ public class ScriptService {
         /* 3F */ General::Script_General_NoOperation,
     };
 
-/**
- * Converted script functions for Teams.
- */
-    ScriptFunction g_scriptFunctionsTeam = new ScriptFunction[] {
+    /**
+     * Converted script functions for Teams.
+     */
+    static ScriptFunction g_scriptFunctionsTeam = new ScriptFunction[] {
         /* 00 */ General::Script_General_Delay,
         /* 01 */ General::Script_Team_DisplayText,
         /* 02 */ General::Script_Team_GetMembers,
@@ -558,7 +560,7 @@ public class ScriptService {
      * @param functions Pointer to the functions to call via script.
      * @param data Pointer to preallocated space to load data.
      */
-    public static int Script_LoadFromFile(String filename, ScriptInfo scriptInfo, ScriptFunction[] functions, int[] data) {
+    public static int Script_LoadFromFile(String filename, ScriptInfo scriptInfo, ScriptFunction[] functions, byte[] data) {
         long total = 0;
         long length = 0;
         int index;

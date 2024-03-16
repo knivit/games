@@ -6,7 +6,10 @@ import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_ACTIVE;
 import static com.tsoft.dune2.house.HouseType.HOUSE_MAX;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
+import static com.tsoft.dune2.sprites.SpritesService.*;
 import static com.tsoft.dune2.utils.CFunc.ucmp;
+import static com.tsoft.dune2.video.VideoWin32Service.Video_GetFrameBuffer;
+import static com.tsoft.dune2.video.VideoWin32Service.Video_SetPalette;
 import static org.lwjgl.system.libc.LibCString.memcpy;
 import static org.lwjgl.system.libc.LibCString.memset;
 
@@ -16,10 +19,10 @@ public class GfxService {
     public static final int SCREEN_HEIGHT = 200;  /*!< Height of the screen in pixels. */
 
     static byte[] g_paletteActive = new byte[256 * 3];
-    static int *g_palette1 = null;
-    static int *g_palette2 = null;
-    static int *g_paletteMapping1 = null;
-    static int *g_paletteMapping2 = null;
+    static byte[] g_palette1 = null;
+    static byte[] g_palette2 = null;
+    static byte[] g_paletteMapping1 = null;
+    static byte[] g_paletteMapping2 = null;
 
     static int s_tileSpacing  = 0;	/* bytes to skip between each line. == SCREEN_WIDTH - 2*s_tileWidth */
     static int s_tileHeight   = 0;	/* "icon" sprites height (lines) */
@@ -409,7 +412,7 @@ public class GfxService {
      * Set a new palette for the screen.
      * @param palette The palette in RGB order.
      */
-    public static void GFX_SetPalette(int *palette) {
+    public static void GFX_SetPalette(byte[] palette) {
         int from, to;
 
         for (from = 0; from < 256; from++) {

@@ -9,23 +9,23 @@ import com.tsoft.dune2.team.Team;
 import com.tsoft.dune2.tile.Tile32;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
-import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_SAND_BURST;
+import static com.tsoft.dune2.explosion.ExplosionType.*;
 import static com.tsoft.dune2.gobject.GObjectService.*;
-import static com.tsoft.dune2.gui.GuiService.GUI_ChangeSelectionType;
-import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
+import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.gui.SelectionType.*;
+import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
 import static com.tsoft.dune2.house.HouseService.*;
 import static com.tsoft.dune2.house.HouseType.*;
 import static com.tsoft.dune2.map.LandscapeType.*;
 import static com.tsoft.dune2.map.MapService.*;
-import static com.tsoft.dune2.opendune.OpenDuneService.g_debugScenario;
-import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
+import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
+import static com.tsoft.dune2.pool.PoolTeamService.Team_Find;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Get_ByIndex;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
 import static com.tsoft.dune2.script.ScriptService.*;
+import static com.tsoft.dune2.sprites.SpritesService.g_bloomTileID;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
@@ -35,6 +35,7 @@ import static com.tsoft.dune2.structure.StructureType.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structure_layoutTileDiff;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.tile.TileService.*;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.tools.IndexType.*;
 import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.ActionType.*;
@@ -127,7 +128,7 @@ public class UnitService {
     /**
      * Loop over all units, performing various of tasks.
      */
-    void GameLoop_Unit() {
+    static void GameLoop_Unit() {
         PoolFindStruct find = new PoolFindStruct();
         boolean tickMovement = false;
         boolean tickRotation = false;
@@ -835,7 +836,7 @@ public class UnitService {
      * @return True if and only if the position changed.
      * @position The position.
      */
-    static boolean Unit_SetPosition(Unit u, Tile32 position) {
+    public static boolean Unit_SetPosition(Unit u, Tile32 position) {
 	   UnitInfo ui;
 
         if (u == null) return false;
@@ -1232,7 +1233,7 @@ public class UnitService {
      * @param houseID     House controlling the deviator.
      * @return True if and only if the unit beacame deviated.
      */
-    boolean Unit_Deviate(Unit unit, int probability, int houseID) {
+    public static boolean Unit_Deviate(Unit unit, int probability, int houseID) {
         UnitInfo ui;
 
         if (unit == null) return false;
@@ -1525,7 +1526,7 @@ public class UnitService {
      * @param range  ??.
      * @return True if and only if the unit has no hitpoints left.
      */
-    boolean Unit_Damage(Unit unit, int damage, int range) {
+    static boolean Unit_Damage(Unit unit, int damage, int range) {
 	    UnitInfo ui;
         boolean alive = false;
         int houseID;
@@ -1754,7 +1755,7 @@ public class UnitService {
      * @param destination To where on the map this Unit should move.
      * @return The new created Unit, or NULL if something failed.
      */
-    Unit Unit_CreateWrapper(int houseID, int typeID, int destination) {
+    static Unit Unit_CreateWrapper(int houseID, int typeID, int destination) {
         Tile32 tile;
         House h;
         int orientation;
@@ -1831,7 +1832,7 @@ public class UnitService {
      * @param packed The packed tile around where to look.
      * @return A packed tile where a Unit/Structure is, or the given packed tile if nothing found.
      */
-    int Unit_FindTargetAround(int packed) {
+    static int Unit_FindTargetAround(int packed) {
         int[] around = new int[] {0, -1, 1, -64, 64, -65, -63, 65, 63};
 
         int i;
@@ -1842,7 +1843,7 @@ public class UnitService {
 
         if (Map_GetLandscapeType(packed) == LST_BLOOM_FIELD) return packed;
 
-        for (i = 0; i < lengthof(around); i++) {
+        for (i = 0; i < around.length; i++) {
             Unit u;
 
             u = Unit_Get_ByPackedTile(packed + around[i]);
@@ -2119,7 +2120,7 @@ public class UnitService {
      * @param createCarryall Create a carryall if none found.
      * @return The found Unit, or NULL if none found.
      */
-    static Unit Unit_CallUnitByType(int type, int houseID, int target, boolean createCarryall) {
+    public static Unit Unit_CallUnitByType(int type, int houseID, int target, boolean createCarryall) {
         PoolFindStruct find = new PoolFindStruct();
         Unit unit = null;
 

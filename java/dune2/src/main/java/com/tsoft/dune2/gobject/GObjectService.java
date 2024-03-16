@@ -7,13 +7,14 @@ import com.tsoft.dune2.tile.Tile32;
 
 import static com.tsoft.dune2.map.MapService.g_map;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Get_ByIndex;
+import static com.tsoft.dune2.structure.StructureService.Structure_GetLinkedUnit;
 import static com.tsoft.dune2.structure.StructureService.Structure_SetState;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structure_layoutEdgeTiles;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_BUSY;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_IDLE;
 import static com.tsoft.dune2.tile.TileService.*;
-import static com.tsoft.dune2.tools.ToolsService.Tools_Index_GetStructure;
+import static com.tsoft.dune2.tools.ToolsService.*;
 
 public class GObjectService {
 

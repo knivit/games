@@ -1,11 +1,14 @@
 package com.tsoft.dune2.config;
 
+import static com.tsoft.dune2.file.FileService.*;
+
 public class ConfigService {
 
     public static GameCfg g_gameConfig = new GameCfg(1, 1, 2, 1, 0);
-    DuneCfg g_config;
-    boolean g_enableSoundMusic = true;
-    boolean g_enableVoices = true;
+
+    static DuneCfg g_config;
+    static boolean g_enableSoundMusic = true;
+    static boolean g_enableVoices = true;
 
     /**
      * Reads and decode the config.
@@ -14,12 +17,12 @@ public class ConfigService {
      * @param config The address where the config will be stored.
      * @return True if loading and decoding is successful.
      */
-    boolean Config_Read(STring *filename, DuneCfg config) {
+    static boolean Config_Read(String filename, DuneCfg config) {
         FILE *f;
         size_t read;
         uint8 sum;
-        uint8 *c;
-        int8 i;
+        byte[] c;
+        int i;
 
         f = fopendatadir(SEARCHDIR_PERSONAL_DATA_DIR, filename, "rb");
         if (f == null) return false;
@@ -49,7 +52,7 @@ public class ConfigService {
      * @param config The address where the config will be read.
      * @return True if successful.
      */
-    boolean Config_Write(String filename, DuneCfg config) {
+    static boolean Config_Write(String filename, DuneCfg config) {
         FILE *f;
         size_t write;
         uint8 coded[sizeof(DuneCfg)];
@@ -77,7 +80,7 @@ public class ConfigService {
     /**
      * Set a default config
      */
-    boolean Config_Default(DuneCfg config) {
+    static boolean Config_Default(DuneCfg config) {
         if (config == null) return false;
 
         memset(config, 0, sizeof(DuneCfg));
@@ -96,8 +99,8 @@ public class ConfigService {
      *
      * @return True if loading is successful.
      */
-    boolean GameOptions_Load() {
-        uint8 index;
+    static boolean GameOptions_Load() {
+        int index;
 
         index = File_Open_Personal("OPTIONS.CFG", FILE_MODE_READ);
 
@@ -117,8 +120,8 @@ public class ConfigService {
     /**
      * Saves the game options.
      */
-    void GameOptions_Save() {
-        uint8 index;
+    static void GameOptions_Save() {
+        int index;
 
         index = File_Open_Personal("OPTIONS.CFG", FILE_MODE_WRITE);
 

@@ -18,4 +18,20 @@ public class HouseInfo {
     public int musicLose;                                     /* Music played when you lose a mission. */
     public int musicBriefing;                                 /* Music played during initial briefing of mission. */
 	public String voiceFilename;                              /* Pointer to filename with the voices of the house. */
+
+    public HouseInfo(String name, int toughness, int degradingChance, int degradingAmount, int minimapColor, int specialCountDown, int starportDeliveryTime, int prefixChar, int specialWeapon, int musicWin, int musicLose, int musicBriefing, String voiceFilename) {
+        this.name = name;
+        this.toughness = toughness;
+        this.degradingChance = degradingChance;
+        this.degradingAmount = degradingAmount;
+        this.minimapColor = minimapColor;
+        this.specialCountDown = specialCountDown;
+        this.starportDeliveryTime = starportDeliveryTime;
+        this.prefixChar = prefixChar;
+        this.specialWeapon = specialWeapon;
+        this.musicWin = musicWin;
+        this.musicLose = musicLose;
+        this.musicBriefing = musicBriefing;
+        this.voiceFilename = voiceFilename;
+    }
 }

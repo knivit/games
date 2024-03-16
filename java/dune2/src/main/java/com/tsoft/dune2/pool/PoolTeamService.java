@@ -1,6 +1,9 @@
 package com.tsoft.dune2.pool;
 
 import com.tsoft.dune2.team.Team;
+import com.tsoft.dune2.team.TeamFlags;
+
+import java.util.Arrays;
 
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 
@@ -49,16 +52,16 @@ public class PoolTeamService {
     /**
      * Initialize the Team array.
      */
-    void Team_Init() {
-        memset(g_teamArray, 0, sizeof(g_teamArray));
-        memset(g_teamFindArray, 0, sizeof(g_teamFindArray));
+    static void Team_Init() {
+        Arrays.fill(g_teamArray, null);
+        Arrays.fill(g_teamFindArray, null);
         g_teamFindCount = 0;
     }
 
     /**
      * Recount all Teams, ignoring the cache array.
      */
-    void Team_Recount() {
+    static void Team_Recount() {
         int index;
 
         g_teamFindCount = 0;
@@ -92,7 +95,7 @@ public class PoolTeamService {
         assert(t != null);
 
         /* Initialize the Team */
-        memset(t, 0, sizeof(Team));
+        t.reset();
         t.index      = index;
         t.flags.used = true;
 
@@ -104,10 +107,10 @@ public class PoolTeamService {
     /**
      * Free a Team.
      */
-    void Team_Free(Team t) {
+    static void Team_Free(Team t) {
         int i;
 
-        memset(&t.flags, 0, sizeof(t.flags));
+        t.flags = new TeamFlags();
 
         /* Walk the array to find the Team we are removing */
         for (i = 0; i < g_teamFindCount; i++) {
@@ -119,6 +122,6 @@ public class PoolTeamService {
 
         /* If needed, close the gap */
         if (i == g_teamFindCount) return;
-        memmove(&g_teamFindArray[i], &g_teamFindArray[i + 1], (g_teamFindCount - i) * sizeof(g_teamFindArray[0]));
+        memmove(g_teamFindArray[i], g_teamFindArray[i + 1], (g_teamFindCount - i) * sizeof(g_teamFindArray[0]));
     }
 }

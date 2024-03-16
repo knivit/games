@@ -16,6 +16,14 @@ import static com.tsoft.dune2.gui.FactoryResult.FACTORY_RESUME;
 import static com.tsoft.dune2.gui.GuiService.GUI_DrawFilledRectangle;
 import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_PLACE;
 import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_STRUCTURE;
+import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_Scrollbar_Draw;
+import static com.tsoft.dune2.gui.widget.WidgetService.GUI_Widget_Scrollbar_CalculateScrollPosition;
+import static com.tsoft.dune2.gui.widget.WidgetService.g_widgetProperties;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
+import static com.tsoft.dune2.input.InputService.Input_Test;
+import static com.tsoft.dune2.input.MouseService.g_mouseX;
+import static com.tsoft.dune2.input.MouseService.g_mouseY;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureType.STRUCTURE_CONSTRUCTION_YARD;
@@ -123,7 +131,7 @@ public class WidgetClickService {
      * @param w The widget.
      * @return False, always.
      */
-    boolean GUI_Widget_Scrollbar_ArrowUp_Click(Widget w) {
+    public static boolean GUI_Widget_Scrollbar_ArrowUp_Click(Widget w) {
         GUI_Widget_Scrollbar_Scroll(w.data, -1);
 
         return false;
@@ -135,7 +143,7 @@ public class WidgetClickService {
      * @param w The widget.
      * @return False, always.
      */
-    boolean GUI_Widget_Scrollbar_ArrowDown_Click(Widget w) {
+    public static boolean GUI_Widget_Scrollbar_ArrowDown_Click(Widget w) {
         GUI_Widget_Scrollbar_Scroll(w.data, 1);
 
         return false;
@@ -147,7 +155,7 @@ public class WidgetClickService {
      * @param w The widget.
      * @return False, always.
      */
-    boolean GUI_Widget_Scrollbar_Click(Widget w) {
+    static boolean GUI_Widget_Scrollbar_Click(Widget w) {
         WidgetScrollbar scrollbar;
         int positionX, positionY;
 
@@ -227,7 +235,7 @@ public class WidgetClickService {
      * @param w The widget.
      * @return True, always.
      */
-    boolean GUI_Widget_TextButton_Click(Widget w) {
+    static boolean GUI_Widget_TextButton_Click(Widget w) {
 	    UnitInfo ui;
 	    ActionInfo ai;
 	    int *actions;

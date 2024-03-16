@@ -11,16 +11,20 @@ import com.tsoft.dune2.unit.Unit;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_STRUCTURE;
 import static com.tsoft.dune2.gobject.GObjectService.Object_Script_Variable4_Clear;
 import static com.tsoft.dune2.gobject.GObjectService.Object_Script_Variable4_Set;
+import static com.tsoft.dune2.gui.GuiService.GUI_DisplayHint;
 import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
 import static com.tsoft.dune2.house.HouseService.House_AreAllied;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_debugScenario;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentStructure;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_ROCKET_TURRET;
+import static com.tsoft.dune2.sprites.SpritesService.g_iconMap;
 import static com.tsoft.dune2.strings.Strings.STR_SEARCH_FOR_SPICE_FIELDS_TO_HARVEST;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.structure.StructureState.*;
@@ -33,9 +37,9 @@ import static com.tsoft.dune2.tools.IndexType.*;
 import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.ActionType.ACTION_ATTACK;
 import static com.tsoft.dune2.unit.ActionType.ACTION_MOVE;
+import static com.tsoft.dune2.unit.MovementType.MOVEMENT_WINGER;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.*;
-import static jdk.internal.org.jline.utils.Colors.h;
 
 public class ScriptStructureService {
 
@@ -47,10 +51,8 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return State of current structure.
      */
-    int Script_Structure_GetState(ScriptEngine script) {
+    public static int Script_Structure_GetState(ScriptEngine script) {
         Structure s;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
         return s.state;
@@ -64,7 +66,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Structure_SetState(ScriptEngine script) {
+    public static int Script_Structure_SetState(ScriptEngine script) {
         Structure s;
         int state;
 
@@ -97,9 +99,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Structure_RemoveFogAroundTile(ScriptEngine script) {
-        VARIABLE_NOT_USED(script);
-
+    public static int Script_Structure_RemoveFogAroundTile(ScriptEngine script) {
         Structure_RemoveFog(g_scriptCurrentStructure);
 
         return 0;
@@ -113,14 +113,12 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return 0 if there is no spice to refine, otherwise 1.
      */
-    int Script_Structure_RefineSpice(ScriptEngine script) {
+    public static int Script_Structure_RefineSpice(ScriptEngine script) {
 	    StructureInfo si;
         Structure s;
         Unit u;
         House h;
         int harvesterStep, creditsStep;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
 
@@ -157,7 +155,7 @@ public class ScriptStructureService {
         h.credits += creditsStep;
         u.amount -= harvesterStep;
 
-        if (u.amount == 0) u.o.flags.s.inTransport = false;
+        if (u.amount == 0) u.o.flags.inTransport = false;
         s.o.script.delay = 6;
         return 1;
     }
@@ -170,12 +168,10 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_Unknown0A81(ScriptEngine script) {
+    public static int Script_Structure_Unknown0A81(ScriptEngine script) {
         int structureIndex;
         Structure s;
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
 
@@ -201,7 +197,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_FindUnitByType(ScriptEngine script) {
+    public static int Script_Structure_FindUnitByType(ScriptEngine script) {
         Structure s;
         Unit u;
         Unit carryall;
@@ -242,13 +238,11 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_Unknown0C5A(ScriptEngine script) {
+    public static int Script_Structure_Unknown0C5A(ScriptEngine script) {
         Tile32 tile;
         Structure s;
         Unit u;
         int position;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
 
@@ -307,7 +301,7 @@ public class ScriptStructureService {
      * @return The Unit Index of the closest unit within range and not friendly,
      *   or 0 if none exists.
      */
-    int Script_Structure_FindTargetUnit(ScriptEngine script) {
+    public static int Script_Structure_FindTargetUnit(ScriptEngine script) {
         PoolFindStruct find = new PoolFindStruct();
         Structure s;
         Unit u;
@@ -378,7 +372,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return 0 if looking at target, otherwise 1.
      */
-    int Script_Structure_RotateTurret(ScriptEngine script) {
+    public static int Script_Structure_RotateTurret(ScriptEngine script) {
         Structure s;
         Tile32 lookAt;
         Tile tile;
@@ -442,7 +436,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return The direction (value between 0 and 7, shifted to the left with 5).
      */
-    int Script_Structure_GetDirection(ScriptEngine script) {
+    public static int Script_Structure_GetDirection(ScriptEngine script) {
         Structure s;
         Tile32 tile;
         int encoded;
@@ -465,7 +459,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_Unknown11B9(ScriptEngine script) {
+    public static int Script_Structure_Unknown11B9(ScriptEngine script) {
         int encoded;
         Unit u;
 
@@ -491,7 +485,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_VoicePlay(ScriptEngine script) {
+    public static int Script_Structure_VoicePlay(ScriptEngine script) {
         Structure s;
 
         s = g_scriptCurrentStructure;
@@ -512,7 +506,7 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return The time between this and the next time firing.
      */
-    int Script_Structure_Fire(ScriptEngine script) {
+    public static int Script_Structure_Fire(ScriptEngine script) {
         Structure s;
         Unit u;
         Tile32 position = new Tile32();
@@ -555,13 +549,11 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return unknown.
      */
-    int Script_Structure_Explode(ScriptEngine script) {
+    public static int Script_Structure_Explode(ScriptEngine script) {
         Structure s;
         int position;
         int layout;
         int i;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
         layout = g_table_structureInfo[s.o.type].layout;
@@ -586,13 +578,11 @@ public class ScriptStructureService {
      * @param script The script engine to operate on.
      * @return Always 0.
      */
-    int Script_Structure_Destroy(ScriptEngine script) {
+    public static int Script_Structure_Destroy(ScriptEngine script) {
         Structure s;
         int position;
         int layout;
         int i;
-
-        VARIABLE_NOT_USED(script);
 
         s = g_scriptCurrentStructure;
         layout = g_table_structureInfo[s.o.type].layout;

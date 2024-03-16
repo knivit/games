@@ -11,25 +11,32 @@ import com.tsoft.dune2.unit.Unit;
 
 import java.util.Arrays;
 
+import static com.tsoft.dune2.animation.AnimationService.Animation_Tick;
 import static com.tsoft.dune2.config.ConfigService.g_gameConfig;
+import static com.tsoft.dune2.explosion.ExplosionService.Explosion_Tick;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.FactoryResult.FACTORY_RESUME;
 import static com.tsoft.dune2.gui.Gui.*;
 import static com.tsoft.dune2.gui.SelectionType.*;
+import static com.tsoft.dune2.gui.ViewportService.GUI_Widget_Viewport_Draw;
 import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseType.*;
 import static com.tsoft.dune2.input.MouseService.*;
-import static com.tsoft.dune2.map.MapService.Map_Update;
+import static com.tsoft.dune2.map.MapService.*;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_selectionType;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_viewport_forceRedraw;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
+import static com.tsoft.dune2.sprites.SpritesService.g_mouseSpriteBuffer;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.structure.StructureType.*;
 import static com.tsoft.dune2.tile.TileService.Tile_GetPackedX;
 import static com.tsoft.dune2.tile.TileService.Tile_GetPackedY;
 import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
+import static com.tsoft.dune2.tools.ToolsService.BitArray_Set;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.UNIT_HARVESTER;
@@ -58,17 +65,17 @@ public class GuiService {
 
     static int[] g_colours = new int[16];		/*!< Colors used for drawing chars */
     static ClippingArea g_clipping = new ClippingArea(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
-    int *g_palette_998A = null;
-    int[] g_remap = new int[256];
-    FactoryWindowItem[] g_factoryWindowItems = new FactoryWindowItem[25];
-    int g_factoryWindowOrdered = 0;
-    int g_factoryWindowBase = 0;
-    int g_factoryWindowTotal = 0;
-    int g_factoryWindowSelected = 0;
-    int g_factoryWindowUpgradeCost = 0;
+    static byte[] g_palette_998A = null;
+    static int[] g_remap = new int[256];
+    static FactoryWindowItem[] g_factoryWindowItems = new FactoryWindowItem[25];
+    static int g_factoryWindowOrdered = 0;
+    static int g_factoryWindowBase = 0;
+    static int g_factoryWindowTotal = 0;
+    static int g_factoryWindowSelected = 0;
+    static int g_factoryWindowUpgradeCost = 0;
     public static boolean g_factoryWindowConstructionYard = false;
-    int g_factoryWindowResult = FACTORY_RESUME;
-    boolean g_factoryWindowStarport = false;
+    static int g_factoryWindowResult = FACTORY_RESUME;
+    static boolean g_factoryWindowStarport = false;
     static int[] s_factoryWindowGraymapTbl = new int[256];
     static Widget[] s_factoryWindowWidgets = new Widget[13];
     static int[] s_factoryWindowWsaBuffer = new int[64000];
@@ -77,11 +84,11 @@ public class GuiService {
     static long s_arrowAnimationTimeout = 0;                  /*!< Timeout value for the next palette change in the animation of the arrows. */
     static int s_arrowAnimationState = 0;                    /*!< State of the arrow animation. @see _arrowAnimationTimeout */
     static int[][] s_temporaryColourBorderSchema = new int[5][4];          /*!< Temporary storage for the #s_colourBorderSchema. */
-    int g_productionStringID;                                /*!< Descriptive text of activity of the active structure. */
+    static int g_productionStringID;                                /*!< Descriptive text of activity of the active structure. */
     public static boolean g_textDisplayNeedsUpdate;                              /*!< If set, text display needs to be updated. */
-    long g_strategicRegionBits;                               /*!< Region bits at the map. */
+    static long g_strategicRegionBits;                               /*!< Region bits at the map. */
     static long s_ticksPlayed;
-    boolean g_doQuitHOF;
+    static boolean g_doQuitHOF;
     static int[] s_strategicMapArrowColors = new int[24];
     static boolean s_strategicMapFastForward;
 
@@ -90,19 +97,19 @@ public class GuiService {
     static int s_mouseSpriteWidth;
     static int s_mouseSpriteHeight;
 
-    int g_mouseSpriteHotspotX;
-    int g_mouseSpriteHotspotY;
-    int g_mouseWidth;
-    int g_mouseHeight;
+    static int g_mouseSpriteHotspotX;
+    static int g_mouseSpriteHotspotY;
+    static int g_mouseWidth;
+    static int g_mouseHeight;
 
-    int g_cursorSpriteID;
-    int g_cursorDefaultSpriteID;
+    static int g_cursorSpriteID;
+    static int g_cursorDefaultSpriteID;
 
-    boolean g_structureHighHealth;                          /*!< If false, the repair button will flash. */
-    boolean g_var_37B8;
+    static boolean g_structureHighHealth;                          /*!< If false, the repair button will flash. */
+    static boolean g_var_37B8;
 
-    int g_viewportMessageCounter;                           /*!< Countdown counter for displaying #g_viewportMessageText, bit 0 means 'display the text'. */
-    char *g_viewportMessageText;                            /*!< If not \c null, message text displayed in the viewport. */
+    public static int g_viewportMessageCounter;                           /*!< Countdown counter for displaying #g_viewportMessageText, bit 0 means 'display the text'. */
+    static byte[] g_viewportMessageText;                            /*!< If not \c null, message text displayed in the viewport. */
 
     public static int g_viewportPosition;                   /*!< Top-left tile of the viewport. */
     public static int g_minimapPosition;                    /*!< Top-left tile of the border in the minimap. */
@@ -138,7 +145,7 @@ public class GuiService {
      * @param bottom The bottom position of the rectangle.
      * @param colour The colour of the rectangle.
      */
-    public static void GUI_DrawWiredRectangle(int left, int top, int right, int bottom, int colour) {
+    public static void GUI_DrawWiredRectangle(int left, int top, int right, int bottom, byte colour) {
         GUI_DrawLine(left, top, right, top, colour);
         GUI_DrawLine(left, bottom, right, bottom, colour);
         GUI_DrawLine(left, top, left, bottom, colour);
@@ -3771,7 +3778,7 @@ public class GuiService {
      * Show the mouse on the screen. Copy the screen behind the mouse in a safe
      *  buffer.
      */
-    void GUI_Mouse_Show() {
+    public static void GUI_Mouse_Show() {
         int left, top;
 
         if (g_mouseDisabled == 1) return;
@@ -3800,7 +3807,7 @@ public class GuiService {
      * Hide the mouse from the screen. Do this by copying the mouse buffer back to
      *  the screen.
      */
-    private static void GUI_Mouse_Hide() {
+    public static void GUI_Mouse_Hide() {
         if (g_mouseDisabled == 1) return;
 
         if (g_mouseHiddenDepth == 0 && s_mouseSpriteWidth != 0) {
@@ -3832,7 +3839,7 @@ public class GuiService {
      * The safe version of GUI_Mouse_Show(). It waits for a mouselock before doing
      *  anything.
      */
-    void GUI_Mouse_Show_Safe() {
+    public static void GUI_Mouse_Show_Safe() {
         while (g_mouseLock != 0) sleepIdle();
         if (g_mouseDisabled == 1) return;
         g_mouseLock++;
@@ -4511,7 +4518,7 @@ public class GuiService {
      * @param palette The new palette.
      * @param ticksOfAnimation The amount of ticks it should take.
      */
-    static void GUI_SetPaletteAnimated(int *palette, int ticksOfAnimation) {
+    public static void GUI_SetPaletteAnimated(byte[] palette, int ticksOfAnimation) {
         boolean progress;
         int diffPerTick;
         int tickSlice;

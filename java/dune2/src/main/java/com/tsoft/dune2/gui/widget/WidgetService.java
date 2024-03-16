@@ -16,47 +16,47 @@ import static java.lang.Math.min;
 
 public class WidgetService {
 
-    Widget g_widgetLinkedListHead = null;
-    Widget g_widgetLinkedListTail = null;
-    Widget g_widgetInvoiceTail = null;
-    Widget g_widgetMentatFirst = null;
-    Widget g_widgetMentatTail = null;
-    Widget g_widgetMentatScrollUp = null;
-    Widget g_widgetMentatScrollDown = null;
-    Widget g_widgetMentatScrollbar = null;
+    static Widget g_widgetLinkedListHead = null;
+    static Widget g_widgetLinkedListTail = null;
+    static Widget g_widgetInvoiceTail = null;
+    public static Widget g_widgetMentatFirst = null;
+    public static Widget g_widgetMentatTail = null;
+    static Widget g_widgetMentatScrollUp = null;
+    static Widget g_widgetMentatScrollDown = null;
+    public static Widget g_widgetMentatScrollbar = null;
 
     /** Layout and other properties of the widgets. */
     public static WidgetProperties[] g_widgetProperties = new WidgetProperties[] {
         /* x   y   w    h   p4  norm sel */
-        new WidgetProperties( 0,   0, 40, 200,  15,  12,  0), /*  0 */
-        new WidgetProperties( 1,  75, 29,  70,  15,  15,  0), /*  1 */
-        new WidgetProperties( 0,  40, 30, 160,  15,  20,  0), /*  2 */
-        new WidgetProperties(32, 136,  8,  64,  15,  12,  0), /*  3 */
-        new WidgetProperties(32,  44,  8,   9,  29, 116,  0), /*  4 */
-        new WidgetProperties(32,   4,  8,   9,  29, 116,  0), /*  5 */
-        new WidgetProperties(32,  42,  8,  82,  15,  20,  0), /*  6 */
-        new WidgetProperties( 1,  21, 38,  14,  12, 116,  0), /*  7 */
-        new WidgetProperties(16,  48, 23, 112,  15, 233,  0), /*  8 */
-        new WidgetProperties( 2, 176, 36,  11,  15,  20,  0), /*  9 */
-        new WidgetProperties( 0,  40, 40, 160,  29,  20,  0), /* 10 */
-        new WidgetProperties(16,  48, 23, 112,  29,  20,  0), /* 11 */
-        new WidgetProperties( 9,  80, 22, 112,  29, 116,  0), /* 12 */
-        new WidgetProperties(12, 140, 16,  42, 236, 233,  0), /* 13 */
-        new WidgetProperties( 2,  89, 36,  60,   0,   0,  0), /* 14 */
-        new WidgetProperties( 4, 110, 32,  12, 232, 235,  0), /* 15 */
-        new WidgetProperties( 5,  48, 30, 134,   0,   0,  0), /* 16 */
-        new WidgetProperties( 3,  36, 36, 148,   0,   0,  0), /* 17 */
-        new WidgetProperties( 1,  72, 38,  52,   0,   0,  0), /* 18 */
-        new WidgetProperties( 0,   0,  0,   0,   0,   0,  0), /* 19 */
-        new WidgetProperties( 2,  24, 36, 152,  12,  12,  0), /* 20 */
-        new WidgetProperties( 1,   6, 12,   3,   0,  15,  6)  /* 21 */
+        new WidgetProperties( 0,   0, 40, 200,  (byte)15,  (byte)12,  (byte)0), /*  0 */
+        new WidgetProperties( 1,  75, 29,  70,  (byte)15,  (byte)15,  (byte)0), /*  1 */
+        new WidgetProperties( 0,  40, 30, 160,  (byte)15,  (byte)20,  (byte)0), /*  2 */
+        new WidgetProperties(32, 136,  8,  64,  (byte)15,  (byte)12,  (byte)0), /*  3 */
+        new WidgetProperties(32,  44,  8,   9,  (byte)29, (byte)116,  (byte)0), /*  4 */
+        new WidgetProperties(32,   4,  8,   9,  (byte)29, (byte)116,  (byte)0), /*  5 */
+        new WidgetProperties(32,  42,  8,  82,  (byte)15,  (byte)20,  (byte)0), /*  6 */
+        new WidgetProperties( 1,  21, 38,  14,  (byte)12, (byte)116,  (byte)0), /*  7 */
+        new WidgetProperties(16,  48, 23, 112,  (byte)15, (byte)233,  (byte)0), /*  8 */
+        new WidgetProperties( 2, 176, 36,  11,  (byte)15,  (byte)20,  (byte)0), /*  9 */
+        new WidgetProperties( 0,  40, 40, 160,  (byte)29,  (byte)20,  (byte)0), /* 10 */
+        new WidgetProperties(16,  48, 23, 112,  (byte)29,  (byte)20,  (byte)0), /* 11 */
+        new WidgetProperties( 9,  80, 22, 112,  (byte)29, (byte)116,  (byte)0), /* 12 */
+        new WidgetProperties(12, 140, 16,  42, (byte)236, (byte)233,  (byte)0), /* 13 */
+        new WidgetProperties( 2,  89, 36,  60,   (byte)0,   (byte)0,  (byte)0), /* 14 */
+        new WidgetProperties( 4, 110, 32,  12, (byte)232, (byte)235,  (byte)0), /* 15 */
+        new WidgetProperties( 5,  48, 30, 134,   (byte)0,   (byte)0,  (byte)0), /* 16 */
+        new WidgetProperties( 3,  36, 36, 148,   (byte)0,   (byte)0,  (byte)0), /* 17 */
+        new WidgetProperties( 1,  72, 38,  52,   (byte)0,   (byte)0,  (byte)0), /* 18 */
+        new WidgetProperties( 0,   0,  0,   0,   (byte)0,   (byte)0,  (byte)0), /* 19 */
+        new WidgetProperties( 2,  24, 36, 152,  (byte)12,  (byte)12,  (byte)0), /* 20 */
+        new WidgetProperties( 1,   6, 12,   3,   (byte)0,  (byte)15,  (byte)6)  /* 21 */
     };
 
     public static int g_curWidgetIndex;           /*!< Index of the currently selected widget in #g_widgetProperties. */
     public static int g_curWidgetXBase;          /*!< Horizontal base position of the currently selected widget. */
-    private static int g_curWidgetYBase;          /*!< Vertical base position of the currently selected widget. */
+    public static int g_curWidgetYBase;          /*!< Vertical base position of the currently selected widget. */
     private static int g_curWidgetWidth;          /*!< Width of the currently selected widget. */
-    private static int g_curWidgetHeight;         /*!< Height of the currently selected widget. */
+    public static int g_curWidgetHeight;         /*!< Height of the currently selected widget. */
     public static byte g_curWidgetFGColourBlink;  /*!< Blinking colour of the currently selected widget. */
     public static byte g_curWidgetFGColourNormal; /*!< Normal colour of the currently selected widget. */
 
@@ -74,7 +74,7 @@ public class WidgetService {
      * @param index The index of the widget you are looking for.
      * @return The widget, or null if not found.
      */
-    static Widget GUI_Widget_Get_ByIndex(Widget w, int index) {
+    public static Widget GUI_Widget_Get_ByIndex(Widget w, int index) {
         if (index == 0) return w;
 
         while (w != null) {
@@ -651,7 +651,7 @@ public class WidgetService {
      * @param drawProc Procedure for drawing.
      * @return Address of the new widget.
      */
-    Widget GUI_Widget_Allocate_WithScrollbar(int index, int parentID, int offsetX, int offsetY, int width, int height, ScrollbarDrawProc drawProc) {
+    public static Widget GUI_Widget_Allocate_WithScrollbar(int index, int parentID, int offsetX, int offsetY, int width, int height, ScrollbarDrawProc drawProc) {
         Widget w = new Widget();
         WidgetScrollbar ws = new WidgetScrollbar();
 
@@ -702,7 +702,7 @@ public class WidgetService {
      * Allocate a scroll button for the Mentat screen scroll bar.
      * @return Allocated widget.
      */
-    Widget GUI_Widget_AllocateScrollBtn(int index, int parentID, int offsetX, int offsetY, Object sprite1, Object sprite2, Widget widget2, boolean isDown) {
+    public static Widget GUI_Widget_AllocateScrollBtn(int index, int parentID, int offsetX, int offsetY, Object sprite1, Object sprite2, Widget widget2, boolean isDown) {
         Widget w = new Widget();
 
         w.index    = index;
@@ -787,7 +787,7 @@ public class WidgetService {
      * @param w2 Widget which is added to the first widget (at the end of his chain).
      * @return The first widget of the chain.
      */
-    Widget GUI_Widget_Link(Widget w1, Widget w2) {
+    public static Widget GUI_Widget_Link(Widget w1, Widget w2) {
         Widget first = w1;
 
         s_widgetReset = true;
@@ -807,7 +807,7 @@ public class WidgetService {
      * @param w Widget.
      * @return Scrollbar position, or \c 0xFFFF if no widget supplied.
      */
-    int GUI_Get_Scrollbar_Position(Widget w) {
+    static int GUI_Get_Scrollbar_Position(Widget w) {
         WidgetScrollbar ws;
 
         if (w == null) return 0xFFFF;
@@ -816,7 +816,7 @@ public class WidgetService {
         return ws.scrollPosition;
     }
 
-    int GUI_Widget_Scrollbar_Init(Widget w, int scrollMax, int scrollPageSize, int scrollPosition) {
+    static int GUI_Widget_Scrollbar_Init(Widget w, int scrollMax, int scrollPageSize, int scrollPosition) {
         int position;
         WidgetScrollbar scrollbar;
 
@@ -838,7 +838,7 @@ public class WidgetService {
         return position;
     }
 
-    int GUI_Widget_Scrollbar_CalculatePosition(WidgetScrollbar scrollbar) {
+    static int GUI_Widget_Scrollbar_CalculatePosition(WidgetScrollbar scrollbar) {
         Widget w;
         int position;
 
@@ -857,7 +857,7 @@ public class WidgetService {
         return position;
     }
 
-    int GUI_Widget_Scrollbar_CalculateScrollPosition(WidgetScrollbar scrollbar) {
+    static int GUI_Widget_Scrollbar_CalculateScrollPosition(WidgetScrollbar scrollbar) {
         Widget w;
 
         w = scrollbar.parent;
@@ -868,7 +868,7 @@ public class WidgetService {
         return scrollbar.scrollPosition;
     }
 
-    void GUI_Widget_Free_WithScrollbar(Widget w) {
+    static void GUI_Widget_Free_WithScrollbar(Widget w) {
         if (w == null) return;
 
         free(w.data);
@@ -881,7 +881,7 @@ public class WidgetService {
      * @param w2 Widget which is added to the first widget (ordered by index).
      * @return The first widget of the chain.
      */
-    Widget GUI_Widget_Insert(Widget w1, Widget w2) {
+    static Widget GUI_Widget_Insert(Widget w1, Widget w2) {
         Widget first;
         Widget prev;
 

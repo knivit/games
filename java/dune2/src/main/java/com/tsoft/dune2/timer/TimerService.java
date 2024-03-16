@@ -11,7 +11,7 @@ public class TimerService {
 
     public static volatile long g_timerGUI = 0;                                      /*!< Tick counter. Increases with 1 every tick when Timer 1 is enabled. Used for GUI. */
     static volatile long g_timerGame = 0;                                     /*!< Tick counter. Increases with 1 every tick when Timer 2 is enabled. Used for game timing (units, ..). */
-    static volatile long g_timerInput = 0;                                    /*!< Tick counter. Increases with 1 every tick. Used for input timing. */
+    public static volatile long g_timerInput = 0;                                    /*!< Tick counter. Increases with 1 every tick. Used for input timing. */
     static volatile long g_timerSleep = 0;                                    /*!< Tick counter. Increases with 1 every tick. Used for sleeping. */
     static volatile long g_timerTimeout = 0;                                  /*!< Tick counter. Decreases with 1 every tick when non-zero. Used to timeout. */
 
@@ -29,9 +29,7 @@ public class TimerService {
     static long s_timerSpeed = 1000000 / 120; /* Our timer runs at 120Hz */
 
     static long Timer_GetTime() {
-        timeval tv;
-        gettimeofday(&tv, null);
-        return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+        return System.currentTimeMillis();
     }
 
     /**
@@ -130,7 +128,7 @@ public class TimerService {
      * Resume the timer interrupt handling.
      */
     static void Timer_InterruptResume() {
-        int timerTime = s_timerSpeed / 1000;
+        long timerTime = s_timerSpeed / 1000;
         CreateTimerQueueTimer(&s_timerThread, null, Timer_InterruptWindows, null, timerTime, timerTime, WT_EXECUTEINTIMERTHREAD);
     }
 
@@ -184,10 +182,10 @@ public class TimerService {
      */
     static void Timer_Change(Supplier<Void> callback, long usec_delay) {
         int i;
-        TimerNode[] node = s_timerNodes;
+
         for (i = 0; i < s_timerNodeCount; i++) {
-            if (node[i].callback == callback) {
-                node[i].usec_delay = usec_delay;
+            if (s_timerNodes[i].callback == callback) {
+                s_timerNodes[i].usec_delay = usec_delay;
                 return;
             }
         }

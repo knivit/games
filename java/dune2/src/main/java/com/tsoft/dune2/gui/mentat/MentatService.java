@@ -5,11 +5,18 @@ import com.tsoft.dune2.gui.widget.Widget;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.GuiService.*;
+import static com.tsoft.dune2.gui.widget.WidgetClickService.GUI_Widget_Scrollbar_ArrowDown_Click;
+import static com.tsoft.dune2.gui.widget.WidgetClickService.GUI_Widget_Scrollbar_ArrowUp_Click;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.house.HouseType.HOUSE_MERCENARY;
+import static com.tsoft.dune2.input.InputFlagsEnum.INPUT_FLAG_KEY_REPEAT;
+import static com.tsoft.dune2.input.InputService.Input_Flags_SetBits;
+import static com.tsoft.dune2.input.InputService.Input_History_Clear;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
 import static com.tsoft.dune2.sprites.SpritesService.*;
 import static com.tsoft.dune2.strings.Strings.*;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
 import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
 
 public class MentatService {
@@ -46,8 +53,8 @@ public class MentatService {
     static int s_otherTop;  /*!< Top of the other object (ring of Ordos mentat, book of atreides mentat). */
     boolean g_disableOtherMovement; /*!< Disable moving of the other object. */
 
-    int g_shoulderLeft; /*!< Left of the right shoulder of the house mentats (to put them in front of the display in the background). */
-    int g_shoulderTop;  /*!< Top of the right shoulder of the house mentats (to put them in front of the display in the background). */
+    static int g_shoulderLeft; /*!< Left of the right shoulder of the house mentats (to put them in front of the display in the background). */
+    static int g_shoulderTop;  /*!< Top of the right shoulder of the house mentats (to put them in front of the display in the background). */
 
     static boolean s_selectMentatHelp = false; /*!< Selecting from the list of in-game help subjects. */
     static int *s_helpSubjects = null;
@@ -224,13 +231,12 @@ public class MentatService {
         s_helpSubjects = helpSubjects;
     }
 
-    static void GUI_Mentat_Draw(boolean force)
-    {
+    static void GUI_Mentat_Draw(boolean force) {
         static int displayedHelpSubject = 0;
 
-        Screen oldScreenID;
-        Widget *line;
-        Widget *w = g_widgetMentatTail;
+        int oldScreenID;
+        Widget line;
+        Widget w = g_widgetMentatTail;
         int *helpSubjects = s_helpSubjects;
         int i;
 
@@ -290,9 +296,8 @@ public class MentatService {
      * Shows the Help window.
      * @param proceed Display a "Proceed" button if true, "Exit" otherwise.
      */
-    static void GUI_Mentat_ShowHelpList(boolean proceed)
-    {
-        Screen oldScreenID;
+    static void GUI_Mentat_ShowHelpList(boolean proceed) {
+        int oldScreenID;
 
         oldScreenID = GFX_Screen_SetActive(SCREEN_1);
 
@@ -803,8 +808,7 @@ public class MentatService {
     }
 
     /** Create the widgets of the mentat help screen. */
-    void GUI_Mentat_Create_HelpScreen_Widgets(void)
-    {
+    static void GUI_Mentat_Create_HelpScreen_Widgets() {
         static char empty[2] = "";
         int ypos;
         Widget *w;
@@ -882,8 +886,7 @@ public class MentatService {
         GUI_Widget_Draw(g_widgetMentatFirst);
     }
 
-    static void GUI_Mentat_ShowHelp(void)
-    {
+    static void GUI_Mentat_ShowHelp() {
         struct {
         int  notused[8];
         long length;

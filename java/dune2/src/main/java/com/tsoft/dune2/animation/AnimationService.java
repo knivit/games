@@ -4,14 +4,18 @@ import com.tsoft.dune2.map.Tile;
 import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.tile.Tile32;
 
+import java.util.Arrays;
+
 import static com.tsoft.dune2.animation.AnimationCommand.*;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_ROCKET_TURRET;
+import static com.tsoft.dune2.sprites.SpritesService.g_iconMap;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structure_layoutTileCount;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structure_layoutTiles;
 import static com.tsoft.dune2.structure.StructureService.Structure_Get_ByPackedTile;
 import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
+import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
 import static com.tsoft.dune2.tools.ToolsService.Tools_Random_256;
 
 public class AnimationService {
@@ -101,8 +105,6 @@ public class AnimationService {
      * @param parameter Not used.
      */
     static void Animation_Func_Rewind(Animation animation, int parameter) {
-        VARIABLE_NOT_USED(parameter);
-
         animation.current = 0;
     }
 
@@ -113,8 +115,8 @@ public class AnimationService {
      */
     static void Animation_Func_SetGroundTile(Animation animation, int parameter) {
         int[] specialMap = new int[1];
-        int *iconMap;
-	    int *layout = g_table_structure_layoutTiles[animation.tileLayout];
+        byte[] iconMap;
+	    int[] layout = g_table_structure_layoutTiles[animation.tileLayout];
         int layoutTileCount = g_table_structure_layoutTileCount[animation.tileLayout];
         int packed = Tile_PackTile(animation.tile);
         int i;
@@ -181,19 +183,19 @@ public class AnimationService {
     }
 
     void Animation_Init() {
-        memset(g_animations, 0, ANIMATION_MAX * sizeof(Animation));
+        Arrays.fill(g_animations, null);
     }
 
     /**
      * Start an Animation.
      * @param commands List of commands for the Animation.
      * @param tile The tile to do the Animation on.
-     * @param layout The layout of tiles for the Animation.
+     * @param tileLayout The layout of tiles for the Animation.
      * @param houseID The house of the item being Animation.
      * @param iconGroup In which IconGroup the sprites of the Animation belongs.
      */
-    public static void Animation_Start(AnimationCommandStruct commands, Tile32 tile, int tileLayout, int houseID, int iconGroup) {
-        Animation animation = g_animations;
+    public static void Animation_Start(AnimationCommandStruct[] commands, Tile32 tile, int tileLayout, int houseID, int iconGroup) {
+        Animation[] animation = g_animations;
         int packed = Tile_PackTile(tile);
         Tile t;
         int i;
@@ -201,16 +203,16 @@ public class AnimationService {
         t = g_map[packed];
         Animation_Stop_ByTile(packed);
 
-        for (i = 0; i < ANIMATION_MAX; i++, animation++) {
-            if (animation.commands != null) continue;
+        for (i = 0; i < ANIMATION_MAX; i++) {
+            if (animation[i].commands != null) continue;
 
-            animation.tickNext   = g_timerGUI;
-            animation.tileLayout = tileLayout;
-            animation.houseID    = houseID;
-            animation.current    = 0;
-            animation.iconGroup  = iconGroup;
-            animation.commands   = commands;
-            animation.tile       = tile;
+            animation[i].tickNext   = g_timerGUI;
+            animation[i].tileLayout = tileLayout;
+            animation[i].houseID    = houseID;
+            animation[i].current    = 0;
+            animation[i].iconGroup  = iconGroup;
+            animation[i].commands   = commands;
+            animation[i].tile       = tile;
 
             s_animationTimer = 0;
 
@@ -225,17 +227,17 @@ public class AnimationService {
      * @param packed The tile to check for animation on.
      */
     public static void Animation_Stop_ByTile(int packed) {
-        Animation animation = g_animations;
+        Animation[] animation = g_animations;
         Tile t = g_map[packed];
         int i;
 
         if (!t.hasAnimation) return;
 
-        for (i = 0; i < ANIMATION_MAX; i++, animation++) {
-            if (animation.commands == null) continue;
-            if (Tile_PackTile(animation.tile) != packed) continue;
+        for (i = 0; i < ANIMATION_MAX; i++) {
+            if (animation[i].commands == null) continue;
+            if (Tile_PackTile(animation[i].tile) != packed) continue;
 
-            Animation_Func_Stop(animation, 0);
+            Animation_Func_Stop(animation[i], 0);
             return;
         }
     }
@@ -243,41 +245,41 @@ public class AnimationService {
     /**
      * Check all Animations if they need changing.
      */
-    void Animation_Tick() {
-        Animation animation = g_animations;
+    public static void Animation_Tick() {
+        Animation[] animation = g_animations;
         int i;
 
         if (s_animationTimer > g_timerGUI) return;
         s_animationTimer += 10000;
 
-        for (i = 0; i < ANIMATION_MAX; i++, animation++) {
-            if (animation.commands == null) continue;
+        for (i = 0; i < ANIMATION_MAX; i++) {
+            if (animation[i].commands == null) continue;
 
-            if (animation.tickNext <= g_timerGUI) {
-			    AnimationCommandStruct *commands = animation.commands + animation.current;
+            if (animation[i].tickNext <= g_timerGUI) {
+			    AnimationCommandStruct[] commands = animation[i].commands + animation[i].current;
                 int parameter = commands.parameter;
                 assert((parameter & 0x0800) == 0 || (parameter & 0xF000) != 0); /* Validate if the compiler sign-extends correctly */
 
-                animation.current++;
+                animation[i].current++;
 
                 switch (commands.command) {
                     case ANIMATION_STOP:
-                    default:                           Animation_Func_Stop(animation, parameter); break;
+                    default:                           Animation_Func_Stop(animation[i], parameter); break;
 
-                    case ANIMATION_ABORT:              Animation_Func_Abort(animation, parameter); break;
-                    case ANIMATION_SET_OVERLAY_TILE:   Animation_Func_SetOverlayTile(animation, parameter); break;
-                    case ANIMATION_PAUSE:              Animation_Func_Pause(animation, parameter); break;
-                    case ANIMATION_REWIND:             Animation_Func_Rewind(animation, parameter); break;
-                    case ANIMATION_PLAY_VOICE:         Animation_Func_PlayVoice(animation, parameter); break;
-                    case ANIMATION_SET_GROUND_TILE:    Animation_Func_SetGroundTile(animation, parameter); break;
-                    case ANIMATION_FORWARD:            Animation_Func_Forward(animation, parameter); break;
-                    case ANIMATION_SET_ICONGROUP:      Animation_Func_SetIconGroup(animation, parameter); break;
+                    case ANIMATION_ABORT:              Animation_Func_Abort(animation[i], parameter); break;
+                    case ANIMATION_SET_OVERLAY_TILE:   Animation_Func_SetOverlayTile(animation[i], parameter); break;
+                    case ANIMATION_PAUSE:              Animation_Func_Pause(animation[i], parameter); break;
+                    case ANIMATION_REWIND:             Animation_Func_Rewind(animation[i], parameter); break;
+                    case ANIMATION_PLAY_VOICE:         Animation_Func_PlayVoice(animation[i], parameter); break;
+                    case ANIMATION_SET_GROUND_TILE:    Animation_Func_SetGroundTile(animation[i], parameter); break;
+                    case ANIMATION_FORWARD:            Animation_Func_Forward(animation[i], parameter); break;
+                    case ANIMATION_SET_ICONGROUP:      Animation_Func_SetIconGroup(animation[i], parameter); break;
                 }
 
-                if (animation.commands == null) continue;
+                if (animation[i].commands == null) continue;
             }
 
-            if (animation.tickNext < s_animationTimer) s_animationTimer = animation.tickNext;
+            if (animation[i].tickNext < s_animationTimer) s_animationTimer = animation[i].tickNext;
         }
     }
 }

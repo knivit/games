@@ -1,5 +1,6 @@
 package com.tsoft.dune2.tools;
 
+import com.tsoft.dune2.gobject.GObject;
 import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.structure.StructureInfo;
 import com.tsoft.dune2.tile.Tile32;
@@ -211,7 +212,7 @@ public class ToolsService {
      * @param encoded The encoded index to get the Object of.
      * @return The Object.
      */
-    Object Tools_Index_GetObject(int encoded) {
+    public static GObject Tools_Index_GetObject(int encoded) {
         int index;
 
         switch (Tools_Index_GetType(encoded)) {

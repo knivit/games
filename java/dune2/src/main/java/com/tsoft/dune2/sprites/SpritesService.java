@@ -1,13 +1,14 @@
 package com.tsoft.dune2.sprites;
 
 import static com.tsoft.dune2.file.FileService.*;
-import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_GetSize_ByIndex;
-import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_Get_ByIndex;
+import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_2;
+import static com.tsoft.dune2.gui.GuiService.GUI_Mouse_Hide;
 import static com.tsoft.dune2.input.MouseService.g_mouseDisabled;
+import static com.tsoft.dune2.input.MouseService.g_mouseLock;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
 import static com.tsoft.dune2.os.EndianService.READ_LE_UINT32;
-import static com.tsoft.dune2.script.ScriptService.Script_LoadFromFile;
+import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.*;
 import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
 import static com.tsoft.dune2.utils.CFunc.uint8;
@@ -16,12 +17,12 @@ public class SpritesService {
     
     public static int[][] g_sprites = null;
     static int s_spritesCount = 0;
-    int *g_iconRTBL = null;
-    int *g_iconRPAL = null;
-    int *g_tilesPixels = null;
-    public static int[] g_iconMap = null;
+    public static byte[] g_iconRTBL = null;
+    public static byte[] g_iconRPAL = null;
+    public static byte[] g_tilesPixels = null;
+    public static byte[] g_iconMap = null;
 
-    int *g_fileRgnclkCPS = null;
+    static byte[] g_fileRgnclkCPS = null;
     void *g_fileRegionINI = null;
     int *g_regions = null;
 
@@ -32,7 +33,7 @@ public class SpritesService {
     public static int g_wallTileID;
 
     void *g_mouseSprite = null;
-    void *g_mouseSpriteBuffer = null;
+    public static byte[] g_mouseSpriteBuffer = null;
 
     static int s_mouseSpriteSize = 0;
     static int s_mouseSpriteBufferSize = 0;
@@ -46,7 +47,7 @@ public class SpritesService {
      * @param sprites The array where to store CSIP for each loaded sprite.
      */
     static void Sprites_Load(String filename, String altFilename, int expectedCount) {
-        int *buffer;
+        byte[] buffer;
         int count;
         int i;
         int size;
@@ -69,19 +70,19 @@ public class SpritesService {
 
         count = READ_LE_int(buffer);
         Debug("%s: %d %d\n", filename, count, expectedCount);
-        oldFormat = (4 + (uint32)count * 4) != READ_LE_UINT32(buffer + 2);
+        oldFormat = (4 + (long)count * 4) != READ_LE_UINT32(buffer + 2);
 
         s_spritesCount += count;
         g_sprites = (int **)realloc(g_sprites, s_spritesCount * sizeof(int *));
 
         for (i = 0; i < count; i++) {
-            int *dst = null;
+            byte[] dst = null;
             long offset = oldFormat ? (long)READ_LE_int(buffer + 2 + 2 * i) : READ_LE_UINT32(buffer + 2 + 4 * i);
 
             if (offset == 0) {
                 Warning("Sprites %-12s %3d : Load Error\n", filename, i);
             } else {
-			    int *src = buffer + offset;
+			    byte *src = buffer + offset;
                 if (!oldFormat) src += 2;
                 Debug("Sprites %-12s %3d : 0x%04x %2dx%2d %2d %5d %5d\n", filename, i,
                     READ_LE_int(src)/*Flags*/, READ_LE_int(src+3)/*Width*/, src[2], /* height */
@@ -281,7 +282,7 @@ public class SpritesService {
         int index;
         int size;
         byte[] buffer;
-        int *buffer2;
+        byte[] buffer2;
         int paletteSize;
 
         buffer = GFX_Screen_Get_ByIndex(screenID);
@@ -289,7 +290,7 @@ public class SpritesService {
         index = File_Open(filename, FILE_MODE_READ);
         if (index == FILE_INVALID) {
             Warning("Failed to open %s\n", filename);
-            return 0;
+            return null;
         }
 
         size = File_Read_LE16(index);
@@ -330,11 +331,11 @@ public class SpritesService {
      * @param palette Where to store the palette, if any.
      * @return The size of the loaded image.
      */
-    static int Sprites_LoadImage(String filename, int screenID, int *palette) {
-        return Sprites_LoadCPSFile(filename, screenID, palette) / 8000;
+    static int Sprites_LoadImage(String filename, int screenID, byte[] palette) {
+        return Sprites_LoadCPSFile(filename, screenID, palette).length / 8000;
     }
 
-    public static void Sprites_SetMouseSprite(int hotSpotX, int hotSpotY, int *sprite) {
+    public static void Sprites_SetMouseSprite(int hotSpotX, int hotSpotY, byte[] sprite) {
         int size;
 
         if (sprite == null || g_mouseDisabled != 0) return;

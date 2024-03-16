@@ -7,6 +7,7 @@ import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_validateStrictIfZero;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
 import static com.tsoft.dune2.script.ScriptService.Script_Reset;
+import static com.tsoft.dune2.script.ScriptService.g_scriptStructure;
 import static com.tsoft.dune2.structure.StructureType.*;
 
 public class PoolStructureService {
@@ -88,7 +89,7 @@ public class PoolStructureService {
     /**
      * Initialize the Structure array.
      */
-    void Structure_Init()  {
+    static void Structure_Init()  {
         g_structureArray = new Structure[STRUCTURE_INDEX_MAX_HARD];
         g_structureFindArray = new Structure[STRUCTURE_INDEX_MAX_SOFT];
         g_structureFindCount = 0;
@@ -98,7 +99,7 @@ public class PoolStructureService {
      * Recount all Structures, ignoring the cache array. Also set the structureCount
      *  of all houses to zero.
      */
-    void Structure_Recount() {
+    static void Structure_Recount() {
         int index;
         PoolFindStruct find = new PoolFindStruct( -1, -1, -1);
         House h = House_Find(find);
@@ -178,7 +179,7 @@ public class PoolStructureService {
      *
      * @param s The address of the Structure to free.
      */
-    void Structure_Free(Structure s) {
+    public static void Structure_Free(Structure s) {
         int i;
 
         s.o.flags.reset();

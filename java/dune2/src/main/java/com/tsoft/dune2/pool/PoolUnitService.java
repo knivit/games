@@ -8,6 +8,7 @@ import static com.tsoft.dune2.opendune.OpenDuneService.g_validateStrictIfZero;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.script.ScriptService.Script_Reset;
+import static com.tsoft.dune2.script.ScriptService.g_scriptUnit;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.unit.MovementType.MOVEMENT_SLITHER;
 import static com.tsoft.dune2.unit.MovementType.MOVEMENT_WINGER;
@@ -63,7 +64,7 @@ public class PoolUnitService {
     /**
      * Initialize the Unit array.
      */
-    void Unit_Init() {
+    static void Unit_Init() {
         g_unitArray = new Unit[UNIT_INDEX_MAX];
         g_unitFindArray = new Unit[UNIT_INDEX_MAX];
         g_unitFindCount = 0;
@@ -73,7 +74,7 @@ public class PoolUnitService {
      * Recount all Units, ignoring the cache array. Also set the unitCount
      *  of all houses to zero.
      */
-    void Unit_Recount() {
+    static void Unit_Recount() {
         int index;
         PoolFindStruct find = new PoolFindStruct(-1, -1, -1);
         House h = House_Find(find);
@@ -154,7 +155,7 @@ public class PoolUnitService {
     /**
      * Free a Unit.
      */
-    void Unit_Free(Unit u) {
+    static void Unit_Free(Unit u) {
         int i;
 
         u.o.flags.reset();

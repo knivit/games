@@ -45,7 +45,7 @@ public class PoolHouseService {
     /**
      * Initialize the House array.
      */
-    void House_Init() {
+    static void House_Init() {
         g_houseArray = new House[HOUSE_INDEX_MAX]
         g_houseFindArray = new House[HOUSE_INDEX_MAX];
         g_houseFindCount = 0;
@@ -57,7 +57,7 @@ public class PoolHouseService {
      * @param index The index to use.
      * @return The House allocated, or null on failure.
      */
-    House House_Allocate(int index) {
+    static House House_Allocate(int index) {
         House h;
 
         if (index >= HOUSE_INDEX_MAX) return null;
@@ -79,7 +79,7 @@ public class PoolHouseService {
     /**
      * Free a House.
      */
-    void House_Free(House h) {
+    static void House_Free(House h) {
         int i;
 
         /* Walk the array to find the House we are removing */

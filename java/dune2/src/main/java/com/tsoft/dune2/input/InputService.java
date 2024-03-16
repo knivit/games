@@ -2,19 +2,24 @@ package com.tsoft.dune2.input;
 
 import com.tsoft.dune2.opendune.XYPosition;
 
+import static com.tsoft.dune2.file.FileService.File_Read;
+import static com.tsoft.dune2.file.FileService.File_Write;
 import static com.tsoft.dune2.gfx.GfxService.SCREEN_HEIGHT;
 import static com.tsoft.dune2.gfx.GfxService.SCREEN_WIDTH;
+import static com.tsoft.dune2.gui.GuiService.GUI_Mouse_Hide;
+import static com.tsoft.dune2.gui.GuiService.GUI_Mouse_Show;
 import static com.tsoft.dune2.input.InputFlagsEnum.*;
 import static com.tsoft.dune2.input.InputMouseMode.*;
 import static com.tsoft.dune2.input.MouseService.*;
+import static com.tsoft.dune2.timer.TimerService.g_timerInput;
 
 public class InputService {
 
-    static int s_history[128];                /*!< History of input commands. */
-    static int s_historyHead = 0;             /*!< The current head inside the #s_history array. */
-    static int s_historyTail = 0;             /*!< The current tail inside the #s_history array. */
-    static boolean s_input_extendedKey = false;   /*!< If we are currently actively reading an extended key. */
-    static int  s_activeInputMap[16];          /*!< A 96 bit array, where each active bit means that the Nth key is pressed. */
+    static int[] s_history = new int[128];                /*!< History of input commands. */
+    static int s_historyHead = 0;                         /*!< The current head inside the #s_history array. */
+    static int s_historyTail = 0;                         /*!< The current tail inside the #s_history array. */
+    static boolean s_input_extendedKey = false;           /*!< If we are currently actively reading an extended key. */
+    static int[]  s_activeInputMap = new int [16];        /*!< A 96 bit array, where each active bit means that the Nth key is pressed. */
 
     /* Dune II key codes :
      * 0x00        : invalid
@@ -137,7 +142,7 @@ public class InputService {
         'b', 'g', 'c', 'h', 127, 127,  127, 'z', '{'                                      /* 0x50 - 0x58 */
     };
 
-    void Input_Init() {
+    static void Input_Init() {
         int i;
 
         for (i = 0; i < s_activeInputMap.length; i++) s_activeInputMap[i] = 0;
@@ -163,7 +168,7 @@ public class InputService {
     }
 
     /* Receive the keyboard scancodes from the AT keyboard */
-    void Input_EventHandler(int key) {
+    static void Input_EventHandler(int key) {
         int state;
         int i;
 
@@ -217,7 +222,7 @@ public class InputService {
      * @param bits The bits to clear.
      * @return The new value of input flags.
      */
-    int Input_Flags_ClearBits(int bits) {
+    static int Input_Flags_ClearBits(int bits) {
         g_inputFlags &= ~bits;
         return g_inputFlags;
     }
@@ -228,7 +233,7 @@ public class InputService {
      * @param bits The bits to set.
      * @return The new value of input flags.
      */
-    int Input_Flags_SetBits(int bits) {
+    static int Input_Flags_SetBits(int bits) {
         g_inputFlags |= bits;
 
         if ((g_inputFlags & INPUT_FLAG_KEY_RELEASE) != 0) {
@@ -240,7 +245,7 @@ public class InputService {
     }
 
     /** Clear the history buffer. */
-    void Input_History_Clear() {
+    static void Input_History_Clear() {
         s_historyTail = s_historyHead;
     }
 
@@ -250,8 +255,7 @@ public class InputService {
      * @return Read input.
      * @note Provided \a index gets updated and written to #historyHead
      */
-    static int Input_ReadHistory(int index)
-    {
+    static int Input_ReadHistory(int index) {
         int value;
 
         if (g_mouseMode != INPUT_MOUSE_MODE_PLAY) g_mouseInputValue = s_history[index / 2];
@@ -378,17 +382,17 @@ public class InputService {
      *   0x04 ALT
      *   0x08 KEYUP / RELEASE
      */
-    void Input_HandleInput(int input) {
+    public static void Input_HandleInput(int input) {
         int oldTail;
         int saveSize = 0;
 
         int index;
         int value;
-        int  bit_value;
+        int bit_value;
 
         int inputMouseX;
         int inputMouseY;
-        int tempBuffer[4];
+        int[] tempBuffer = new int[4];
         int flags; /* Mask for allowed input types. See InputFlagsEnum. */
 
         flags       = g_inputFlags;
@@ -542,8 +546,7 @@ public class InputService {
      * Is input available?
      * @return \c 0 if no input, else a value.
      */
-    int Input_IsInputAvailable(void)
-    {
+    public static int Input_IsInputAvailable() {
         int value;
 
         value = s_historyHead ^ s_historyTail;
@@ -555,8 +558,7 @@ public class InputService {
      * Wait for input, and return the read event.
      * @return New input.
      */
-    int Input_Wait(void)
-    {
+    static int Input_Wait() {
         int value = 0;
 
         for (;; sleepIdle()) {
@@ -577,8 +579,7 @@ public class InputService {
      * @param value Input value.
      * @return \c 0 means not available.
      */
-    int Input_Test(int value)
-    {
+    public static int Input_Test(int value) {
         Input_AddHistory(value);
         value = Input_Keyboard_Translate(value);
 
@@ -592,8 +593,7 @@ public class InputService {
      * @todo Most users seem to ignore the returned high byte, perhaps make it a
      *      int at some time in the future?
      */
-    int Input_Keyboard_HandleKeys(int value)
-    {
+    static int Input_Keyboard_HandleKeys(int value) {
         int keyFlags;
 
         keyFlags = value & 0xFF00;
@@ -662,8 +662,7 @@ public class InputService {
      * Wait for valid input.
      * @return Read input. (ASCII VALUE or > 0x80)
      */
-    int Input_WaitForValidInput(void)
-    {
+    static int Input_WaitForValidInput() {
         int index = 0;
         int value, i;
 
@@ -676,10 +675,10 @@ public class InputService {
             }
 
             value = Input_ReadHistory(index);
-            for (i = 0; i < lengthof(s_keymapIgnore); i++) {
+            for (i = 0; i < s_keymapIgnore.length; i++) {
                 if ((value & 0xFF) == s_keymapIgnore[i]) break;
             }
-        } while (i < lengthof(s_keymapIgnore) || (value & 0x800) != 0 || (value & 0xFF) >= 0x7A);
+        } while (i < s_keymapIgnore.length || (value & 0x800) != 0 || (value & 0xFF) >= 0x7A);
 
         value = Input_Keyboard_HandleKeys(value);
         Input_ReadInputFromFile();
@@ -690,8 +689,7 @@ public class InputService {
      * Get the next key.
      * @return Next key.
      */
-    int Input_Keyboard_NextKey(void)
-    {
+    static int Input_Keyboard_NextKey() {
         int i;
         int value;
 
@@ -709,11 +707,11 @@ public class InputService {
             value = s_history[index / 2];
             if (g_mouseMode == INPUT_MOUSE_MODE_PLAY && value == 0) break;
 
-            for (i = 0; i < lengthof(s_keymapIgnore); i++) {
+            for (i = 0; i < s_keymapIgnore.length; i++) {
                 if (s_keymapIgnore[i] == (value & 0xFF)) break;
             }
 
-            if (i == lengthof(s_keymapIgnore) && (value & 0x800) == 0 && (value & 0xFF) < 0x7A) break;
+            if (i == s_keymapIgnore.length && (value & 0x800) == 0 && (value & 0xFF) < 0x7A) break;
 
             if ((value & 0xFF) >= 0x41 && (value & 0xFF) <= 0x44) index += 4;
 

@@ -3,14 +3,29 @@ package com.tsoft.dune2.explosion;
 import com.tsoft.dune2.map.Tile;
 import com.tsoft.dune2.tile.Tile32;
 
+import java.util.Arrays;
+
+import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
 import static com.tsoft.dune2.explosion.ExplosionCommand.*;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_MAX;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_SPICE_BLOOM_TREMOR;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.map.LandscapeType.*;
 import static com.tsoft.dune2.map.MapService.*;
+import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.structure.StructureService.Structure_Get_ByPackedTile;
+import static com.tsoft.dune2.table.TableAnimation.g_table_animation_map;
+import static com.tsoft.dune2.table.TableExplosion.g_table_explosion;
+import static com.tsoft.dune2.table.TableLandscapeInfo.g_table_landscapeInfo;
 import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
+import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
+import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
+import static com.tsoft.dune2.tools.ToolsService.Tools_Random_256;
 
 public class ExplosionService {
+
+    static Explosion[] g_explosions = new Explosion[EXPLOSION_MAX];     /*!< Explosions. */
+    static long s_explosionTimer = 0;                                   /*!< Timeout value for next explosion activity. */
 
     /**
      * Update the tile a Explosion is on.
@@ -40,9 +55,7 @@ public class ExplosionService {
         Tile t;
         int iconMapIndex;
         int overlayTileID;
-	    int *iconMap;
-
-        VARIABLE_NOT_USED(parameter);
+	    byte[] iconMap;
 
         packed = Tile_PackTile(e.position);
 
@@ -126,8 +139,6 @@ public class ExplosionService {
     static void Explosion_Func_BloomExplosion(Explosion e, int parameter) {
         int packed;
 
-        VARIABLE_NOT_USED(parameter);
-
         packed = Tile_PackTile(e.position);
 
         if (g_map[packed].groundTileID != g_bloomTileID) return;
@@ -169,8 +180,6 @@ public class ExplosionService {
      * @param parameter Unused parameter.
      */
     static void Explosion_Func_Stop(Explosion e, int parameter) {
-        VARIABLE_NOT_USED(parameter);
-
         g_map[Tile_PackTile(e.position)].hasExplosion = false;
 
         Explosion_Update(0, e);
@@ -231,7 +240,7 @@ public class ExplosionService {
     }
 
     static void Explosion_Init() {
-        memset(g_explosions, 0, EXPLOSION_MAX * sizeof(Explosion));
+        Arrays.fill(g_explosions, null);
     }
 
     /**
@@ -274,7 +283,7 @@ public class ExplosionService {
     /**
      * Timer tick for explosions.
      */
-    static void Explosion_Tick() {
+    public static void Explosion_Tick() {
         int i;
 
         if (s_explosionTimer > g_timerGUI) return;

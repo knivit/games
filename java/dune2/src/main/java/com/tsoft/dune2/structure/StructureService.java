@@ -1252,7 +1252,7 @@ public class StructureService {
      * @param checkForSpice Spot should be as close to spice as possible.
      * @return Position of the free spot, or \c 0 if no free spot available.
      */
-    int Structure_FindFreePosition(Structure s, boolean checkForSpice) {
+    public static int Structure_FindFreePosition(Structure s, boolean checkForSpice) {
 	    StructureInfo si;
         int packed;
         int spicePacked;  /* Position of the spice, or 0 if not used or if no spice. */

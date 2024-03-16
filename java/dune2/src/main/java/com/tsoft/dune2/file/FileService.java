@@ -1,10 +1,9 @@
 package com.tsoft.dune2.file;
 
 import static com.tsoft.dune2.file.ConvertCase.*;
-import static com.tsoft.dune2.file.SearchDirectory.SEARCHDIR_PERSONAL_DATA_DIR;
+import static com.tsoft.dune2.file.SearchDirectory.*;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
-import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
-import static com.tsoft.dune2.utils.CFunc.strrchr;
+import static com.tsoft.dune2.utils.CFunc.*;
 import static java.lang.Math.min;
 
 public class FileService {
@@ -15,7 +14,6 @@ public class FileService {
 
     public static final int FILE_MAX = 8;
     public static final int FILE_INVALID = 0xFF;
-
 
     static String g_dune_data_dir = DUNE_DATA_DIR;
     static String g_personal_data_dir = ".";
@@ -36,16 +34,16 @@ public class FileService {
      */
     public static long fread_le_long(CFile stream) {
         byte[] buffer = stream.fread(4);
-	    return READ_LE_long(buffer);
+	    return READ_LE_long(buffer, 0);
     }
 
     /**
      * Read a int value from a little endian file.
      */
-    public static boolean fread_le_int(CFile stream) {
+    public static int fread_le_int(CFile stream) {
         byte[] buffer = stream.fread(2);
         if (buffer.length != 2) throw new IllegalStateException();
-	    return READ_LE_int(buffer);
+	    return READ_LE_int(buffer, 0);
     }
 
     /**
@@ -68,7 +66,7 @@ public class FileService {
         return true;
     }
 
-    static void File_MakeCompleteFilename(char *buf, size_t len, int dir, String filename, int convert) {
+    static void File_MakeCompleteFilename(byte[] buf, size_t len, int dir, String filename, int convert) {
         int j;
         int i = 0;
 
@@ -559,9 +557,9 @@ public class FileService {
      * @param index The index given by File_Open() of the file.
      * @return The integer read.
      */
-    static long File_Read_LE32(int index) {
+    public static long File_Read_LE32(int index) {
         byte[] buffer = File_Read(index, 4);
-        return READ_LE_long(buffer);
+        return READ_LE_long(buffer, 0);
     }
 
     /**
@@ -572,7 +570,7 @@ public class FileService {
      * @param length The amount of bytes to write.
      * @return The amount of bytes truly written, or 0 if there was a failure.
      */
-    static long File_Write(int index, void *buffer, long length) {
+    public static long File_Write(int index, byte[] buffer, long length) {
         if (index >= FILE_MAX) return 0;
         if (s_file[index].fp == null) return 0;
 
@@ -595,8 +593,8 @@ public class FileService {
      * @param value The 16bit unsigned integer
      * @return true if the operation succeeded
      */
-    static boolean File_Write_LE16(int index, int value) {
-        int[] buffer = new int[2];
+    public static boolean File_Write_LE16(int index, int value) {
+        byte[] buffer = new byte[2];
         WRITE_LE_int(buffer, value);
         return (File_Write(index, buffer, 2) == 2);
     }
@@ -638,7 +636,7 @@ public class FileService {
      * @param index The index given by File_Open() of the file.
      * @return The size of the file.
      */
-    static long File_GetSize(int index) {
+    public static long File_GetSize(int index) {
         if (index >= FILE_MAX) return 0;
         if (s_file[index].fp == null) return 0;
 
@@ -650,7 +648,7 @@ public class FileService {
      *
      * @param filename The filename to remove.
      */
-    static void File_Delete_Personal(String filename) {
+    public static void File_Delete_Personal(String filename) {
         char[] filenameComplete = new char[1024];
 
         File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), SEARCHDIR_PERSONAL_DATA_DIR, filename, CONVERT_TO_LOWERCASE);
@@ -667,7 +665,7 @@ public class FileService {
      *
      * @param filename The filename to create.
      */
-    static void File_Create_Personal(String filename) {
+    public static void File_Create_Personal(String filename) {
         int index;
 
         index = _File_Open(SEARCHDIR_PERSONAL_DATA_DIR, filename, FILE_MODE_WRITE);
@@ -701,7 +699,7 @@ public class FileService {
     public static byte[] File_ReadWholeFile(String filename) {
         int index;
         long length;
-        void *buffer;
+        byte[] buffer;
 
         index = File_Open(filename, FILE_MODE_READ);
         if (index == FILE_INVALID) return null;
@@ -733,10 +731,10 @@ public class FileService {
      * @param mallocFlags The type of memory to allocate.
      * @return The pointer to allocated memory where the file has been read.
      */
-    public static int *File_ReadWholeFileLE16(String filename) {
+    public static byte[] File_ReadWholeFileLE16(String filename) {
         int index;
         long count;
-        int *buffer;
+        byte[] buffer;
 
         index = File_Open(filename, FILE_MODE_READ);
         count = File_GetSize(index) / sizeof(int);
@@ -765,10 +763,10 @@ public class FileService {
 
         index = File_Open(filename, FILE_MODE_READ);
         length = File_GetSize(index);
-        File_Read(index, buf, length);
+        byte[] buf = File_Read(index, length);
         File_Close(index);
 
-        return length;
+        return buf;
     }
 
     /**
@@ -855,7 +853,7 @@ public class FileService {
      * @param length The amount of bytes to read.
      * @return The amount of bytes truly read, or 0 if there was a failure.
      */
-    public static long ChunkFile_Read(int index, long chunk, void *buffer, long buflen) {
+    public static long ChunkFile_Read(int index, long chunk, byte[] buffer, long buflen) {
         long value = 0;
         long length = 0;
         boolean first = true;

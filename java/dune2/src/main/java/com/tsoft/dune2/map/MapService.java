@@ -29,6 +29,7 @@ import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
 import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_FOG_OF_WAR;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_LANDSCAPE;
 import static com.tsoft.dune2.sprites.SpritesService.*;
@@ -51,7 +52,7 @@ public class MapService {
     public static int[] g_mapTileID = new int[64 * 64];
     public static Tile[] g_map = new Tile[64 * 64];                                        /*!< All map data. */
 
-    static int[][] g_functions= new int[][] {
+    public static int[][] g_functions= new int[][] {
         new int[] {0, 1, 0},
         new int[] {2, 3, 0},
         new int[] {0, 1, 0}
@@ -248,7 +249,7 @@ public class MapService {
      * @param packed The new position.
      * @param forceUpdate If true force the update even if the position didn't change.
      */
-    static void Map_UpdateMinimapPosition(int packed, boolean forceUpdate) {
+    public static void Map_UpdateMinimapPosition(int packed, boolean forceUpdate) {
         /* Border tiles of the viewport relative to the top-left. */
         int[] viewportBorder = new int[] {
             0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x000E,
@@ -672,7 +673,7 @@ public class MapService {
      * @param packed Center position.
      * @param houseID %House causing the explosion.
      */
-    static void Map_Bloom_ExplodeSpice(int packed, int houseID) {
+    public static void Map_Bloom_ExplodeSpice(int packed, int houseID) {
         if (g_validateStrictIfZero == 0) {
             Unit_Remove(Unit_Get_ByPackedTile(packed));
             g_map[packed].groundTileID = g_mapTileID[packed] & 0x1FF;
@@ -1026,7 +1027,7 @@ public class MapService {
      * @param unit The unit to update for (can be null if function < 2).
      * @param function The function to call.
      */
-    static void Map_UpdateAround(int radius, Tile32 position, Unit unit, int function) {
+    public static void Map_UpdateAround(int radius, Tile32 position, Unit unit, int function) {
         int[] tileOffsets = new int[] {
             0x0080, 0x0088, 0x0090, 0x0098,
             0x00A0, 0x00A8, 0x00B0, 0x00B8,

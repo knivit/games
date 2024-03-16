@@ -1,12 +1,17 @@
 package com.tsoft.dune2.input;
 
 import static com.badlogic.gdx.math.MathUtils.clamp;
+import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.gfx.GfxService.SCREEN_HEIGHT;
 import static com.tsoft.dune2.gfx.GfxService.SCREEN_WIDTH;
+import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.input.InputFlagsEnum.INPUT_FLAG_KEY_RELEASE;
-import static com.tsoft.dune2.input.InputMouseMode.INPUT_MOUSE_MODE_PLAY;
+import static com.tsoft.dune2.input.InputFlagsEnum.INPUT_FLAG_MOUSE_EMUL;
+import static com.tsoft.dune2.input.InputMouseMode.*;
+import static com.tsoft.dune2.input.InputService.*;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Seed;
 import static com.tsoft.dune2.tools.ToolsService.Tools_Random_Seed;
+import static com.tsoft.dune2.video.VideoWin32Service.Video_Mouse_SetRegion;
 import static java.lang.Math.abs;
 
 public class MouseService {
@@ -22,16 +27,16 @@ public class MouseService {
     public static int g_mouseClickX;        /*!< X position of last mouse click. */
     public static int g_mouseClickY;        /*!< Y position of last mouse click. */
 
-    int g_regionFlags;        /*!< Flags: 0x4000 - Mouse still inside region, 0x8000 - Region check. 0x00FF - Countdown to showing. */
-    int g_mouseRegionLeft;    /*!< Region mouse can be in - left position. */
-    int g_mouseRegionRight;   /*!< Region mouse can be in - right position. */
-    int g_mouseRegionTop;     /*!< Region mouse can be in - top position. */
-    int g_mouseRegionBottom;  /*!< Region mouse can be in - bottom position. */
+    public static int g_regionFlags;        /*!< Flags: 0x4000 - Mouse still inside region, 0x8000 - Region check. 0x00FF - Countdown to showing. */
+    public static int g_mouseRegionLeft;    /*!< Region mouse can be in - left position. */
+    public static int g_mouseRegionRight;   /*!< Region mouse can be in - right position. */
+    public static int g_mouseRegionTop;     /*!< Region mouse can be in - top position. */
+    public static int g_mouseRegionBottom;  /*!< Region mouse can be in - bottom position. */
 
-    int g_regionMinX;         /*!< Region - minimum value for X position. */
-    int g_regionMinY;         /*!< Region - minimum value for Y position. */
-    int g_regionMaxX;         /*!< Region - maximum value for X position. */
-    int g_regionMaxY;         /*!< Region - maximum value for Y position. */
+    public static int g_regionMinX;         /*!< Region - minimum value for X position. */
+    public static int g_regionMinY;         /*!< Region - minimum value for Y position. */
+    public static int g_regionMaxX;         /*!< Region - maximum value for X position. */
+    public static int g_regionMaxY;         /*!< Region - maximum value for Y position. */
 
     public static int g_mouseDisabled;       /*!< Mouse disabled flag */
     public static int g_mouseHiddenDepth;
@@ -49,7 +54,7 @@ public class MouseService {
     /**
      * Initialize the mouse driver.
      */
-    void Mouse_Init() {
+    public static void Mouse_Init() {
         g_mouseX = SCREEN_WIDTH / 2;
         g_mouseY = SCREEN_HEIGHT / 2;
         g_mouseHiddenDepth = 1;
@@ -66,7 +71,7 @@ public class MouseService {
     /**
      * Handle the new mouse event.
      */
-    void Mouse_EventHandler(int mousePosX, int mousePosY, boolean mouseButtonLeft, boolean mouseButtonRight) {
+    public static void Mouse_EventHandler(int mousePosX, int mousePosY, boolean mouseButtonLeft, boolean mouseButtonRight) {
         int newButtonState = (mouseButtonLeft ? 0x1 : 0x0) | (mouseButtonRight ? 0x2 : 0x0);
 
         if (g_mouseDisabled == 0) {
@@ -89,7 +94,7 @@ public class MouseService {
      * @param right The right side of the region.
      * @param bottom The bottom side of the region.
      */
-    void Mouse_SetRegion(int left, int top, int right, int bottom) {
+    static void Mouse_SetRegion(int left, int top, int right, int bottom) {
         if (left > right) {
             int temp = left;
             left = right;
@@ -122,7 +127,7 @@ public class MouseService {
      * @param bottom Bottom edge.
      * @return Mouse is at the border or inside the rectangle.
      */
-    int Mouse_InsideRegion(int left, int top, int right, int bottom) {
+    static int Mouse_InsideRegion(int left, int top, int right, int bottom) {
         int mx, my;
         int inside;
 
@@ -138,7 +143,7 @@ public class MouseService {
         return inside;
     }
 
-    void Mouse_SetMouseMode(int mouseMode, STring filename) {
+    static void Mouse_SetMouseMode(int mouseMode, String filename) {
         switch (mouseMode) {
             default: break;
 
@@ -302,8 +307,8 @@ public class MouseService {
      * @param newButtonState New button state.
      */
     public static void Mouse_HandleMovementIfMoved(int newButtonState) {
-        if (abs((int)g_mouseX - (int)g_mousePrevX) >= 1 ||
-            abs((int)g_mouseY - (int)g_mousePrevY) >= 1) {
+        if (abs(g_mouseX - g_mousePrevX) >= 1 ||
+            abs(g_mouseY - g_mousePrevY) >= 1) {
             Mouse_HandleMovement(newButtonState, g_mouseX, g_mouseY);
         }
     }
