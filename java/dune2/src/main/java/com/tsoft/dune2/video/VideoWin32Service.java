@@ -3,6 +3,7 @@ package com.tsoft.dune2.video;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
 import static com.tsoft.dune2.input.MouseService.Mouse_EventHandler;
+import static org.lwjgl.system.windows.User32.SetCursorPos;
 
 public class VideoWin32Service {
 
@@ -230,11 +231,10 @@ public class VideoWin32Service {
             s_mouseButtonLeft, s_mouseButtonRight);
     }
 
-    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    {
+    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         boolean keyup = true;
 
-#ifdef VIDEO_STATS
+        //#ifdef VIDEO_STATS
         if(hwnd == s_hwnd_pal) {
             switch (uMsg) {
                 case WM_PAINT: {
@@ -257,13 +257,13 @@ public class VideoWin32Service {
                     return DefWindowProc(hwnd, uMsg, wParam, lParam);
             }
         }
-#endif /* VIDEO_STATS */
+        //#endif /* VIDEO_STATS */
 
         switch (uMsg) {
             case WM_CREATE: {
                 CREATESTRUCT *cs = (CREATESTRUCT*)lParam;
-                s_x = cs->x;
-                s_y = cs->y;
+                s_x = cs.x;
+                s_y = cs.y;
                 return 0;
             }
 
@@ -367,26 +367,26 @@ public class VideoWin32Service {
                 long width, height;
                 RECT * rect = (RECT *)lParam;
 
-                width = rect->right - rect->left - s_adjustRight + s_adjustLeft;
-                height = rect->bottom - rect->top - s_adjustBottom + s_adjustTop;
+                width = rect.right - rect.left - s_adjustRight + s_adjustLeft;
+                height = rect.bottom - rect.top - s_adjustBottom + s_adjustTop;
                 if(width * SCREEN_HEIGHT != height * SCREEN_WIDTH) {
                     /* adjust window to keep aspect ratio ! */
                     switch(wParam) {
                         case WMSZ_TOPRIGHT:
                         case WMSZ_TOPLEFT:
                         case WMSZ_LEFT:
-                            rect->top = rect->bottom + s_adjustTop - s_adjustBottom - (width * SCREEN_HEIGHT) / SCREEN_WIDTH;
+                            rect.top = rect.bottom + s_adjustTop - s_adjustBottom - (width * SCREEN_HEIGHT) / SCREEN_WIDTH;
                             break;
                         case WMSZ_BOTTOMLEFT:
                         case WMSZ_BOTTOMRIGHT:
                         case WMSZ_RIGHT:
-                            rect->bottom = rect->top - s_adjustTop + s_adjustBottom + (width * SCREEN_HEIGHT) / SCREEN_WIDTH;
+                            rect.bottom = rect.top - s_adjustTop + s_adjustBottom + (width * SCREEN_HEIGHT) / SCREEN_WIDTH;
                             break;
                         case WMSZ_TOP:
-                            rect->left = rect->right - s_adjustRight + s_adjustLeft - (height * SCREEN_WIDTH) / SCREEN_HEIGHT;
+                            rect.left = rect.right - s_adjustRight + s_adjustLeft - (height * SCREEN_WIDTH) / SCREEN_HEIGHT;
                             break;
                         case WMSZ_BOTTOM:
-                            rect->right = rect->left + s_adjustRight - s_adjustLeft + (height * SCREEN_WIDTH) / SCREEN_HEIGHT;
+                            rect.right = rect.left + s_adjustRight - s_adjustLeft + (height * SCREEN_WIDTH) / SCREEN_HEIGHT;
                             break;
                     }
                 }
@@ -521,21 +521,21 @@ public class VideoWin32Service {
         }
         bi = (BITMAPINFO*)_alloca(sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256);
         memset(bi, 0, sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256);
-        bi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         if (s_scale_filter == FILTER_NEAREST_NEIGHBOR) {
-            bi->bmiHeader.biWidth = SCREEN_WIDTH;
-            bi->bmiHeader.biHeight = -SCREEN_HEIGHT;
+            bi.bmiHeader.biWidth = SCREEN_WIDTH;
+            bi.bmiHeader.biHeight = -SCREEN_HEIGHT;
         } else {
-            bi->bmiHeader.biWidth = SCREEN_WIDTH * s_screen_magnification;
-            bi->bmiHeader.biHeight = -SCREEN_HEIGHT * s_screen_magnification;
+            bi.bmiHeader.biWidth = SCREEN_WIDTH * s_screen_magnification;
+            bi.bmiHeader.biHeight = -SCREEN_HEIGHT * s_screen_magnification;
         }
-        bi->bmiHeader.biPlanes = 1;
+        bi.bmiHeader.biPlanes = 1;
         if (s_scale_filter == FILTER_HQX) {
-            bi->bmiHeader.biBitCount = 32;
+            bi.bmiHeader.biBitCount = 32;
         } else {
-            bi->bmiHeader.biBitCount = 8;
+            bi.bmiHeader.biBitCount = 8;
         }
-        bi->bmiHeader.biCompression = BI_RGB;
+        bi.bmiHeader.biCompression = BI_RGB;
 
         dc = GetDC(null);
         s_dib = CreateDIBSection(dc, bi, DIB_RGB_COLORS, (s_scale_filter == FILTER_NEAREST_NEIGHBOR) ? &s_screen : &s_screen2, null, 0);
@@ -552,12 +552,12 @@ public class VideoWin32Service {
             SelectObject(dc2, old_bmp);
             DeleteDC(dc2);
         }
-#ifdef VIDEO_STATS
-        bi->bmiHeader.biWidth = 16;
-        bi->bmiHeader.biHeight = -16;
-        bi->bmiHeader.biPlanes = 1;
-        bi->bmiHeader.biBitCount = 8;
-        bi->bmiHeader.biCompression = BI_RGB;
+        //#ifdef VIDEO_STATS
+        bi.bmiHeader.biWidth = 16;
+        bi.bmiHeader.biHeight = -16;
+        bi.bmiHeader.biPlanes = 1;
+        bi.bmiHeader.biBitCount = 8;
+        bi.bmiHeader.biCompression = BI_RGB;
         s_pal_dib = CreateDIBSection(dc, bi, DIB_RGB_COLORS, &s_pal_screen, null, 0);
         if (s_pal_dib == null) {
             Error("CreateDIBSection failed\n");
@@ -568,13 +568,12 @@ public class VideoWin32Service {
                 data[i] = i;
             }
         }
-#endif /* VIDEO_STATS */
+        //#endif /* VIDEO_STATS */
         ReleaseDC(null, dc);
         return true;
     }
 
-    boolean Video_Init(int screen_magnification, VideoScaleFilter filter)
-    {
+    public static boolean Video_Init(int screen_magnification, VideoScaleFilter filter) {
         WNDCLASS wc;
         HINSTANCE hInstance;
 
@@ -603,10 +602,10 @@ public class VideoWin32Service {
         wc.lpszMenuName = null;
         wc.lpszClassName = s_className;
         if (!RegisterClass(&wc)) {
-        Error("RegisterClass failed\n");
-        return false;
-    }
-#ifdef VIDEO_STATS
+            Error("RegisterClass failed\n");
+            return false;
+        }
+        // #ifdef VIDEO_STATS
         wc.style = 0;
         wc.lpfnWndProc = WindowProc;
         wc.cbClsExtra = 0;
@@ -621,24 +620,17 @@ public class VideoWin32Service {
         Error("RegisterClass failed\n");
         return false;
     }
-#endif /* VIDEO_STATS */
-
+        //#endif /* VIDEO_STATS */
         if (!Video_AllocateDib()) return false;
 
         if (filter != FILTER_NEAREST_NEIGHBOR) {
-#ifdef _MSC_VER
-            /* we need aligned memory for rescale filter */
-            s_screen = _aligned_malloc(SCREEN_WIDTH * SCREEN_HEIGHT, 16);
-#else  /* _MSC_VER */
             s_screen = malloc(SCREEN_WIDTH * SCREEN_HEIGHT);
-#endif /* _MSC_VER */
         }
         s_init = true;
         return true;
     }
 
-    void Video_Uninit(void)
-    {
+    static void Video_Uninit() {
         if (!s_init) return;
 
         if (s_dib != null) {
@@ -648,12 +640,8 @@ public class VideoWin32Service {
             else s_screen2 = null;
         }
         if (s_scale_filter != FILTER_NEAREST_NEIGHBOR) {
-#ifdef _MSC_VER
-            _aligned_free(s_screen);
-#else  /* _MSC_VER */
             free(s_screen);
-#endif /* _MSC_VER */
-                s_screen = null;
+            s_screen = null;
         }
         UnregisterClass(s_className, GetModuleHandle(null));
         ShowCursor(TRUE);
@@ -697,6 +685,7 @@ public class VideoWin32Service {
                 }
             }
         }
+
         n_similar_colors = 0;
         for(i = 0; i < 256; i++) {
             if(freq[i] == 0) rgb12pal[i] = 0xffff;
@@ -772,10 +761,10 @@ public class VideoWin32Service {
             //#endif /* VIDEO_STATS */
         }
 
-        while (PeekMessage(&msg, null, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+        while (PeekMessage(msg, null, 0, 0, PM_REMOVE)) {
+            TranslateMessage(msg);
+            DispatchMessage(msg);
+        }
 
         if (GFX_Screen_IsDirty(SCREEN_0)) {
             PRECT prect = null;
@@ -786,10 +775,10 @@ public class VideoWin32Service {
             if (area != null) {
                 double factor_x = (double)s_window_width / (double)SCREEN_WIDTH;
                 double factor_y = (double)s_window_height / (double)SCREEN_HEIGHT;
-                rect.left = (long)((double)area->left * factor_x);
-                rect.top = (long)((double)area->top * factor_y);
-                rect.right = (long)((double)area->right * factor_x);
-                rect.bottom = (long)((double)area->bottom * factor_y);
+                rect.left = (long)((double)area.left * factor_x);
+                rect.top = (long)((double)area.top * factor_y);
+                rect.right = (long)((double)area.right * factor_x);
+                rect.bottom = (long)((double)area.bottom * factor_y);
                 prect = &rect;
             }
             //#ifdef VIDEO_STATS
@@ -797,7 +786,7 @@ public class VideoWin32Service {
             //#endif	/* VIDEO_STATS */
             InvalidateRect(s_hwnd, prect, true);
 
-            if(s_unchanged > 0) {
+            if (s_unchanged > 0) {
                 Debug("Video_Tick() : SCREEN_0 unchanged %d times\n", s_unchanged);
                 s_unchanged = 0;
             }
@@ -815,7 +804,7 @@ public class VideoWin32Service {
         int i;
 
         if (s_scale_filter == FILTER_HQX) {
-            uint32 value;
+            long value;
 
             for (i = from; i < from + length; i++) {
                 value = (((*p++) & 0x3F) * 0x41000) & 0xff0000;
@@ -858,7 +847,7 @@ public class VideoWin32Service {
         InvalidateRect(s_hwnd, null, TRUE);
     }
 
-    static void Video_Mouse_SetPosition(int x, int y) {
+    public static void Video_Mouse_SetPosition(int x, int y) {
         SetCursorPos(s_x + x * s_screen_magnification, s_y + y * s_screen_magnification);
     }
 
@@ -875,7 +864,7 @@ public class VideoWin32Service {
      * VGA Hardware has 4 "maps" of 64kB.
      * @param offset The address granularity is 4bytes
      */
-    static void Video_SetOffset(int offset) {
+    public static void Video_SetOffset(int offset) {
         s_screenOffset = offset;
         InvalidateRect(s_hwnd, null, true);
     }

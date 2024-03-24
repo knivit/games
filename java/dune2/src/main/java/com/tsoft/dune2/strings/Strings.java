@@ -1,6 +1,7 @@
 package com.tsoft.dune2.strings;
 
 public class Strings {
+
     public static final int STR_NULL = 0;
     public static final int STR_ATTACK = 1;
     public static final int STR_MOVE = 2;

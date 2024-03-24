@@ -21,8 +21,8 @@ public class PoolUnitService {
     public static final int UNIT_INDEX_INVALID = 0xFFFF;
 
     private static Unit[] g_unitArray;
-    private static Unit[] g_unitFindArray;
-    private static int g_unitFindCount;
+    public static Unit[] g_unitFindArray;
+    public static int g_unitFindCount;
 
     /**
      * Get a Unit from the pool with the indicated index.
@@ -155,7 +155,7 @@ public class PoolUnitService {
     /**
      * Free a Unit.
      */
-    static void Unit_Free(Unit u) {
+    public static void Unit_Free(Unit u) {
         int i;
 
         u.o.flags.reset();

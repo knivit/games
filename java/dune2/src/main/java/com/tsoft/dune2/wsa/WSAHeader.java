@@ -7,16 +7,16 @@ import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
  */
 public class WSAHeader {
 
-    public int frameCurrent;                                    /*!< Current frame displaying. */
-    public int frames;                                          /*!< Total frames in WSA. */
-    public int width;                                           /*!< Width of WSA. */
-    public int height;                                          /*!< Height of WSA. */
-    public int bufferLength;                                    /*!< Length of the buffer. */
-    public byte[] buffer;                                       /*!< The buffer. */
-    public byte[] fileContent;                                  /*!< The content of the file. */
-    public char[] filename = new char[13];                      /*!< Filename of WSA. */
-    public WSAFlags flags;                                      /*!< Flags of WSA. */
-    public int lengthHeader;									/*!< length of file header (8 or 10) */
+    public int frameCurrent;            /*!< Current frame displaying. */
+    public int frames;                  /*!< Total frames in WSA. */
+    public int width;                   /*!< Width of WSA. */
+    public int height;                  /*!< Height of WSA. */
+    public int bufferLength;            /*!< Length of the buffer. */
+    public byte[] buffer;               /*!< The buffer. */
+    public byte[] fileContent;          /*!< The content of the file. */
+    public String filename;             /*!< Filename of WSA. */
+    public WSAFlags flags;              /*!< Flags of WSA. */
+    public int lengthHeader;			/*!< length of file header (8 or 10) */
 
     public static WSAHeader from(byte[] wsa) {
         if (wsa == null) {
@@ -31,7 +31,7 @@ public class WSAHeader {
         header.bufferLength = READ_LE_int(wsa, 8);
         // ? header.fileContent = READ_LE_int(wsa, 10);
         // ? header.fileContent = READ_LE_int(wsa, 12);
-        System.arraycopy(wsa, 14, header.filename, 0, 13);
+        System.arraycopy(wsa, 14, header.filename.getBytes(), 0, 13);
         header.flags = new WSAFlags(wsa[26]);
         header.lengthHeader = READ_LE_int(wsa, 28);
         return header;

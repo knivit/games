@@ -21,6 +21,7 @@ import static com.tsoft.dune2.gfx.Screen.SCREEN_1;
 import static com.tsoft.dune2.gobject.GObjectService.Object_GetByPackedTile;
 import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.gui.SelectionType.*;
+import static com.tsoft.dune2.gui.ViewportService.GUI_Widget_Viewport_DrawTile;
 import static com.tsoft.dune2.house.HouseService.House_AreAllied;
 import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.house.HouseType.*;
@@ -28,7 +29,6 @@ import static com.tsoft.dune2.map.LandscapeType.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
 import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_FOG_OF_WAR;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_LANDSCAPE;
@@ -175,7 +175,6 @@ public class MapService {
      *
      * @param layout The layout to determine selection size from.
      * @return The previous layout.
-     * @see StructureLayout
      */
     public static int Map_SetSelectionSize(int layout) {
         int selectionLayout = 0;
@@ -278,14 +277,12 @@ public class MapService {
         cleared = false;
 
         if (minimapPreviousPosition != 0xFFFF && minimapPreviousPosition != packed) {
-		    int *m;
-
             cleared = true;
 
-            for (m = viewportBorder; *m != 0xFFFF; m++) {
+            for (int mOff = 0; viewportBorder[mOff] != 0xFFFF; mOff ++) {
                 int curPacked;
 
-                curPacked = minimapPreviousPosition + *m;
+                curPacked = minimapPreviousPosition + viewportBorder[mOff];
                 BitArray_Clear(g_displayedMinimap, curPacked);
 
                 GUI_Widget_Viewport_DrawTile(curPacked);
@@ -293,7 +290,7 @@ public class MapService {
         }
 
         if (packed != 0xFFFF && (packed != minimapPreviousPosition || forceUpdate)) {
-		    int *m;
+		    int[] m;
             int mapScale;
 		    MapInfo mapInfo;
             int left, top, right, bottom;
@@ -306,12 +303,12 @@ public class MapService {
             top    = (Tile_GetPackedY(packed) - mapInfo.minY) * (mapScale + 1) + 136;
             bottom = top + mapScale * 10 + 9;
 
-            GUI_DrawWiredRectangle(left, top, right, bottom, 15);
+            GUI_DrawWiredRectangle(left, top, right, bottom, (byte)15);
 
-            for (m = viewportBorder; *m != 0xFFFF; m++) {
+            for (int mOff = 0; viewportBorder[mOff] != 0xFFFF; mOff ++) {
                 int curPacked;
 
-                curPacked = packed + *m;
+                curPacked = packed + viewportBorder[mOff];
                 BitArray_Set(g_displayedMinimap, curPacked);
             }
         }
@@ -690,7 +687,7 @@ public class MapService {
      * @param packed Center position of the area.
      * @param radius Radius of the circle.
      */
-    static void Map_FillCircleWithSpice(int packed, int radius) {
+    public static void Map_FillCircleWithSpice(int packed, int radius) {
         int x;
         int y;
         int i;
@@ -832,7 +829,7 @@ public class MapService {
      * @param packed The tile where the bloom is on.
      * @param houseID The HouseID that is driving over the bloom.
      */
-    static void Map_Bloom_ExplodeSpecial(int packed, int houseID) {
+    public static void Map_Bloom_ExplodeSpecial(int packed, int houseID) {
         House h;
         PoolFindStruct find = new PoolFindStruct();
         int enemyHouseID;
@@ -1432,7 +1429,7 @@ public class MapService {
      * Creates the landscape using the given seed.
      * @param seed The seed.
      */
-    static void Map_CreateLandscape(long seed) {
+    public static void Map_CreateLandscape(long seed) {
         int[] around = new int[] {0, -1, 1, -16, 16, -17, 17, -15, 15, -2, 2, -32, 32, -4, 4, -64, 64, -30, 30, -34, 34};
 
         int i;
@@ -1443,7 +1440,7 @@ public class MapService {
         int[] previousRow = new int[64];
         int spriteID1;
         int spriteID2;
-        int *iconMap;
+        byte[] iconMap;
 
         Tools_Random_Seed(seed);
 

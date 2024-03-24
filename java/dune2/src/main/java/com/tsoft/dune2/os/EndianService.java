@@ -1,5 +1,7 @@
 package com.tsoft.dune2.os;
 
+import static com.tsoft.dune2.utils.CFunc.uint8;
+
 public class EndianService {
 
     public static int endian_bswap16(int x) {
@@ -42,12 +44,12 @@ public class EndianService {
         return (x);
     }
 
-    public static int READ_LE_UINT16(int p) {
-        return ((uint16)(p)[0] | ((uint16)(p)[1] << 8));
+    public static int READ_LE_UINT16(byte[] p, int off) {
+        return uint8(p[off + 0]) | ((uint8(p[off + 1]) << 8));
     }
 
-    public static long READ_LE_UINT32(long p) {
-        return ((uint32)(p)[0] | ((uint32)(p)[1] << 8) | ((uint32)(p)[2] << 16) | ((uint32)(p)[3] << 24));
+    public static long READ_LE_UINT32(byte[] p, int off) {
+        return (uint8(p[off + 0]) | ((long) uint8(p[off + 1]) << 8) | ((long) uint8(p[off + 2]) << 16) | ((long) uint8(p[off + 3) << 24));
     }
 
     public static int WRITE_LE_UINT16(int p, int value) {

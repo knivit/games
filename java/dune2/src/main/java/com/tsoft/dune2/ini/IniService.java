@@ -145,7 +145,7 @@ public class IniService {
         return atoi(buffer);
     }
 
-    void Ini_SetString(String category, String key, String value, char *source) {
+    static void Ini_SetString(String category, String key, String value, char *source) {
         char *s;
         char buffer[120];
 

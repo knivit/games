@@ -321,7 +321,7 @@ public class ViewportService {
      * @param houseID The House to recolour it with.
      * @param paletteHouse the palette to set
      */
-    static boolean GUI_Widget_Viewport_GetSprite_HousePalette(int *sprite, int houseID, int *paletteHouse) {
+    static boolean GUI_Widget_Viewport_GetSprite_HousePalette(byte[] sprite, int houseID, byte[] paletteHouse) {
         int i;
 
         if (sprite == null) return false;
@@ -333,7 +333,7 @@ public class ViewportService {
             memcpy(paletteHouse, sprite + 10, 16);
         } else {
             for (i = 0; i < 16; i++) {
-                int v = sprite[10 + i];
+                byte v = sprite[10 + i];
 
                 if (v >= 0x90 && v <= 0x98) {
                     v += houseID << 4;
@@ -431,9 +431,9 @@ public class ViewportService {
 
         while (true) {
             Unit u;
-            int *sprite;
+            byte[] sprite;
 
-            u = Unit_Find(&find);
+            u = Unit_Find(find);
 
             if (u == null) break;
 
@@ -987,7 +987,7 @@ public class ViewportService {
      *
      * @param screenID To which screen we should draw the map. Can only be SCREEN_0 or SCREEN_1. Any non-zero is forced to SCREEN_1.
      */
-    void GUI_Widget_Viewport_RedrawMap(int screenID) {
+    public static void GUI_Widget_Viewport_RedrawMap(int screenID) {
         int oldScreenID = SCREEN_1;
         int i;
 

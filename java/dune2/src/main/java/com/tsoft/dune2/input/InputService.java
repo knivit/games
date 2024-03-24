@@ -142,7 +142,7 @@ public class InputService {
         'b', 'g', 'c', 'h', 127, 127,  127, 'z', '{'                                      /* 0x50 - 0x58 */
     };
 
-    static void Input_Init() {
+    public static void Input_Init() {
         int i;
 
         for (i = 0; i < s_activeInputMap.length; i++) s_activeInputMap[i] = 0;
@@ -245,7 +245,7 @@ public class InputService {
     }
 
     /** Clear the history buffer. */
-    static void Input_History_Clear() {
+    public static void Input_History_Clear() {
         s_historyTail = s_historyHead;
     }
 

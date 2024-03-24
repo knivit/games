@@ -12,7 +12,7 @@ public class WsaService {
     /**
      * Get the amount of frames a WSA has.
      */
-    static int WSA_GetFrameCount(byte[] wsa) {
+    public static int WSA_GetFrameCount(byte[] wsa) {
         WSAHeader header = WSAHeader.from(wsa);
 
         if (header == null) return 0;
@@ -135,7 +135,7 @@ public class WsaService {
      * @param reserveDisplayFrame True if we need to reserve the display frame.
      * @return Address of loaded WSA file, or null.
      */
-    static byte[] WSA_LoadFile(String filename, byte[] wsa, long wsaSize, boolean reserveDisplayFrame) {
+    public static byte[] WSA_LoadFile(String filename, byte[] wsa, long wsaSize, boolean reserveDisplayFrame) {
         WSAFlags flags;
         WSAFileHeader fileheader = new WSAFileHeader();
         WSAHeader header;
@@ -281,7 +281,7 @@ public class WsaService {
      * Unload the WSA.
      * @param wsa The pointer to the WSA.
      */
-    static void WSA_Unload(byte[] wsa) {
+    public static void WSA_Unload(byte[] wsa) {
         WSAHeader header = WSAHeader.from(wsa);
 
         if (wsa == null) return;
@@ -360,7 +360,7 @@ public class WsaService {
      * @param screenID The screenID to draw on.
      * @return False on failure, true on success.
      */
-    boolean WSA_DisplayFrame(byte[] wsa, int frameNext, int posX, int posY, int screenID) {
+    public static boolean WSA_DisplayFrame(byte[] wsa, int frameNext, int posX, int posY, int screenID) {
         WSAHeader header = WSAHeader.from(wsa);
         byte[] dst;
 

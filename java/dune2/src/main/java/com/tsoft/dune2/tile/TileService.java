@@ -3,6 +3,7 @@ package com.tsoft.dune2.tile;
 import static com.tsoft.dune2.map.MapService.Map_IsValidPosition;
 import static com.tsoft.dune2.map.MapService.Map_UnveilTile;
 import static com.tsoft.dune2.tools.ToolsService.Tools_Random_256;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 
 public class TileService {
 
@@ -163,8 +164,6 @@ public class TileService {
 
             if (Map_IsValidPosition(packed)) return packed;
         }
-
-        return 0;
     }
 
     /**

@@ -9,11 +9,11 @@ import static com.tsoft.dune2.timer.TimerType.TIMER_GUI;
 
 public class TimerService {
 
-    public static volatile long g_timerGUI = 0;                                      /*!< Tick counter. Increases with 1 every tick when Timer 1 is enabled. Used for GUI. */
-    static volatile long g_timerGame = 0;                                     /*!< Tick counter. Increases with 1 every tick when Timer 2 is enabled. Used for game timing (units, ..). */
-    public static volatile long g_timerInput = 0;                                    /*!< Tick counter. Increases with 1 every tick. Used for input timing. */
-    static volatile long g_timerSleep = 0;                                    /*!< Tick counter. Increases with 1 every tick. Used for sleeping. */
-    static volatile long g_timerTimeout = 0;                                  /*!< Tick counter. Decreases with 1 every tick when non-zero. Used to timeout. */
+    public static volatile long g_timerGUI = 0;           /*!< Tick counter. Increases with 1 every tick when Timer 1 is enabled. Used for GUI. */
+    public static volatile long g_timerGame = 0;          /*!< Tick counter. Increases with 1 every tick when Timer 2 is enabled. Used for game timing (units, ..). */
+    public static volatile long g_timerInput = 0;         /*!< Tick counter. Increases with 1 every tick. Used for input timing. */
+    static volatile long g_timerSleep = 0;                /*!< Tick counter. Increases with 1 every tick. Used for sleeping. */
+    public static volatile long g_timerTimeout = 0;       /*!< Tick counter. Decreases with 1 every tick when non-zero. Used to timeout. */
 
     public static int s_timersActive = 0;
 
@@ -92,7 +92,7 @@ public class TimerService {
         s_timer_count++;
     }
 
-    void SleepAndProcessBackgroundTasks() {
+    static void SleepAndProcessBackgroundTasks() {
         while (s_timer_count == 0) {
             Sleep(2); /* TODO : use a semaphore */
         }
@@ -110,7 +110,7 @@ public class TimerService {
         }
     }
 
-    void CALLBACK Timer_InterruptWindows(LPVOID arg, booleanEAN TimerOrWaitFired) {
+    static void CALLBACK Timer_InterruptWindows(LPVOID arg, booleanEAN TimerOrWaitFired) {
         SuspendThread(s_timerMainThread);
         s_timer_count++;
         ResumeThread(s_timerMainThread);
@@ -135,7 +135,7 @@ public class TimerService {
     /**
      * Initialize the timer.
      */
-    static void Timer_Init() {
+    public static void Timer_Init() {
         s_timerLastTime = Timer_GetTime();
 
         DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &s_timerMainThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
@@ -160,7 +160,7 @@ public class TimerService {
      * @param callback the callback for the timer.
      * @param usec_delay The interval of the timer.
      */
-    static void Timer_Add(Supplier<Void> callback, long usec_delay, boolean callonce) {
+    public static void Timer_Add(Supplier<Void> callback, long usec_delay, boolean callonce) {
         TimerNode node;
         if (s_timerNodeCount == s_timerNodeSize) {
             s_timerNodeSize ++;
@@ -225,7 +225,7 @@ public class TimerService {
      * @param set True sets the timer on, false sets it off.
      * @return True if timer was set, false if it was not set.
      */
-    static boolean Timer_SetTimer(int timer, boolean set) {
+    public static boolean Timer_SetTimer(int timer, boolean set) {
         int t;
         boolean ret;
 
@@ -245,7 +245,7 @@ public class TimerService {
      * Sleep for an amount of ticks.
      * @param ticks The amount of ticks to sleep.
      */
-    static void Timer_Sleep(int ticks) {
+    public static void Timer_Sleep(int ticks) {
         long tick = g_timerSleep + ticks;
         while (tick >= g_timerSleep) sleepIdle();
     }

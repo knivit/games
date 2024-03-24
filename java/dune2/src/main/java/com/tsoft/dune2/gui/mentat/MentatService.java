@@ -2,22 +2,31 @@ package com.tsoft.dune2.gui.mentat;
 
 import com.tsoft.dune2.gui.widget.Widget;
 
+import static com.tsoft.dune2.file.FileService.File_ReadBlockFile;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.GuiService.*;
+import static com.tsoft.dune2.gui.font.FontService.Font_GetCharWidth;
 import static com.tsoft.dune2.gui.widget.WidgetClickService.GUI_Widget_Scrollbar_ArrowDown_Click;
 import static com.tsoft.dune2.gui.widget.WidgetClickService.GUI_Widget_Scrollbar_ArrowUp_Click;
+import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_DrawAll;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
-import static com.tsoft.dune2.house.HouseType.HOUSE_MERCENARY;
+import static com.tsoft.dune2.house.HouseType.*;
 import static com.tsoft.dune2.input.InputFlagsEnum.INPUT_FLAG_KEY_REPEAT;
-import static com.tsoft.dune2.input.InputService.Input_Flags_SetBits;
-import static com.tsoft.dune2.input.InputService.Input_History_Clear;
+import static com.tsoft.dune2.input.InputService.*;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_campaignID;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.strings.StringService.*;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
-import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
+import static com.tsoft.dune2.timer.TimerService.*;
+import static com.tsoft.dune2.timer.TimerType.TIMER_GAME;
+import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
+import static com.tsoft.dune2.wsa.WsaService.*;
+import static java.lang.Math.abs;
 
 public class MentatService {
 
@@ -43,15 +52,15 @@ public class MentatService {
     static int s_eyesRight;   /*!< Right of the changing eyes. */
     static int s_eyesBottom;  /*!< Bottom of the changing eyes. */
 
-    long g_interrogationTimer; /*!< Speaking time-out for security question. */
-    static int s_mouthLeft;   /*!< Left of the moving mouth. */
-    static int s_mouthTop;    /*!< Top of the moving mouth. */
-    static int s_mouthRight;  /*!< Right of the moving mouth. */
-    static int s_mouthBottom; /*!< Bottom of the moving mouth. */
+    static long g_interrogationTimer; /*!< Speaking time-out for security question. */
+    static int s_mouthLeft;           /*!< Left of the moving mouth. */
+    static int s_mouthTop;            /*!< Top of the moving mouth. */
+    static int s_mouthRight;          /*!< Right of the moving mouth. */
+    static int s_mouthBottom;         /*!< Bottom of the moving mouth. */
 
-    static int s_otherLeft; /*!< Left of the other object (ring of Ordos mentat, book of atreides mentat). */
-    static int s_otherTop;  /*!< Top of the other object (ring of Ordos mentat, book of atreides mentat). */
-    boolean g_disableOtherMovement; /*!< Disable moving of the other object. */
+    static int s_otherLeft;                /*!< Left of the other object (ring of Ordos mentat, book of atreides mentat). */
+    static int s_otherTop;                 /*!< Top of the other object (ring of Ordos mentat, book of atreides mentat). */
+    static boolean g_disableOtherMovement; /*!< Disable moving of the other object. */
 
     static int g_shoulderLeft; /*!< Left of the right shoulder of the house mentats (to put them in front of the display in the background). */
     static int g_shoulderTop;  /*!< Top of the right shoulder of the house mentats (to put them in front of the display in the background). */
@@ -344,10 +353,7 @@ public class MentatService {
      * Handle clicks on the Mentat widget.
      * @return True, always.
      */
-    boolean GUI_Widget_Mentat_Click(Widget *w)
-    {
-        VARIABLE_NOT_USED(w);
-
+    public static boolean GUI_Widget_Mentat_Click(Widget w) {
         g_cursorSpriteID = 0;
 
         Sprites_SetMouseSprite(0, 0, g_sprites[0]);
@@ -398,7 +404,7 @@ public class MentatService {
         Widget_SetAndPaintCurrentWidget(8);
 
         if (wsaFilename != null) {
-            void *wsa;
+            byte[] wsa;
 
             wsa = WSA_LoadFile(wsaFilename, GFX_Screen_Get_ByIndex(SCREEN_2), GFX_Screen_GetSize_ByIndex(SCREEN_2), false);
             WSA_DisplayFrame(wsa, 0, g_curWidgetXBase * 8, g_curWidgetYBase, SCREEN_1);
@@ -442,38 +448,35 @@ public class MentatService {
     /**
      * Show the briefing screen.
      */
-    void GUI_Mentat_ShowBriefing(void)
-    {
+    public static void GUI_Mentat_ShowBriefing() {
         GUI_Mentat_ShowDialog(g_playerHouseID, g_campaignID * 4 + 4, g_scenario.pictureBriefing, g_table_houseInfo[g_playerHouseID].musicBriefing);
     }
 
     /**
      * Show the win screen.
      */
-    void GUI_Mentat_ShowWin(void)
-    {
+    public static void GUI_Mentat_ShowWin() {
         GUI_Mentat_ShowDialog(g_playerHouseID, g_campaignID * 4 + 5, g_scenario.pictureWin, g_table_houseInfo[g_playerHouseID].musicWin);
     }
 
     /**
      * Show the lose screen.
      */
-    void GUI_Mentat_ShowLose(void)
-    {
+    static void GUI_Mentat_ShowLose() {
         GUI_Mentat_ShowDialog(g_playerHouseID, g_campaignID * 4 + 6, g_scenario.pictureLose, g_table_houseInfo[g_playerHouseID].musicLose);
     }
 
     /**
      * Display a mentat.
-     * @param houseFilename Filename of the house.
+     * @param wsaFilename Filename of the house.
      * @param houseID ID of the house.
      */
     static void GUI_Mentat_Display(String wsaFilename, int houseID) {
-        char textBuffer[16];
+        String textBuffer;
         int oldScreenID;
         int i;
 
-        snprintf(textBuffer, sizeof(textBuffer), "MENTAT%c.CPS", g_table_houseInfo[houseID].name[0]);
+        textBuffer = String.format("MENTAT%c.CPS", g_table_houseInfo[houseID].name.charAt(0));
         Sprites_LoadImage(textBuffer, SCREEN_1, g_palette_998A);
 
         oldScreenID = GFX_Screen_SetActive(SCREEN_1);
@@ -517,7 +520,7 @@ public class MentatService {
         Widget_SetAndPaintCurrentWidget(8);
 
         if (wsaFilename != null) {
-            void *wsa;
+            byte[] wsa;
 
             wsa = WSA_LoadFile(wsaFilename, GFX_Screen_Get_ByIndex(SCREEN_2), GFX_Screen_GetSize_ByIndex(SCREEN_2), false);
             WSA_DisplayFrame(wsa, 0, g_curWidgetXBase * 8, g_curWidgetYBase, SCREEN_1);
@@ -541,14 +544,14 @@ public class MentatService {
         static int movingMouthSprite = 0;
 
         static long movingOtherTimer = 0;
-        static int16 otherSprite = 0;
+        static int otherSprite = 0;
 
         boolean partNeedsRedraw;
         int i;
 
         if (movingOtherTimer < g_timerGUI && !g_disableOtherMovement) {
             if (movingOtherTimer != 0) {
-                int *sprite;
+                byte[] sprite;
 
                 if (s_mentatSprites[2][1 + abs(otherSprite)] == null) {
                     otherSprite = 1 - otherSprite;
@@ -777,8 +780,7 @@ public class MentatService {
      * Select a new subject, move the list of help subjects displayed, if necessary.
      * @param difference Number of subjects to jump.
      */
-    void GUI_Mentat_SelectHelpSubject(int16 difference)
-    {
+    static void GUI_Mentat_SelectHelpSubject(int difference) {
         if (difference > 0) {
             if (difference + s_topHelpList + 11 > s_numberHelpSubjects) {
                 difference = s_numberHelpSubjects - (s_topHelpList + 11);
@@ -794,7 +796,7 @@ public class MentatService {
         if (difference < 0) {
             difference = -difference;
 
-            if ((int16)s_topHelpList < difference) {
+            if ((int)s_topHelpList < difference) {
                 difference = s_topHelpList;
             }
 
@@ -811,7 +813,7 @@ public class MentatService {
     static void GUI_Mentat_Create_HelpScreen_Widgets() {
         static char empty[2] = "";
         int ypos;
-        Widget *w;
+        Widget w;
         int i;
 
         if (g_widgetMentatScrollbar != null) {
@@ -886,11 +888,12 @@ public class MentatService {
         GUI_Widget_Draw(g_widgetMentatFirst);
     }
 
-    static void GUI_Mentat_ShowHelp() {
-        struct {
-        int  notused[8];
+    private static class info {
+        int[]  notused = new int[8];
         long length;
-    } info;
+    };
+
+    static void GUI_Mentat_ShowHelp() {
         int *subject;
         int i;
         boolean noDesc;
@@ -929,7 +932,7 @@ public class MentatService {
 
         loopAnimation = (*text == '*') ? true : false;
 
-	*text++ = '\0';
+	    *text++ = '\0';
 
         if (noDesc) {
             int index;
@@ -1010,7 +1013,7 @@ public class MentatService {
         return false;
     }
 
-    void GUI_Mentat_ScrollBar_Draw(Widget w) {
+    static void GUI_Mentat_ScrollBar_Draw(Widget w) {
         GUI_Mentat_SelectHelpSubject(GUI_Get_Scrollbar_Position(w) - s_topHelpList);
         GUI_Mentat_Draw(false);
     }
@@ -1038,7 +1041,7 @@ public class MentatService {
     static int GUI_Mentat_Loop(String wsaFilename, String pictureDetails, String text, boolean loopAnimation, Widget w) {
         int oldScreenID;
         int oldWidgetID;
-        void *wsa;
+        byte[] wsa;
         int descLines;
         boolean dirty;
         boolean done;
@@ -1263,11 +1266,11 @@ public class MentatService {
         int width = 0;
 
         while (width < maxWidth && str[strPos] != '.' && str[strPos] != '!' && str[strPos] != '?' && str[strPos] != '\0' && str[strPos] != '\r') {
-            width += Font_GetCharWidth(str[strPos++]);
+            width += Font_GetCharWidth((char)str[strPos++]);
         }
 
         if (width >= maxWidth) {
-            while (str[strPos] != ' ') width -= Font_GetCharWidth(str[strPos--]);
+            while (str[strPos] != ' ') width -= Font_GetCharWidth((char)str[strPos--]);
         }
 
         height++;

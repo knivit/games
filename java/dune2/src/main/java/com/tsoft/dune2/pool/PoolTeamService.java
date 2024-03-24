@@ -61,7 +61,7 @@ public class PoolTeamService {
     /**
      * Recount all Teams, ignoring the cache array.
      */
-    static void Team_Recount() {
+    public static void Team_Recount() {
         int index;
 
         g_teamFindCount = 0;

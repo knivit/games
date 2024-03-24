@@ -16,13 +16,13 @@ import static java.lang.Math.min;
 
 public class WidgetService {
 
-    static Widget g_widgetLinkedListHead = null;
+    public static Widget g_widgetLinkedListHead = null;
     static Widget g_widgetLinkedListTail = null;
-    static Widget g_widgetInvoiceTail = null;
+    public static Widget g_widgetInvoiceTail = null;
     public static Widget g_widgetMentatFirst = null;
     public static Widget g_widgetMentatTail = null;
-    static Widget g_widgetMentatScrollUp = null;
-    static Widget g_widgetMentatScrollDown = null;
+    public static Widget g_widgetMentatScrollUp = null;
+    public static Widget g_widgetMentatScrollDown = null;
     public static Widget g_widgetMentatScrollbar = null;
 
     /** Layout and other properties of the widgets. */
@@ -53,10 +53,10 @@ public class WidgetService {
     };
 
     public static int g_curWidgetIndex;           /*!< Index of the currently selected widget in #g_widgetProperties. */
-    public static int g_curWidgetXBase;          /*!< Horizontal base position of the currently selected widget. */
-    public static int g_curWidgetYBase;          /*!< Vertical base position of the currently selected widget. */
-    private static int g_curWidgetWidth;          /*!< Width of the currently selected widget. */
-    public static int g_curWidgetHeight;         /*!< Height of the currently selected widget. */
+    public static int g_curWidgetXBase;           /*!< Horizontal base position of the currently selected widget. */
+    public static int g_curWidgetYBase;           /*!< Vertical base position of the currently selected widget. */
+    public static int g_curWidgetWidth;           /*!< Width of the currently selected widget. */
+    public static int g_curWidgetHeight;          /*!< Height of the currently selected widget. */
     public static byte g_curWidgetFGColourBlink;  /*!< Blinking colour of the currently selected widget. */
     public static byte g_curWidgetFGColourNormal; /*!< Normal colour of the currently selected widget. */
 
@@ -868,7 +868,7 @@ public class WidgetService {
         return scrollbar.scrollPosition;
     }
 
-    static void GUI_Widget_Free_WithScrollbar(Widget w) {
+    public static void GUI_Widget_Free_WithScrollbar(Widget w) {
         if (w == null) return;
 
         free(w.data);
@@ -948,7 +948,7 @@ public class WidgetService {
     /**
      * Draw the exterior of the currently selected widget.
      */
-    static void Widget_PaintCurrentWidget() {
+    public static void Widget_PaintCurrentWidget() {
         GUI_DrawFilledRectangle(g_curWidgetXBase << 3, g_curWidgetYBase, ((g_curWidgetXBase + g_curWidgetWidth) << 3) - 1, g_curWidgetYBase + g_curWidgetHeight - 1, g_curWidgetFGColourNormal);
     }
 }

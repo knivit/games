@@ -10,21 +10,31 @@ import com.tsoft.dune2.unit.UnitType;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
 import static com.tsoft.dune2.animation.AnimationService.Animation_Stop_ByTile;
+import static com.tsoft.dune2.config.ConfigService.g_config;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_DEATH_HAND;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_SABOTEUR_DEATH;
 import static com.tsoft.dune2.gobject.GObjectService.*;
 import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.map.LandscapeType.LST_SPICE;
 import static com.tsoft.dune2.map.LandscapeType.LST_THICK_SPICE;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
 import static com.tsoft.dune2.pool.PoolStructureService.*;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentUnit;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_FRENCH;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.STR_S_S_DESTROYED;
 import static com.tsoft.dune2.strings.Strings.STR_UNIT_IS_UNABLE_TO_DEPLOY_HERE;
 import static com.tsoft.dune2.structure.StructureService.Structure_Create;
 import static com.tsoft.dune2.structure.StructureService.Structure_SetState;
 import static com.tsoft.dune2.structure.StructureState.*;
 import static com.tsoft.dune2.structure.StructureType.*;
+import static com.tsoft.dune2.table.TableAnimation.g_table_animation_unitScript1;
+import static com.tsoft.dune2.table.TableAnimation.g_table_animation_unitScript2;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
+import static com.tsoft.dune2.table.TableLandscapeInfo.g_table_landscapeInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.tile.TileService.*;
@@ -86,7 +96,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The encoded index of the best target or 0 if none found.
      */
-    int Script_Unit_FindBestTarget(ScriptEngine script) {
+    static int Script_Unit_FindBestTarget(ScriptEngine script) {
         Unit u;
 
         u = g_scriptCurrentUnit;
@@ -128,11 +138,9 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return One if delivered, zero otherwise..
      */
-    int Script_Unit_TransportDeliver(ScriptEngine script) {
+    static int Script_Unit_TransportDeliver(ScriptEngine script) {
         Unit u;
         Unit u2;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -229,10 +237,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_Pickup(ScriptEngine script) {
+    static int Script_Unit_Pickup(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -361,10 +367,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_Stop(ScriptEngine script) {
+    static int Script_Unit_Stop(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -383,7 +387,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The new speed; it might differ from the value given.
      */
-    int Script_Unit_SetSpeed(ScriptEngine script) {
+    static int Script_Unit_SetSpeed(ScriptEngine script) {
         Unit u;
         int speed;
 
@@ -405,7 +409,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_SetSprite(ScriptEngine script) {
+    static int Script_Unit_SetSprite(ScriptEngine script) {
         Unit u;
 
         u = g_scriptCurrentUnit;
@@ -427,7 +431,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return 1 if arrived, 0 if still busy.
      */
-    int Script_Unit_MoveToTarget(ScriptEngine script) {
+    static int Script_Unit_MoveToTarget(ScriptEngine script) {
         Unit u;
         int delay;
         Tile32 tile;
@@ -489,11 +493,9 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_Die(ScriptEngine script) {
+    static int Script_Unit_Die(ScriptEngine script) {
 	    UnitInfo ui;
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
         ui = g_table_unitInfo[u.o.type];
@@ -531,7 +533,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_ExplosionSingle(ScriptEngine script) {
+    static int Script_Unit_ExplosionSingle(ScriptEngine script) {
         Unit u;
 
         u = g_scriptCurrentUnit;
@@ -550,7 +552,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_ExplosionMultiple(ScriptEngine script) {
+    static int Script_Unit_ExplosionMultiple(ScriptEngine script) {
         Unit u;
         int i;
 
@@ -573,11 +575,11 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 1 if the current unit fired/eat, 0 otherwise.
      */
-    int Script_Unit_Fire(ScriptEngine script) {
+    static int Script_Unit_Fire(ScriptEngine script) {
 	    UnitInfo ui;
         Unit u;
         int target;
-        UnitType typeID;
+        int typeID;
         int distance;
         boolean fireTwice;
         int damage;
@@ -607,16 +609,16 @@ public class ScriptUnitService {
         if ((int)(ui.fireDistance << 8) < (int)distance) return 0;
 
         if (u.o.type != UNIT_SANDWORM && (Tools_Index_GetType(target) != IT_UNIT || g_table_unitInfo[Tools_Index_GetUnit(target).o.type].movementType != MOVEMENT_WINGER)) {
-        int diff = 0;
-        int orientation;
+            int diff = 0;
+            int orientation;
 
-        orientation = Tile_GetDirection(u.o.position, Tools_Index_GetTile(target));
+            orientation = Tile_GetDirection(u.o.position, Tools_Index_GetTile(target));
 
-        diff = abs(u.orientation[ui.o.flags.hasTurret ? 1 : 0].current - orientation);
-        if (ui.movementType == MOVEMENT_WINGER) diff /= 8;
+            diff = abs(u.orientation[ui.o.flags.hasTurret ? 1 : 0].current - orientation);
+            if (ui.movementType == MOVEMENT_WINGER) diff /= 8;
 
-        if (diff >= 8) return 0;
-    }
+            if (diff >= 8) return 0;
+        }
 
         damage = ui.damage;
         typeID = ui.bulletType;
@@ -702,7 +704,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The current orientation of the unit (it will move to the requested over time).
      */
-    int Script_Unit_SetOrientation(ScriptEngine script) {
+    static int Script_Unit_SetOrientation(ScriptEngine script) {
         Unit u;
 
         u = g_scriptCurrentUnit;
@@ -720,15 +722,13 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return 0 if the enemy is no longer there or if we are looking at him, 1 otherwise.
      */
-    int Script_Unit_Rotate(ScriptEngine script) {
+    static int Script_Unit_Rotate(ScriptEngine script) {
 	    UnitInfo ui;
         Unit u;
         int index;
         int current;
         Tile32 tile;
         int orientation;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
         ui = g_table_unitInfo[u.o.type];
@@ -762,7 +762,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The direction to the encoded tile if valid, otherwise our current orientation.
      */
-    int Script_Unit_GetOrientation(ScriptEngine script) {
+    static int Script_Unit_GetOrientation(ScriptEngine script) {
         Unit u;
         int encoded;
 
@@ -788,7 +788,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_SetDestination(ScriptEngine script) {
+    static int Script_Unit_SetDestination(ScriptEngine script) {
         Unit u;
         int encoded;
 
@@ -825,7 +825,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The new target.
      */
-    int Script_Unit_SetTarget(ScriptEngine script) {
+    static int Script_Unit_SetTarget(ScriptEngine script) {
         Unit u;
         int target;
         Tile32 tile;
@@ -862,7 +862,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_SetAction(ScriptEngine script) {
+    static int Script_Unit_SetAction(ScriptEngine script) {
         Unit u;
         int action;
 
@@ -885,7 +885,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_SetActionDefault(ScriptEngine script) {
+    static int Script_Unit_SetActionDefault(ScriptEngine script) {
         Unit u;
 
         VARIABLE_NOT_USED(script);
@@ -906,7 +906,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_SetDestinationDirect(ScriptEngine script) {
+    static int Script_Unit_SetDestinationDirect(ScriptEngine script) {
         Unit u;
         int encoded;
 
@@ -933,7 +933,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The information you requested.
      */
-    int Script_Unit_GetInfo(ScriptEngine script) {
+    static int Script_Unit_GetInfo(ScriptEngine script) {
 	    UnitInfo ui;
         Unit u;
 
@@ -1002,7 +1002,7 @@ public class ScriptUnitService {
 
         int packed;
         int bufferFrom;
-        int *bufferTo;
+        byte[] bufferTo;
 
         data.buffer[data.routeSize] = 0xFF;
         packed = data.packed;
@@ -1166,7 +1166,7 @@ public class ScriptUnitService {
      * @param bufferSize The size of the buffer.
      * @return A struct with information about the found route.
      */
-    public static Pathfinder_Data Script_Unit_Pathfinder(int packedSrc, int packedDst, void *buffer, int bufferSize) {
+    public static Pathfinder_Data Script_Unit_Pathfinder(int packedSrc, int packedDst, int[] buffer, int bufferSize) {
         int packedCur;
         Pathfinder_Data res;
 
@@ -1278,7 +1278,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return 0 if we arrived on location, 1 otherwise.
      */
-    int Script_Unit_CalculateRoute(ScriptEngine script) {
+    static int Script_Unit_CalculateRoute(ScriptEngine script) {
         Unit u;
         int encoded;
         int packedSrc;
@@ -1345,7 +1345,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return An encoded structure index.
      */
-    int Script_Unit_MoveToStructure(ScriptEngine script) {
+    static int Script_Unit_MoveToStructure(ScriptEngine script) {
         Unit u;
         PoolFindStruct find = new PoolFindStruct();
 
@@ -1403,10 +1403,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The amount.
      */
-    int Script_Unit_GetAmount(ScriptEngine script) {
+    static int Script_Unit_GetAmount(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1423,10 +1421,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return True if the current unit is in transport.
      */
-    int Script_Unit_IsInTransport(ScriptEngine script) {
+    static int Script_Unit_IsInTransport(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1441,12 +1437,10 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 1. Always.
      */
-    int Script_Unit_StartAnimation(ScriptEngine script) {
+    static int Script_Unit_StartAnimation(ScriptEngine script) {
         Unit u;
         int animationUnitID;
         int position;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1509,11 +1503,9 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_Unknown2552(ScriptEngine script) {
+    static int Script_Unit_Unknown2552(ScriptEngine script) {
         Unit u;
         Unit u2;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
         if (u.o.script.variables[4] == 0) return 0;
@@ -1535,7 +1527,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return An encoded structure index, or 0 if none found.
      */
-    int Script_Unit_FindStructure(ScriptEngine script) {
+    static int Script_Unit_FindStructure(ScriptEngine script) {
         Unit u;
         PoolFindStruct find = new PoolFindStruct();
 
@@ -1568,14 +1560,12 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_DisplayDestroyedText(ScriptEngine script) {
+    static int Script_Unit_DisplayDestroyedText(ScriptEngine script) {
 	    UnitInfo ui;
         Unit u;
 
-        VARIABLE_NOT_USED(script);
-
         u = g_scriptCurrentUnit;
-        ui = &g_table_unitInfo[u.o.type];
+        ui = g_table_unitInfo[u.o.type];
 
         if (g_config.language == LANGUAGE_FRENCH) {
             GUI_DisplayText(String_Get_ByIndex(STR_S_S_DESTROYED), 0, String_Get_ByIndex(ui.o.stringID_abbrev), g_table_houseInfo[Unit_GetHouseID(u)].name);
@@ -1594,10 +1584,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_RemoveFog(ScriptEngine script) {
+    static int Script_Unit_RemoveFog(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
         Unit_RemoveFog(u);
@@ -1612,12 +1600,10 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return ??.
      */
-    int Script_Unit_Harvest(ScriptEngine script) {
+    static int Script_Unit_Harvest(ScriptEngine script) {
         Unit u;
         int packed;
         int type;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1653,7 +1639,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return ??.
      */
-    int Script_Unit_IsValidDestination(ScriptEngine script) {
+    static int Script_Unit_IsValidDestination(ScriptEngine script) {
         Unit u;
         Unit u2;
         int encoded;
@@ -1696,7 +1682,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return An encoded tile, or 0.
      */
-    int Script_Unit_GetRandomTile(ScriptEngine script) {
+    static int Script_Unit_GetRandomTile(ScriptEngine script) {
         Unit u;
         Tile32 tile;
 
@@ -1717,13 +1703,11 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_IdleAction(ScriptEngine script) {
+    static int Script_Unit_IdleAction(ScriptEngine script) {
         Unit u;
         int random;
         int movementType;
         int i;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1754,7 +1738,7 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 1 if and only if a structure has been found.
      */
-    int Script_Unit_GoToClosestStructure(ScriptEngine script) {
+    static int Script_Unit_GoToClosestStructure(ScriptEngine script) {
         Unit u;
         Structure s = null;
         PoolFindStruct find = new PoolFindStruct();
@@ -1801,12 +1785,10 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return 1 if and only if the transformation succeeded.
      */
-    int Script_Unit_MCVDeploy(ScriptEngine script) {
+    static int Script_Unit_MCVDeploy(ScriptEngine script) {
         Unit u;
         Structure s = null;
         int i;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1840,11 +1822,9 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return An encoded unit index, or 0.
      */
-    int Script_Unit_Sandworm_GetBestTarget(ScriptEngine script) {
+    static int Script_Unit_Sandworm_GetBestTarget(ScriptEngine script) {
         Unit u;
         Unit u2;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1862,10 +1842,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return ??.
      */
-    int Script_Unit_Unknown2BD5(ScriptEngine script) {
+    static int Script_Unit_Unknown2BD5(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
 
@@ -1902,10 +1880,8 @@ public class ScriptUnitService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Unit_Blink(ScriptEngine script) {
+    static int Script_Unit_Blink(ScriptEngine script) {
         Unit u;
-
-        VARIABLE_NOT_USED(script);
 
         u = g_scriptCurrentUnit;
         u.blinkCounter = 32;

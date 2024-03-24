@@ -15,7 +15,7 @@ import static com.tsoft.dune2.utils.CFunc.uint8;
 
 public class SpritesService {
     
-    public static int[][] g_sprites = null;
+    public static byte[][] g_sprites = null;
     static int s_spritesCount = 0;
     public static byte[] g_iconRTBL = null;
     public static byte[] g_iconRPAL = null;
@@ -23,8 +23,8 @@ public class SpritesService {
     public static byte[] g_iconMap = null;
 
     static byte[] g_fileRgnclkCPS = null;
-    void *g_fileRegionINI = null;
-    int *g_regions = null;
+    static byte[] g_fileRegionINI = null;
+    static byte[] g_regions = null;
 
     public static int g_veiledTileID;
     public static int g_bloomTileID;
@@ -331,7 +331,7 @@ public class SpritesService {
      * @param palette Where to store the palette, if any.
      * @return The size of the loaded image.
      */
-    static int Sprites_LoadImage(String filename, int screenID, byte[] palette) {
+    public static int Sprites_LoadImage(String filename, int screenID, byte[] palette) {
         return Sprites_LoadCPSFile(filename, screenID, palette).length / 8000;
     }
 
@@ -478,7 +478,7 @@ public class SpritesService {
         Sprites_Load("CREDIT11.SHP", null, 1);                    /* 524 */
     }
 
-    static void Sprites_Uninit() {
+    public static void Sprites_Uninit() {
         int i;
 
         for (i = 0; i < s_spritesCount; i++) free(g_sprites[i]);

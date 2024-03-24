@@ -9,6 +9,7 @@ import com.tsoft.dune2.team.Team;
 import com.tsoft.dune2.tile.Tile32;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
+import static com.tsoft.dune2.config.ConfigService.g_config;
 import static com.tsoft.dune2.explosion.ExplosionType.*;
 import static com.tsoft.dune2.gobject.GObjectService.*;
 import static com.tsoft.dune2.gui.GuiService.*;
@@ -24,10 +25,19 @@ import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Find;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.*;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.SpritesService.g_bloomTileID;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_ENGLISH;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_FRENCH;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.*;
+import static com.tsoft.dune2.table.TableActionInfo.g_table_actionInfo;
+import static com.tsoft.dune2.table.TableAnimation.g_table_animation_unitMove;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
+import static com.tsoft.dune2.table.TableLandscapeInfo.g_table_landscapeInfo;
+import static com.tsoft.dune2.table.TableMovementType.g_table_movementTypeName;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_BUSY;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_READY;
@@ -128,7 +138,7 @@ public class UnitService {
     /**
      * Loop over all units, performing various of tasks.
      */
-    static void GameLoop_Unit() {
+    public static void GameLoop_Unit() {
         PoolFindStruct find = new PoolFindStruct();
         boolean tickMovement = false;
         boolean tickRotation = false;
@@ -473,7 +483,7 @@ public class UnitService {
      * @param typeID  The type of the Unit.
      * @return Returns true if and only if a Unit with the given attributes is on the map.
      */
-    static boolean Unit_IsTypeOnMap(int houseID, int typeID) {
+    public static boolean Unit_IsTypeOnMap(int houseID, int typeID) {
         int i;
 
         for (i = 0; i < g_unitFindCount; i++) {
@@ -538,7 +548,7 @@ public class UnitService {
      * @param t The team to add the unit to.
      * @return Amount of space left in the team.
      */
-    static int Unit_AddToTeam(Unit u, Team t) {
+    public static int Unit_AddToTeam(Unit u, Team t) {
         if (t == null || u == null) return 0;
 
         u.team = t.index + 1;
@@ -553,7 +563,7 @@ public class UnitService {
      * @param u The unit to remove from the team it is in.
      * @return Amount of space left in the team.
      */
-    static int Unit_RemoveFromTeam(Unit u) {
+    public static int Unit_RemoveFromTeam(Unit u) {
         Team t;
 
         if (u == null) return 0;
@@ -912,7 +922,7 @@ public class UnitService {
      * @return The best target or NULL if none found.
      */
     static Unit Unit_FindBestTargetUnit(Unit u, int mode) {
-        Tile32 position = new Tile32();
+        Tile32 position;
         int distance;
         PoolFindStruct find = new PoolFindStruct();
         Unit best = null;
@@ -1125,7 +1135,7 @@ public class UnitService {
      * @param unit    The Unit to set the target for.
      * @param encoded The encoded index of the target.
      */
-    void Unit_SetTarget(Unit unit, int encoded) {
+    public static void Unit_SetTarget(Unit unit, int encoded) {
         if (unit == null || !Tools_Index_IsValid(encoded)) return;
         if (unit.targetAttack == encoded) return;
 
@@ -1167,7 +1177,7 @@ public class UnitService {
      * @param amount The amount to decrease.
      * @return True if and only if the unit lost deviation.
      */
-    static boolean Unit_Deviation_Decrease(Unit unit, int amount) {
+    public static boolean Unit_Deviation_Decrease(Unit unit, int amount) {
 	    UnitInfo ui;
 
         if (unit == null || unit.deviated == 0) return false;
@@ -1454,7 +1464,7 @@ public class UnitService {
                     unit.currentDestination.x = 0;
                     unit.currentDestination.y = 0;
 
-                    if (unit.o.flags.s.degrades && (Tools_Random_256() & 3) == 0) {
+                    if (unit.o.flags.degrades && (Tools_Random_256() & 3) == 0) {
                         Unit_Damage(unit, 1, 0);
                     }
 
@@ -1755,7 +1765,7 @@ public class UnitService {
      * @param destination To where on the map this Unit should move.
      * @return The new created Unit, or NULL if something failed.
      */
-    static Unit Unit_CreateWrapper(int houseID, int typeID, int destination) {
+    public static Unit Unit_CreateWrapper(int houseID, int typeID, int destination) {
         Tile32 tile;
         House h;
         int orientation;
@@ -1861,7 +1871,7 @@ public class UnitService {
      * @param unit The Unit to operate on.
      * @return True if and only if the position of the unit is already occupied.
      */
-    static boolean Unit_IsTileOccupied(Unit unit) {
+    public static boolean Unit_IsTileOccupied(Unit unit) {
 	    UnitInfo ui;
         int packed;
         Unit unit2;
@@ -2034,20 +2044,20 @@ public class UnitService {
      */
     public static void Unit_DisplayStatusText(Unit unit) {
 	    UnitInfo ui;
-        char[] buffer = new char[81];
+        StringBuilder buffer = new StringBuilder();
 
         if (unit == null) return;
 
         ui = g_table_unitInfo[unit.o.type];
 
         if (unit.o.type == UNIT_SANDWORM) {
-            snprintf(buffer, sizeof(buffer), "%s", String_Get_ByIndex(ui.o.stringID_abbrev));
+            buffer.append(String_Get_ByIndex(ui.o.stringID_abbrev)));
         } else {
 		    String houseName = g_table_houseInfo[Unit_GetHouseID(unit)].name;
             if (g_config.language == LANGUAGE_FRENCH) {
-                snprintf(buffer, sizeof(buffer), "%s %s", String_Get_ByIndex(ui.o.stringID_abbrev), houseName);
+                buffer.append(String_Get_ByIndex(ui.o.stringID_abbrev)).append(" ").append(houseName);
             } else {
-                snprintf(buffer, sizeof(buffer), "%s %s", houseName, String_Get_ByIndex(ui.o.stringID_abbrev));
+                buffer.append(houseName).append(" ").append(String_Get_ByIndex(ui.o.stringID_abbrev)));
             }
         }
 
@@ -2072,23 +2082,13 @@ public class UnitService {
 
             if (unit.amount == 0) stringID += 4;
 
-            {
-                size_t len = strlen(buffer);
-                char *s = buffer + len;
-
-                snprintf(s, sizeof(buffer) - len, String_Get_ByIndex(stringID), unit.amount);
-            }
+            buffer.append(String_Get_ByIndex(stringID)).append(unit.amount);
         }
 
-        {
-            /* add a dot "." at the end of the buffer */
-            size_t len = strlen(buffer);
-            if (len < sizeof(buffer) - 1) {
-                buffer[len] = '.';
-                buffer[len + 1] = '\0';
-            }
-        }
-        GUI_DisplayText(buffer, 2);
+        /* add a dot "." at the end of the buffer */
+        buffer.append(".");
+
+        GUI_DisplayText(buffer.toString(), 2);
     }
 
     /**
@@ -2097,7 +2097,7 @@ public class UnitService {
      *
      * @param unit The Unit to hide.
      */
-    static void Unit_Hide(Unit unit) {
+    public static void Unit_Hide(Unit unit) {
         if (unit == null) return;
 
         unit.o.flags.bulletIsBig = true;
@@ -2322,7 +2322,7 @@ public class UnitService {
      * @return 256 if tile is not accessable, -1 when it is an accessable structure,
      * or a score to enter the tile otherwise.
      */
-    static int Unit_GetTileEnterScore(Unit unit, int packed, int orient8) {
+    public static int Unit_GetTileEnterScore(Unit unit, int packed, int orient8) {
 	    UnitInfo ui;
         Unit u;
         Structure s;
@@ -2384,7 +2384,7 @@ public class UnitService {
      * @param mode How to determine the best target.
      * @return The encoded index of the best target or 0 if none found.
      */
-    static int Unit_FindBestTargetEncoded(Unit unit, int mode) {
+    public static int Unit_FindBestTargetEncoded(Unit unit, int mode) {
         Structure s;
         Unit target;
 
@@ -2428,7 +2428,7 @@ public class UnitService {
      *
      * @param unit The Unit to operate on.
      */
-    static void Unit_RemovePlayer(Unit unit) {
+    public static void Unit_RemovePlayer(Unit unit) {
         if (unit == null) return;
         if (Unit_GetHouseID(unit) != g_playerHouseID) return;
         if (!unit.o.flags.allocated) return;
@@ -2521,7 +2521,7 @@ public class UnitService {
      * @param unit   The Unit to remove.
      * @param packed The packed tile.
      */
-    void Unit_RemoveFromTile(Unit unit, int packed) {
+    static void Unit_RemoveFromTile(Unit unit, int packed) {
         Tile t = g_map[packed];
 
         if (t.hasUnit && Unit_Get_ByPackedTile(packed) == unit && (packed != Tile_PackTile(unit.currentDestination) || unit.o.flags.s.bulletIsBig)) {
@@ -2534,7 +2534,7 @@ public class UnitService {
         Map_Update(packed, 0, false);
     }
 
-    void Unit_AddToTile(Unit unit, int packed) {
+    static void Unit_AddToTile(Unit unit, int packed) {
         Map_UnveilTile(packed, Unit_GetHouseID(unit));
         Map_MarkTileDirty(packed);
         Map_Update(packed, 1, false);

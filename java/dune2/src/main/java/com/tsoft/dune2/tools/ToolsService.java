@@ -10,16 +10,15 @@ import static com.tsoft.dune2.config.ConfigService.g_gameConfig;
 import static com.tsoft.dune2.pool.PoolStructureService.STRUCTURE_INDEX_MAX_HARD;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_MAX;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_MAX;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structure_layoutTileDiff;
-import static com.tsoft.dune2.structure.StructureService.STRUCTURE_INDEX_MAX_HARD;
 import static com.tsoft.dune2.tile.TileService.*;
 import static com.tsoft.dune2.tools.IndexType.*;
 
 public class ToolsService {
 
-    private static long[] s_randomSeed = new long[4];
+    private static final long[] s_randomSeed = new long[4];
     private static long s_randomLCG;
 
     public static int Tools_AdjustToGameSpeed(int normal, int minimum, int maximum, boolean inverseSpeed) {
@@ -89,7 +88,7 @@ public class ToolsService {
                 return ret | 0xC000;
             }
             case IT_UNIT: {
-                if (index >= UNIT_INDEX_MAX || !Unit_Get_ByIndex(index).o.flags.s.allocated) return 0;
+                if (index >= UNIT_INDEX_MAX || !Unit_Get_ByIndex(index).o.flags.allocated) return 0;
                 return index | 0x4000;
             }
             case IT_STRUCTURE:  return index | 0x8000;
@@ -113,11 +112,11 @@ public class ToolsService {
         switch (Tools_Index_GetType(encoded)) {
             case IT_UNIT:
                 if (index >= UNIT_INDEX_MAX) return false;
-                return Unit_Get_ByIndex(index).o.flags.s.used && Unit_Get_ByIndex(index).o.flags.s.allocated;
+                return Unit_Get_ByIndex(index).o.flags.used && Unit_Get_ByIndex(index).o.flags.allocated;
 
             case IT_STRUCTURE:
                 if (index >= STRUCTURE_INDEX_MAX_HARD) return false;
-                return Structure_Get_ByIndex(index).o.flags.s.used;
+                return Structure_Get_ByIndex(index).o.flags.used;
 
             case IT_TILE : return true;
 
@@ -233,9 +232,9 @@ public class ToolsService {
      *
      * @return The random value.
      */
-    public static int Tools_Random_256(void) {
-        int val16;
-        int val8;
+    public static int Tools_Random_256() {
+        long val16;
+        long val8;
 
         val16 = (s_randomSeed[1] << 8) | s_randomSeed[2];
         val8 = ((val16 ^ 0x8000) >> 15) & 1;
@@ -245,7 +244,7 @@ public class ToolsService {
         s_randomSeed[1] = val16 >> 8;
         s_randomSeed[2] = val16 & 0xFF;
 
-        return s_randomSeed[0] ^ s_randomSeed[1];
+        return (int)(s_randomSeed[0] ^ s_randomSeed[1]);
     }
 
     /**

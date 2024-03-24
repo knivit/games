@@ -20,8 +20,7 @@ import static com.tsoft.dune2.gobject.GObjectService.Object_GetByPackedTile;
 import static com.tsoft.dune2.gobject.GObjectService.Object_Script_Variable4_Clear;
 import static com.tsoft.dune2.gui.FactoryResult.*;
 import static com.tsoft.dune2.gui.GuiService.*;
-import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_MENTAT;
-import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_STRUCTURE;
+import static com.tsoft.dune2.gui.SelectionType.*;
 import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
 import static com.tsoft.dune2.gui.widget.WidgetService.GUI_Widget_MakeNormal;
 import static com.tsoft.dune2.gui.widget.WidgetService.GUI_Widget_MakeSelected;
@@ -34,21 +33,29 @@ import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.*;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Find;
-import static com.tsoft.dune2.script.ScriptService.Script_Load;
-import static com.tsoft.dune2.script.ScriptService.Script_Reset;
+import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_ROCKET_TURRET;
+import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
+import static com.tsoft.dune2.table.TableAnimation.g_table_animation_structure;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
+import static com.tsoft.dune2.table.TableLandscapeInfo.g_table_landscapeInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.*;
 import static com.tsoft.dune2.structure.StructureState.*;
 import static com.tsoft.dune2.structure.StructureType.*;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.tile.TileService.*;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.tools.IndexType.IT_STRUCTURE;
 import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.ActionType.*;
 import static com.tsoft.dune2.unit.UnitFlag.*;
-import static com.tsoft.dune2.unit.UnitService.Unit_Remove;
+import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.*;
 
 public class StructureService {
@@ -63,12 +70,12 @@ public class StructureService {
     static long s_tickStructureScript    = 0;     /* Indicates next time Script function is executed. */
     static long s_tickStructurePalace    = 0;     /* Indicates next time Palace function is executed. */
 
-    static int g_structureIndex;
+    public static int g_structureIndex;
 
     /**
      * Loop over all structures, preforming various of tasks.
      */
-    static void GameLoop_Structure() {
+    public static void GameLoop_Structure() {
         PoolFindStruct find = new PoolFindStruct();
         boolean tickDegrade   = false;
         boolean tickStructure = false;
@@ -368,7 +375,7 @@ public class StructureService {
      * Convert the name of a structure to the type value of that structure, or
      *  STRUCTURE_INVALID if not found.
      */
-    int Structure_StringToType(String name) {
+    public static int Structure_StringToType(String name) {
         if (name == null) return STRUCTURE_INVALID;
 
         for (int type = 0; type < STRUCTURE_MAX; type++) {
@@ -635,7 +642,7 @@ public class StructureService {
      *
      * @param h The house to calculate the numbers for.
      */
-    void Structure_CalculateHitpointsMax(House h) {
+    public static void Structure_CalculateHitpointsMax(House h) {
         PoolFindStruct find = new PoolFindStruct();
         int power = 0;
 
@@ -744,7 +751,7 @@ public class StructureService {
      */
     public static int Structure_IsValidBuildLocation(int position, int type) {
 	    StructureInfo si;
-        int layoutTile;
+        int[] layoutTile;
         int i;
         int neededSlabs;
         boolean isValid;
@@ -829,7 +836,7 @@ public class StructureService {
      *
      * @param s The structure which launches the weapon. Has to be the Palace.
      */
-    void Structure_ActivateSpecial(Structure s) {
+    public static void Structure_ActivateSpecial(Structure s) {
         House h;
 
         if (s == null) return;
@@ -1685,7 +1692,7 @@ public class StructureService {
      * @param w The widget.
      * @return True if and only if the state changed.
      */
-    boolean Structure_SetUpgradingState(Structure s, int state, Widget w) {
+    public static boolean Structure_SetUpgradingState(Structure s, int state, Widget w) {
         boolean ret = false;
 
         if (s == null) return false;
@@ -1776,7 +1783,7 @@ public class StructureService {
     public static void Structure_UpdateMap(Structure s) {
 	    StructureInfo si;
         int layoutSize;
-        int layout;
+        int[] layout;
         int iconMap;
         int i;
 

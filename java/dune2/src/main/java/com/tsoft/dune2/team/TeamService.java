@@ -11,6 +11,7 @@ import static com.tsoft.dune2.pool.PoolTeamService.Team_Find;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_INVALID;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_MAX;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.tools.ToolsService.Tools_Random_256;
 
 public class TeamService {

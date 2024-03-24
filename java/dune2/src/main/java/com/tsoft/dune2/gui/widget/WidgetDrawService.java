@@ -13,6 +13,7 @@ import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_PLACE;
 import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_TARGET;
+import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
@@ -31,7 +32,7 @@ public class WidgetDrawService {
      *
      * @param w The widget (which is a button) to draw.
      */
-    void GUI_Widget_TextButton_Draw(Widget w) {
+    static void GUI_Widget_TextButton_Draw(Widget w) {
         int oldScreenID;
         int positionX, positionY;
         int width, height;
@@ -136,7 +137,7 @@ public class WidgetDrawService {
      *
      * @param w The widget (which is a button) to draw.
      */
-    void GUI_Widget_SpriteTextButton_Draw(Widget w) {
+    static void GUI_Widget_SpriteTextButton_Draw(Widget w) {
         int oldScreenID;
         Structure s;
         int positionX, positionY;
@@ -295,7 +296,7 @@ public class WidgetDrawService {
      *
      * @param w The widget (which is a button) to draw.
      */
-    void GUI_Widget_TextButton2_Draw(Widget w) {
+    static void GUI_Widget_TextButton2_Draw(Widget w) {
         int oldScreenID;
         int stringID;
         int positionX, positionY;
@@ -915,7 +916,7 @@ public class WidgetDrawService {
      * @param borderType The type of border. 0 = normal, 1 = thick depth, 2 = double, 3 = thin depth.
      * @param pressed True if the button is pressed.
      */
-    void GUI_Widget_DrawBorder(int widgetIndex, int borderType, boolean pressed) {
+    static void GUI_Widget_DrawBorder(int widgetIndex, int borderType, boolean pressed) {
         int[][] borderIndexSize = new int[][] {
             {0, 0}, {2, 4}, {1, 1}, {2, 1}
         };
@@ -950,7 +951,7 @@ public class WidgetDrawService {
      * Draw all widgets, starting with the one given by the parameters.
      * @param w First widget of the chain to draw.
      */
-    void GUI_Widget_DrawAll(Widget w) {
+    public static void GUI_Widget_DrawAll(Widget w) {
         while (w != null) {
             GUI_Widget_Draw(w);
             w = GUI_Widget_GetNext(w);

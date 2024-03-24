@@ -99,7 +99,7 @@ public class PoolStructureService {
      * Recount all Structures, ignoring the cache array. Also set the structureCount
      *  of all houses to zero.
      */
-    static void Structure_Recount() {
+    public static void Structure_Recount() {
         int index;
         PoolFindStruct find = new PoolFindStruct( -1, -1, -1);
         House h = House_Find(find);

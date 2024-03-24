@@ -1,13 +1,15 @@
 package com.tsoft.dune2.config;
 
 import static com.tsoft.dune2.file.FileService.*;
+import static com.tsoft.dune2.file.SearchDirectory.SEARCHDIR_PERSONAL_DATA_DIR;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_ENGLISH;
 
 public class ConfigService {
 
     public static GameCfg g_gameConfig = new GameCfg(1, 1, 2, 1, 0);
 
-    static DuneCfg g_config;
-    static boolean g_enableSoundMusic = true;
+    public static DuneCfg g_config;
+    public static boolean g_enableSoundMusic = true;
     static boolean g_enableVoices = true;
 
     /**
@@ -17,7 +19,7 @@ public class ConfigService {
      * @param config The address where the config will be stored.
      * @return True if loading and decoding is successful.
      */
-    static boolean Config_Read(String filename, DuneCfg config) {
+    public static DuneCfg Config_Read(String filename) {
         FILE *f;
         size_t read;
         uint8 sum;
@@ -25,7 +27,7 @@ public class ConfigService {
         int i;
 
         f = fopendatadir(SEARCHDIR_PERSONAL_DATA_DIR, filename, "rb");
-        if (f == null) return false;
+        if (f == null) return null;
 
         read = fread(config, 1, sizeof(DuneCfg), f);
         fclose(f);
@@ -80,18 +82,16 @@ public class ConfigService {
     /**
      * Set a default config
      */
-    static boolean Config_Default(DuneCfg config) {
-        if (config == null) return false;
-
-        memset(config, 0, sizeof(DuneCfg));
+    public static DuneCfg Config_Default() {
+        DuneCfg config = new DuneCfg();
         config.graphicDrv = 1;
         config.musicDrv = 1;
         config.soundDrv = 1;
         config.voiceDrv = 1;
-        config.useMouse = 1;
-        config.useXMS = 1;
+        config.useMouse = true;
+        config.useXMS = true;
         config.language = LANGUAGE_ENGLISH;
-        return true;
+        return config;
     }
 
     /**

@@ -19,7 +19,7 @@ public class GfxService {
     public static final int SCREEN_HEIGHT = 200;  /*!< Height of the screen in pixels. */
 
     static byte[] g_paletteActive = new byte[256 * 3];
-    static byte[] g_palette1 = null;
+    public static byte[] g_palette1 = null;
     static byte[] g_palette2 = null;
     static byte[] g_paletteMapping1 = null;
     static byte[] g_paletteMapping2 = null;
@@ -108,7 +108,7 @@ public class GfxService {
         for (y = top; y < bottom; y++) g_dirty_blocks[y] |= mask;
     }
 
-    static void GFX_Screen_SetClean(int screenID) {
+    public static void GFX_Screen_SetClean(int screenID) {
         if (screenID == SCREEN_ACTIVE) screenID = s_screenActiveID;
         if (screenID != SCREEN_0) return;
         s_screen0_is_dirty = false;
@@ -120,7 +120,7 @@ public class GfxService {
         memset(g_dirty_blocks, 0);
     }
 
-    static boolean GFX_Screen_IsDirty(int screenID) {
+    public static boolean GFX_Screen_IsDirty(int screenID) {
         if(screenID == SCREEN_ACTIVE) screenID = s_screenActiveID;
         if(screenID != SCREEN_0) return true;
         return s_screen0_is_dirty;
@@ -259,7 +259,7 @@ public class GfxService {
      * @param y The Y-coordinate on the screen.
      * @param colour The colour of the pixel to put on the screen.
      */
-    static void GFX_PutPixel(int x, int y, byte colour) {
+    public static void GFX_PutPixel(int x, int y, byte colour) {
         if (y >= SCREEN_HEIGHT) return;
         if (x >= SCREEN_WIDTH) return;
 
@@ -352,7 +352,7 @@ public class GfxService {
      * @param screenSrc The ID of the source screen.
      * @param screenDst The ID of the destination screen.
      */
-    static void GFX_Screen_Copy(int xSrc, int ySrc, int xDst, int yDst, int width, int height, int screenSrc, int screenDst) {
+    public static void GFX_Screen_Copy(int xSrc, int ySrc, int xDst, int yDst, int width, int height, int screenSrc, int screenDst) {
         if (xSrc >= SCREEN_WIDTH) return;
         if (xSrc < 0) xSrc = 0;
 
@@ -394,7 +394,7 @@ public class GfxService {
     /**
      * Clears the screen.
      */
-    static void GFX_ClearScreen(int screenID) {
+    public static void GFX_ClearScreen(int screenID) {
         Arrays.fill(GFX_Screen_Get_ByIndex(screenID), 0, SCREEN_WIDTH * SCREEN_HEIGHT, (byte)0);
         GFX_Screen_SetDirty(screenID, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
@@ -403,7 +403,7 @@ public class GfxService {
      * Clears the given memory block.
      * @param index The memory block.
      */
-    static void GFX_ClearBlock(int index) {
+    public static void GFX_ClearBlock(int index) {
         Arrays.fill(GFX_Screen_Get_ByIndex(index), 0, GFX_Screen_GetSize_ByIndex(index), (byte)0);
         GFX_Screen_SetDirty(index, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     }

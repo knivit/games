@@ -143,7 +143,7 @@ public class MouseService {
         return inside;
     }
 
-    static void Mouse_SetMouseMode(int mouseMode, String filename) {
+    public static void Mouse_SetMouseMode(int mouseMode, String filename) {
         switch (mouseMode) {
             default: break;
 

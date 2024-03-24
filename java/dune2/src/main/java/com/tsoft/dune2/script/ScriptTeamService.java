@@ -7,16 +7,16 @@ import com.tsoft.dune2.unit.Unit;
 
 import static com.tsoft.dune2.gobject.GObjectService.Object_GetByPackedTile;
 import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
-import static com.tsoft.dune2.script.ScriptService.Script_Load;
-import static com.tsoft.dune2.script.ScriptService.Script_Reset;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
+import static com.tsoft.dune2.os.EndianService.BETOH16;
+import static com.tsoft.dune2.script.ScriptService.*;
+import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_KAMIKAZE;
 import static com.tsoft.dune2.tile.TileService.*;
 import static com.tsoft.dune2.tools.IndexType.IT_TILE;
-import static com.tsoft.dune2.tools.ToolsService.Tools_Index_GetPackedTile;
-import static com.tsoft.dune2.tools.ToolsService.Tools_Index_GetTile;
+import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.ActionType.*;
-import static com.tsoft.dune2.unit.UnitService.Unit_SetAction;
-import static com.tsoft.dune2.unit.UnitService.Unit_SetDestination;
+import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.UNIT_SABOTEUR;
 
 public class ScriptTeamService {
@@ -29,8 +29,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return Amount of members in current team.
      */
-    int Script_Team_GetMembers(ScriptEngine script) {
-        VARIABLE_NOT_USED(script);
+    static int Script_Team_GetMembers(ScriptEngine script) {
         return g_scriptCurrentTeam.members;
     }
 
@@ -42,8 +41,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The variable_06 of the current team.
      */
-    int Script_Team_GetVariable6(ScriptEngine script) {
-        VARIABLE_NOT_USED(script);
+    static int Script_Team_GetVariable6(ScriptEngine script) {
         return g_scriptCurrentTeam.minMembers;
     }
 
@@ -55,8 +53,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The encoded target.
      */
-    int Script_Team_GetTarget(ScriptEngine script) {
-        VARIABLE_NOT_USED(script);
+    static int Script_Team_GetTarget(ScriptEngine script) {
         return g_scriptCurrentTeam.target;
     }
 
@@ -68,15 +65,13 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The amount of space left in current team.
      */
-    int Script_Team_AddClosestUnit(ScriptEngine script) {
+    static int Script_Team_AddClosestUnit(ScriptEngine script) {
         Team t;
         Unit closest = null;
         Unit closest2 = null;
         int minDistance = 0;
         int minDistance2 = 0;
         PoolFindStruct find = new PoolFindStruct();
-
-        VARIABLE_NOT_USED(script);
 
         t = g_scriptCurrentTeam;
 
@@ -129,15 +124,13 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The average distance.
      */
-    int Script_Team_GetAverageDistance(ScriptEngine script) {
+    static int Script_Team_GetAverageDistance(ScriptEngine script) {
         int averageX = 0;
         int averageY = 0;
         int count = 0;
         int distance = 0;
         Team t;
         PoolFindStruct find = new PoolFindStruct();
-
-        VARIABLE_NOT_USED(script);
 
         t = g_scriptCurrentTeam;
 
@@ -192,7 +185,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The number of moving units.
      */
-    int Script_Team_Unknown0543(ScriptEngine script) {
+    static int Script_Team_Unknown0543(ScriptEngine script) {
         Team t;
         int count = 0;
         int distance;
@@ -251,11 +244,9 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The encoded index of the best target or 0 if none found.
      */
-    int Script_Team_FindBestTarget(ScriptEngine script) {
+    static int Script_Team_FindBestTarget(ScriptEngine script) {
         Team t;
         PoolFindStruct find = new PoolFindStruct();
-
-        VARIABLE_NOT_USED(script);
 
         t = g_scriptCurrentTeam;
 
@@ -267,7 +258,7 @@ public class ScriptTeamService {
             Unit u;
             int target;
 
-            u = Unit_Find(&find);
+            u = Unit_Find(find);
             if (u == null) break;
             if (u.team - 1 != t.index) continue;
             target = Unit_FindBestTargetEncoded(u, t.action == TEAM_ACTION_KAMIKAZE ? 4 : 0);
@@ -290,7 +281,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Team_Load(ScriptEngine script) {
+    static int Script_Team_Load(ScriptEngine script) {
         Team t;
         int type;
 
@@ -315,11 +306,9 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Team_Load2(ScriptEngine script) {
+    static int Script_Team_Load2(ScriptEngine script) {
         Team t;
         int type;
-
-        VARIABLE_NOT_USED(script);
 
         t = g_scriptCurrentTeam;
         type = t.actionStart;
@@ -342,12 +331,10 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Team_Unknown0788(ScriptEngine script) {
+    static int Script_Team_Unknown0788(ScriptEngine script) {
         Team t;
         Tile32 tile;
         PoolFindStruct find = new PoolFindStruct();
-
-        VARIABLE_NOT_USED(script);
 
         t = g_scriptCurrentTeam;
         if (t.target == 0) return 0;
@@ -406,7 +393,7 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    int Script_Team_DisplayText(ScriptEngine script) {
+    static int Script_Team_DisplayText(ScriptEngine script) {
         Team t;
         String text;
         int offset;

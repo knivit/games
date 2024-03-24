@@ -2,6 +2,7 @@ package com.tsoft.dune2.opendune;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.tsoft.dune2.config.DuneCfg;
 import com.tsoft.dune2.gobject.GObjectInfo;
 import com.tsoft.dune2.gui.widget.Widget;
 import com.tsoft.dune2.gui.widget.WidgetInfo;
@@ -13,31 +14,56 @@ import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.unit.Unit;
 import com.tsoft.dune2.unit.UnitInfo;
 
+import static com.tsoft.dune2.config.ConfigService.*;
+import static com.tsoft.dune2.explosion.ExplosionService.Explosion_Init;
+import static com.tsoft.dune2.file.FileService.File_Init;
+import static com.tsoft.dune2.gfx.GfxService.*;
+import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
+import static com.tsoft.dune2.gfx.Screen.SCREEN_1;
 import static com.tsoft.dune2.gui.GuiService.*;
-import static com.tsoft.dune2.gui.SelectionType.SELECTIONTYPE_MENTAT;
-import static com.tsoft.dune2.gui.widget.WidgetService.g_widgetProperties;
+import static com.tsoft.dune2.gui.SelectionType.*;
+import static com.tsoft.dune2.gui.font.FontService.*;
+import static com.tsoft.dune2.gui.mentat.MentatService.GUI_Mentat_ShowBriefing;
+import static com.tsoft.dune2.gui.mentat.MentatService.GUI_Mentat_ShowWin;
+import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
+import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseService.*;
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
+import static com.tsoft.dune2.house.HouseType.HOUSE_MERCENARY;
+import static com.tsoft.dune2.input.InputMouseMode.INPUT_MOUSE_MODE_NORMAL;
+import static com.tsoft.dune2.input.InputService.Input_Init;
 import static com.tsoft.dune2.input.MouseService.*;
 import static com.tsoft.dune2.map.MapService.*;
-import static com.tsoft.dune2.opendune.GameMode.GM_MENU;
-import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
-import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
-import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
-import static com.tsoft.dune2.script.ScriptService.Script_ClearInfo;
-import static com.tsoft.dune2.script.ScriptService.Script_Load;
+import static com.tsoft.dune2.opendune.GameMode.*;
+import static com.tsoft.dune2.pool.PoolHouseService.*;
+import static com.tsoft.dune2.pool.PoolStructureService.*;
+import static com.tsoft.dune2.pool.PoolTeamService.Team_Init;
+import static com.tsoft.dune2.pool.PoolTeamService.Team_Recount;
+import static com.tsoft.dune2.scenario.ScenarioService.Scenario_Load;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.script.ScriptService.*;
+import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
+import static com.tsoft.dune2.strings.StringService.String_Uninit;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_READY;
 import static com.tsoft.dune2.structure.StructureType.*;
+import static com.tsoft.dune2.team.TeamService.GameLoop_Team;
+import static com.tsoft.dune2.tile.TileService.Tile_Center;
+import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
+import static com.tsoft.dune2.timer.TimerService.*;
+import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
+import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Seed;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.UNIT_INVALID;
 import static com.tsoft.dune2.unit.UnitType.UNIT_MAX;
+import static com.tsoft.dune2.video.VideoWin32Service.Video_Init;
 
 public class OpenDuneService extends Game {
 
-    public SpriteBatch batch;
+    public static SpriteBatch batch;
 
     @Override
     public void create() {
@@ -65,18 +91,18 @@ public class OpenDuneService extends Game {
     static long g_hintsShown1 = 0;          /*!< A bit-array to indicate which hints has been show already (0-31). */
     static long g_hintsShown2 = 0;          /*!< A bit-array to indicate which hints has been show already (32-63). */
     static int g_gameMode = GM_MENU;
-    static int g_campaignID = 0;
-    static int g_scenarioID = 1;
-    static int g_activeAction = 0xFFFF;      /*!< Action the controlled unit will do. */
-    static long g_tickScenarioStart = 0;      /*!< The tick the scenario started in. */
-    static long s_tickGameTimeout = 0; /*!< The tick the game will timeout. */
+    public static int g_campaignID = 0;
+    public static int g_scenarioID = 1;
+    public static int g_activeAction = 0xFFFF;      /*!< Action the controlled unit will do. */
+    static long g_tickScenarioStart = 0;            /*!< The tick the scenario started in. */
+    static long s_tickGameTimeout = 0;              /*!< The tick the game will timeout. */
 
-    boolean g_debugGame = false;        /*!< When true, you can control the AI. */
+    oublic static boolean g_debugGame = false;               /*!< When true, you can control the AI. */
     public static boolean g_debugScenario = false;    /*!< When true, you can review the scenario. There is no fog. The game is not running (no unit-movement, no structure-building, etc). You can click on individual tiles. */
-    boolean g_debugSkipDialogs = false; /*!< When non-zero, you immediately go to house selection, and skip all intros. */
+    public static boolean g_debugSkipDialogs = false; /*!< When non-zero, you immediately go to house selection, and skip all intros. */
 
-    void *g_readBuffer = null;
-    long g_readBufferSize = 0;
+    public static byte[] g_readBuffer = null;
+    public static long g_readBufferSize = 0;
 
     static boolean  s_debugForceWin = false; /*!< When true, you immediately win the level. */
 
@@ -89,7 +115,7 @@ public class OpenDuneService extends Game {
     public static boolean g_viewport_forceRedraw = false; /*!< Force a full redraw of the screen. */
     public static boolean g_viewport_fadein = false; /*!< Fade in the screen. */
 
-    int g_musicInBattle = 0; /*!< 0 = no battle, 1 = fight is going on, -1 = music of fight is going on is active. */
+    public static int g_musicInBattle = 0; /*!< 0 = no battle, 1 = fight is going on, -1 = music of fight is going on is active. */
 
     /**
      * Check if a level is finished, based on the values in WinFlags.
@@ -220,7 +246,7 @@ public class OpenDuneService extends Game {
         return win;
     }
 
-    void GameLoop_Uninit() {
+    public static void GameLoop_Uninit() {
         while (g_widgetLinkedListHead != null) {
             Widget w = g_widgetLinkedListHead;
             g_widgetLinkedListHead = w.next;
@@ -322,12 +348,12 @@ public class OpenDuneService extends Game {
     }
 
     static void GameLoop_DrawMenu(String[][] strings) {
-        WidgetProperties *props;
+        WidgetProperties props;
         int left;
         int top;
         int i;
 
-        props = &g_widgetProperties[21];
+        props = g_widgetProperties[21];
         top = g_curWidgetYBase + props.yBase;
         left = (g_curWidgetXBase + props.xBase) << 3;
 
@@ -1195,13 +1221,10 @@ public class OpenDuneService extends Game {
         VideoScaleFilter scale_filter = FILTER_NEAREST_NEIGHBOR;
         int scaling_factor = 2;
         int frame_rate = 60;
-        char filter_text[64];
+        char[] filter_text = new char[64];
 
         FreeConsole();
         CrashLog_Init();
-
-        VARIABLE_NOT_USED(argc);
-        VARIABLE_NOT_USED(argv);
 
         /* Load opendune.ini file */
         Load_IniFile();
@@ -1227,8 +1250,9 @@ public class OpenDuneService extends Game {
         }
 
         /* Loading config from dune.cfg */
-        if (!Config_Read("dune.cfg", &g_config)) {
-            Config_Default(&g_config);
+        DuneCfg g_config = Config_Read("dune.cfg");
+        if (g_config == null) {
+            g_config = Config_Default();
             commit_dune_cfg = true;
         }
 
@@ -1236,7 +1260,7 @@ public class OpenDuneService extends Game {
         SetLanguage_From_IniFile(&g_config);
 
         /* Writing config to dune.cfg */
-        if (commit_dune_cfg && !Config_Write("dune.cfg", &g_config)) {
+        if (commit_dune_cfg && !Config_Write("dune.cfg", g_config)) {
             Error("Error writing to dune.cfg file.\n");
             return 1;
         }
@@ -1280,7 +1304,7 @@ public class OpenDuneService extends Game {
      * Prepare the map (after loading scenario or savegame). Does some basic
      *  sanity-check and corrects stuff all over the place.
      */
-    static void Game_Prepare() {
+    public static void Game_Prepare() {
         PoolFindStruct find = new PoolFindStruct();
         int oldSelectionType;
         Tile t;
@@ -1401,7 +1425,7 @@ public class OpenDuneService extends Game {
      * Initialize a game, by setting most variables to zero, cleaning the map, etc
      *  etc.
      */
-    void Game_Init() {
+    static void Game_Init() {
         Unit_Init();
         Structure_Init();
         Team_Init();
@@ -1444,7 +1468,7 @@ public class OpenDuneService extends Game {
      * @param houseID The House which is going to play the game.
      * @param scenarioID The Scenario to load.
      */
-    void Game_LoadScenario(int houseID, int scenarioID) {
+    static void Game_LoadScenario(int houseID, int scenarioID) {
         Sound_Output_Feedback(0xFFFE);
 
         Game_Init();
@@ -1472,8 +1496,9 @@ public class OpenDuneService extends Game {
      * Close down facilities used by the program. Always called just before the
      *  program terminates.
      */
-    private static void PrepareEnd() {
-        free(g_palette_998A); g_palette_998A = null;
+    public static void PrepareEnd() {
+        free(g_palette_998A);
+        g_palette_998A = null;
 
         GameLoop_Uninit();
 

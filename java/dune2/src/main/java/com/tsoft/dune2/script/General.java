@@ -6,7 +6,20 @@ import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 
+import static com.tsoft.dune2.gobject.GObjectService.Object_GetDistanceToEncoded;
+import static com.tsoft.dune2.gui.GuiService.GUI_DisplayModalMessage;
+import static com.tsoft.dune2.map.MapService.Map_SearchSpice;
+import static com.tsoft.dune2.os.EndianService.BETOH16;
+import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Find;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
+import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentObject;
+import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentUnit;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_IDLE;
+import static com.tsoft.dune2.tile.TileService.Tile_GetDistance;
+import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
+import static com.tsoft.dune2.tools.IndexType.*;
+import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.UnitService.Unit_GetHouseID;
 
 public class General {
@@ -82,7 +95,6 @@ public class General {
      * @return The value 0. Always.
      */
     public static int Script_General_NoOperation(ScriptEngine script) {
-        VARIABLE_NOT_USED(script);
         return 0;
     }
 
@@ -265,8 +277,6 @@ public class General {
      */
     public static int Script_General_GetLinkedUnitType(ScriptEngine script) {
         int linkedID;
-
-        VARIABLE_NOT_USED(script);
 
         linkedID = g_scriptCurrentObject.linkedID;
 

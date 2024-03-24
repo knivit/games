@@ -2,6 +2,8 @@ package com.tsoft.dune2.pool;
 
 import com.tsoft.dune2.house.House;
 
+import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
+
 public class PoolHouseService {
 
     public static final int HOUSE_INDEX_MAX = 6;      /*!< The highest possible index for any House.  */
@@ -46,7 +48,7 @@ public class PoolHouseService {
      * Initialize the House array.
      */
     static void House_Init() {
-        g_houseArray = new House[HOUSE_INDEX_MAX]
+        g_houseArray = new House[HOUSE_INDEX_MAX];
         g_houseFindArray = new House[HOUSE_INDEX_MAX];
         g_houseFindCount = 0;
     }
@@ -57,7 +59,7 @@ public class PoolHouseService {
      * @param index The index to use.
      * @return The House allocated, or null on failure.
      */
-    static House House_Allocate(int index) {
+    public static House House_Allocate(int index) {
         House h;
 
         if (index >= HOUSE_INDEX_MAX) return null;

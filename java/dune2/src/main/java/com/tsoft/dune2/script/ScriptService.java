@@ -8,19 +8,23 @@ import com.tsoft.dune2.unit.Unit;
 import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
 import static com.tsoft.dune2.script.ScriptCommand.*;
+import static com.tsoft.dune2.script.ScriptStructureService.*;
 
 public class ScriptService {
 
-    static GObject g_scriptCurrentObject;
-    static Structure g_scriptCurrentStructure;
+    public static final int SCRIPT_UNIT_OPCODES_PER_TICK = 50;         /*!< The amount of opcodes a unit can execute per tick. */
+    public static final int SCRIPT_FUNCTIONS_COUNT = 64;               /*!< There are never more than 64 functions for a script category. */
+
+    public static GObject g_scriptCurrentObject;
+    public static Structure g_scriptCurrentStructure;
     public static Unit g_scriptCurrentUnit;
-    static Team g_scriptCurrentTeam;
+    public static Team g_scriptCurrentTeam;
 
     static ScriptInfo s_scriptStructure;
     static ScriptInfo s_scriptTeam;
     static ScriptInfo s_scriptUnit;
     public static ScriptInfo g_scriptStructure = s_scriptStructure;
-    static ScriptInfo g_scriptTeam = s_scriptTeam;
+    public static ScriptInfo g_scriptTeam = s_scriptTeam;
     public static ScriptInfo g_scriptUnit = s_scriptUnit;
 
     /**

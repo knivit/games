@@ -6,24 +6,47 @@ import com.tsoft.dune2.structure.StructureInfo;
 import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 
-import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
+import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_GetSize_ByIndex;
+import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_Get_ByIndex;
+import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
+import static com.tsoft.dune2.gfx.Screen.SCREEN_1;
+import static com.tsoft.dune2.gui.GuiService.*;
+import static com.tsoft.dune2.gui.ViewportService.GUI_Widget_Viewport_RedrawMap;
 import static com.tsoft.dune2.house.HouseType.*;
-import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
-import static com.tsoft.dune2.opendune.OpenDuneService.g_validateStrictIfZero;
+import static com.tsoft.dune2.map.MapService.Map_FindLocationTile;
+import static com.tsoft.dune2.opendune.OpenDuneService.*;
+import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
+import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
-import static com.tsoft.dune2.strings.Strings.STR_INSUFFICIENT_POWER_WINDTRAP_IS_NEEDED;
+import static com.tsoft.dune2.pool.PoolStructureService.Structure_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.*;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
+import static com.tsoft.dune2.strings.Strings.*;
+import static com.tsoft.dune2.structure.StructureService.Structure_CalculateHitpointsMax;
+import static com.tsoft.dune2.structure.StructureService.g_structureIndex;
 import static com.tsoft.dune2.structure.StructureType.*;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
+import static com.tsoft.dune2.tile.TileService.Tile_UnpackTile;
+import static com.tsoft.dune2.timer.TimerService.Timer_Sleep;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
+import static com.tsoft.dune2.tools.IndexType.IT_STRUCTURE;
+import static com.tsoft.dune2.tools.IndexType.IT_TILE;
+import static com.tsoft.dune2.tools.ToolsService.Tools_Index_Encode;
+import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
+import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.*;
+import static com.tsoft.dune2.wsa.WsaService.*;
 
 public class HouseService {
 
-    House g_playerHouse;
+    static House g_playerHouse;
     public static int g_playerHouseID = HOUSE_INVALID;
-    int g_houseMissileCountdown = 0;
-    int g_playerCreditsNoSilo = 0;
-    int g_playerCredits = 0;                /* Credits shown to player as 'current'. */
-    long g_tickHousePowerMaintenance = 0;
+    public static int g_houseMissileCountdown = 0;
+    static int g_playerCreditsNoSilo = 0;
+    static int g_playerCredits = 0;                /* Credits shown to player as 'current'. */
+    public static long g_tickHousePowerMaintenance = 0;
 
     static long s_tickHouseHouse = 0;
     static long s_tickHouseStarport = 0;
@@ -34,7 +57,7 @@ public class HouseService {
     /**
      * Loop over all houses, preforming various of tasks.
      */
-    void GameLoop_House() {
+    public static void GameLoop_House() {
         PoolFindStruct find = new PoolFindStruct();
         House h = null;
         boolean tickHouse                = false;
@@ -214,7 +237,7 @@ public class HouseService {
 
                     s = Structure_Get_ByIndex(g_structureIndex);
                     if (s.o.type == STRUCTURE_STARPORT && s.o.houseID == h.index) {
-                        u = Unit_CreateWrapper((uint8)h.index, UNIT_FRIGATE, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
+                        u = Unit_CreateWrapper(h.index, UNIT_FRIGATE, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
                     } else {
                         PoolFindStruct find2 = new PoolFindStruct();
 
@@ -361,7 +384,7 @@ public class HouseService {
      * @return True if and only if the radar has been activated.
      */
     public static boolean House_UpdateRadarState(House h) {
-        void wsa;
+        byte[] wsa;
         int frame;
         int frameCount;
         boolean activate;
@@ -428,7 +451,7 @@ public class HouseService {
      */
     public static void House_UpdateCreditsStorage(int houseID) {
         PoolFindStruct find = new PoolFindStruct();
-        long creditsStorage;
+        int creditsStorage;
 
         int oldValidateStrictIfZero = g_validateStrictIfZero;
         g_validateStrictIfZero = 0;
@@ -519,7 +542,7 @@ public class HouseService {
         }
     }
 
-    String House_GetWSAHouseFilename(int houseID) {
+    static String House_GetWSAHouseFilename(int houseID) {
         String[] houseWSAFileNames = new String[] { "FHARK.WSA", "FARTR.WSA", "FORDOS.WSA" };
 
         if (houseID >= 3) return null;

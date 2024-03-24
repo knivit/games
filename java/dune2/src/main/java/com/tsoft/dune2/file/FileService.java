@@ -381,7 +381,7 @@ public class FileService {
      *
      * @return True if and only if everything was ok.
      */
-    static boolean File_Init() {
+    public static boolean File_Init() {
         char buf[1024];
         char *homedir = null;
 
@@ -890,5 +890,41 @@ public class FileService {
             length &= 0xFFFFFFFE;
             File_Seek(index, length, 1);
         }
+    }
+
+    public static int File_Exists(String FILENAME) {
+        return File_Exists_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, null);
+    }
+
+    public static int File_Exists_GetSize(String FILENAME, long FILESIZE) {
+        return File_Exists_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, FILESIZE);
+    }
+
+    public static int File_Exists_Personal(String FILENAME) {
+        return File_Exists_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME, null);
+    }
+
+    public static int File_Open(String FILENAME, int MODE) {
+        return File_Open_Ex(SEARCHDIR_GLOBAL_DATA_DIR,   FILENAME, MODE);
+    }
+
+    public static int File_Open_Personal(String FILENAME, int MODE) {
+        return File_Open_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME, MODE);
+    }
+
+    public static int File_ReadBlockFile(String FILENAME, byte[] BUFFER, long LENGTH) {
+        return File_ReadBlockFile_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, BUFFER, LENGTH);
+    }
+
+    public static int File_ReadBlockFile_Personal(String FILENAME, byte[] BUFFER, long LENGTH) {
+        return File_ReadBlockFile_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME, BUFFER, LENGTH);
+    }
+
+    public static int ChunkFile_Open(String FILENAME) {
+        return ChunkFile_Open_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME);
+    }
+
+    public static int ChunkFile_Open_Personal(String FILENAME) {
+        return ChunkFile_Open_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME);
     }
 }

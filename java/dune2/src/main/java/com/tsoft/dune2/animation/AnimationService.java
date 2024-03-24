@@ -182,7 +182,7 @@ public class AnimationService {
         Voice_PlayAtTile(parameter, animation.tile);
     }
 
-    void Animation_Init() {
+    static void Animation_Init() {
         Arrays.fill(g_animations, null);
     }
 

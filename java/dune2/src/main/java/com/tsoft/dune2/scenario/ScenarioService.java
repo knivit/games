@@ -15,18 +15,23 @@ import static com.tsoft.dune2.file.FileService.File_ReadWholeFile;
 import static com.tsoft.dune2.gui.GuiService.g_minimapPosition;
 import static com.tsoft.dune2.gui.GuiService.g_selectionRectanglePosition;
 import static com.tsoft.dune2.house.HouseService.House_StringToType;
+import static com.tsoft.dune2.house.HouseService.g_playerHouse;
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 import static com.tsoft.dune2.house.HouseType.HOUSE_MAX;
 import static com.tsoft.dune2.ini.IniService.Ini_GetInteger;
 import static com.tsoft.dune2.ini.IniService.Ini_GetString;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.*;
+import static com.tsoft.dune2.pool.PoolHouseService.House_Allocate;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
-import static com.tsoft.dune2.sprites.SpritesService.Sprites_LoadTiles;
-import static com.tsoft.dune2.sprites.SpritesService.g_veiledTileID;
-import static com.tsoft.dune2.structure.StructureService.Structure_Create;
-import static com.tsoft.dune2.structure.StructureService.Structure_Get_ByPackedTile;
+import static com.tsoft.dune2.pool.PoolStructureService.STRUCTURE_INDEX_INVALID;
+import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Free;
+import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_IDLE;
+import static com.tsoft.dune2.structure.StructureType.STRUCTURE_INVALID;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_INVALID;
@@ -64,7 +69,7 @@ public class ScenarioService {
 
     static void Scenario_Load_House(int houseID) {
 	    String houseName = g_table_houseInfo[houseID].name;
-        char *houseType;
+        String houseType;
         char buf[128];
         char *b;
         House h;
@@ -125,13 +130,11 @@ public class ScenarioService {
 
     static void Scenario_Load_Unit(String key, String settings) {
         int houseType, unitType, actionType;
-        int8 orientation;
+        int orientation;
         int hitpoints;
         Tile32 position;
         Unit u;
-        char *split;
-
-        VARIABLE_NOT_USED(key);
+        byte[] split;
 
         /* The value should have 6 values separated by a ',' */
         split = strchr(settings, ',');
@@ -177,7 +180,7 @@ public class ScenarioService {
 	    *split = '\0';
 
         /* Fifth value is orientation */
-        orientation = (int8)((int)atoi(settings));
+        orientation = atoi(settings));
 
         /* Sixth value is the current state of the unit */
         settings = split + 1;
@@ -187,7 +190,7 @@ public class ScenarioService {
 
         u = Unit_Allocate(UNIT_INDEX_INVALID, unitType, houseType);
         if (u == null) return;
-        u.o.flags.s.byScenario = true;
+        u.o.flags.byScenario = true;
 
         u.o.hitpoints   = hitpoints * g_table_unitInfo[unitType].o.hitpoints / 256;
         u.o.position    = position;
@@ -216,7 +219,7 @@ public class ScenarioService {
     static void Scenario_Load_Structure(String key, String settings) {
         int index, houseType, structureType;
         int hitpoints, position;
-        char *split;
+        byte[] split;
 
         /* 'GEN' marked keys are Slabs and Walls, where the number following indicates the position on the map */
         if (strncasecmp(key, "GEN", 3) == 0) {
@@ -410,8 +413,6 @@ public class ScenarioService {
         int minMembers, maxMembers;
         char *split;
 
-        VARIABLE_NOT_USED(key);
-
         /* The value should have 5 values separated by a ',' */
         split = strchr(settings, ',');
         if (split == null) return;
@@ -435,7 +436,7 @@ public class ScenarioService {
         settings = split + 1;
         split = strchr(settings, ',');
         if (split == null) return;
-	*split = '\0';
+	    *split = '\0';
 
         /* Third value is the movement type */
         movementType = Unit_MovementStringToType(settings);
@@ -478,7 +479,7 @@ public class ScenarioService {
 
     static void Scenario_Load_MapParts(String key, BiConsumer<Integer, Tile> ptr) {
         char *s;
-        char buf[128];
+        byte[] buf = new byte[128];
 
         Ini_GetString("MAP", key, "", buf, 127, s_scenarioBuffer);
 
@@ -520,7 +521,7 @@ public class ScenarioService {
         g_scenarioID = scenarioID;
 
         /* Load scenario file */
-        String filename = String.format("SCEN%c%03hu.INI", g_table_houseInfo[houseID].name[0], scenarioID);
+        String filename = String.format("SCEN%c%03hu.INI", g_table_houseInfo[houseID].name.charAt(0), scenarioID);
         if (!Files.exists(Path.of(filename))) return false;
         s_scenarioBuffer = File_ReadWholeFile(filename);
 
@@ -536,12 +537,12 @@ public class ScenarioService {
 
         Scenario_Load_Houses();
 
-        Scenario_Load_Chunk("UNITS", &Scenario_Load_Unit);
-        Scenario_Load_Chunk("STRUCTURES", &Scenario_Load_Structure);
-        Scenario_Load_Chunk("MAP", &Scenario_Load_Map);
-        Scenario_Load_Chunk("REINFORCEMENTS", &Scenario_Load_Reinforcement);
-        Scenario_Load_Chunk("TEAMS", &Scenario_Load_Team);
-        Scenario_Load_Chunk("CHOAM", &Scenario_Load_Choam);
+        Scenario_Load_Chunk("UNITS", Scenario_Load_Unit);
+        Scenario_Load_Chunk("STRUCTURES", Scenario_Load_Structure);
+        Scenario_Load_Chunk("MAP", Scenario_Load_Map);
+        Scenario_Load_Chunk("REINFORCEMENTS", Scenario_Load_Reinforcement);
+        Scenario_Load_Chunk("TEAMS", Scenario_Load_Team);
+        Scenario_Load_Chunk("CHOAM", Scenario_Load_Choam);
 
         Scenario_Load_MapParts("Bloom", Scenario_Load_Map_Bloom);
         Scenario_Load_MapParts("Field", Scenario_Load_Map_Field);

@@ -21,6 +21,7 @@ import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
 import static com.tsoft.dune2.timer.TimerService.g_timerGUI;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
 import static com.tsoft.dune2.tools.ToolsService.Tools_Random_256;
+import static com.tsoft.dune2.video.VideoWin32Service.Video_SetOffset;
 
 public class ExplosionService {
 
@@ -239,7 +240,7 @@ public class ExplosionService {
         }
     }
 
-    static void Explosion_Init() {
+    public static void Explosion_Init() {
         Arrays.fill(g_explosions, null);
     }
 
