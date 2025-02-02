@@ -6,6 +6,7 @@ import com.tsoft.dune2.structure.StructureInfo;
 import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
 import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_GetSize_ByIndex;
 import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_Get_ByIndex;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
@@ -33,19 +34,18 @@ import static com.tsoft.dune2.timer.TimerService.Timer_Sleep;
 import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.tools.IndexType.IT_STRUCTURE;
 import static com.tsoft.dune2.tools.IndexType.IT_TILE;
-import static com.tsoft.dune2.tools.ToolsService.Tools_Index_Encode;
-import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
+import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.*;
 import static com.tsoft.dune2.wsa.WsaService.*;
 
 public class HouseService {
 
-    static House g_playerHouse;
+    public static House g_playerHouse;
     public static int g_playerHouseID = HOUSE_INVALID;
     public static int g_houseMissileCountdown = 0;
-    static int g_playerCreditsNoSilo = 0;
-    static int g_playerCredits = 0;                /* Credits shown to player as 'current'. */
+    public static int g_playerCreditsNoSilo = 0;
+    public static int g_playerCredits = 0;                /* Credits shown to player as 'current'. */
     public static long g_tickHousePowerMaintenance = 0;
 
     static long s_tickHouseHouse = 0;
@@ -184,8 +184,8 @@ public class HouseService {
         }
 
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
             h = House_Find(find);
@@ -242,21 +242,21 @@ public class HouseService {
                         PoolFindStruct find2 = new PoolFindStruct();
 
                         find2.houseID = h.index;
-                        find2.index   = 0xFFFF;
-                        find2.type    = STRUCTURE_STARPORT;
+                        find2.index = 0xFFFF;
+                        find2.type = STRUCTURE_STARPORT;
 
                         while (true) {
                             s = Structure_Find(find2);
                             if (s == null) break;
                             if (s.o.linkedID != 0xFF) continue;
 
-                            u = Unit_CreateWrapper((int)h.index, UNIT_FRIGATE, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
+                            u = Unit_CreateWrapper(h.index, UNIT_FRIGATE, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
                             break;
                         }
                     }
 
                     if (u != null) {
-                        u.o.linkedID = (int)h.starportLinkedID;
+                        u.o.linkedID = h.starportLinkedID;
                         h.starportLinkedID = UNIT_INDEX_INVALID;
                         u.o.flags.inTransport = true;
 
@@ -327,8 +327,8 @@ public class HouseService {
         }
 
         find.houseID = houseID;
-        find.type    = UNIT_CARRYALL;
-        find.index   = 0xFFFF;
+        find.type = UNIT_CARRYALL;
+        find.index = 0xFFFF;
 
         while (true) {
             Unit u;
@@ -342,8 +342,8 @@ public class HouseService {
         if (Unit_IsTypeOnMap(houseID, UNIT_HARVESTER)) return;
 
         find.houseID = houseID;
-        find.type    = STRUCTURE_REFINERY;
-        find.index   = 0xFFFF;
+        find.type = STRUCTURE_REFINERY;
+        find.index = 0xFFFF;
 
         s = Structure_Find(find);
         if (s == null) return;

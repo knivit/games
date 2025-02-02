@@ -322,7 +322,9 @@ public class StructureService {
 
                                     Structure_SetState(s, STRUCTURE_STATE_READY);
 
-                                    if (s.o.houseID == g_playerHouseID) Sound_Output_Feedback(g_playerHouseID + 55);
+                                    if (s.o.houseID == g_playerHouseID) {
+                                        Sound_Output_Feedback(g_playerHouseID + 55);
+                                    }
                                 }
                             }
                         } else if (h.credits != 0) {

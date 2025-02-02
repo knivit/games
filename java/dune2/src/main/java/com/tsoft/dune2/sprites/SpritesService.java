@@ -1,5 +1,6 @@
 package com.tsoft.dune2.sprites;
 
+import static com.tsoft.dune2.codec.Format80Service.Format80_Decode;
 import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_2;
@@ -32,7 +33,7 @@ public class SpritesService {
     public static int g_builtSlabTileID;
     public static int g_wallTileID;
 
-    void *g_mouseSprite = null;
+    public static byte[] g_mouseSprite = null;
     public static byte[] g_mouseSpriteBuffer = null;
 
     static int s_mouseSpriteSize = 0;
@@ -42,9 +43,6 @@ public class SpritesService {
 
     /**
      * Loads the sprites.
-     *
-     * @param index The index of the list of sprite files to load.
-     * @param sprites The array where to store CSIP for each loaded sprite.
      */
     static void Sprites_Load(String filename, String altFilename, int expectedCount) {
         byte[] buffer;
@@ -98,14 +96,14 @@ public class SpritesService {
                     } else {
 					    int *encoded_data = src;
                         int *decoded_data = dst;
-					*decoded_data++ = *encoded_data++ | 0x2;	/* the sprite is not Format80 encoded any more */
+					    *decoded_data++ = *encoded_data++ | 0x2;	/* the sprite is not Format80 encoded any more */
                         memcpy(decoded_data, encoded_data, 5);
                         decoded_data += 5;
                         WRITE_LE_int(decoded_data, size);  /* new packed size */
                         decoded_data += 2;
                         encoded_data += 7;
-					*decoded_data++ = *encoded_data++;    /* copy pixel size */
-					*decoded_data++ = *encoded_data++;
+					    *decoded_data++ = *encoded_data++;    /* copy pixel size */
+					    *decoded_data++ = *encoded_data++;
                         if (READ_LE_int(src) & 0x1) {
                             memcpy(decoded_data, encoded_data, 16);	/* copy palette */
                             decoded_data += 16;

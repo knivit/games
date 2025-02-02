@@ -126,7 +126,7 @@ public class GuiService {
     static boolean g_var_37B8;
 
     public static int g_viewportMessageCounter;             /*!< Countdown counter for displaying #g_viewportMessageText, bit 0 means 'display the text'. */
-    static byte[] g_viewportMessageText;                    /*!< If not \c null, message text displayed in the viewport. */
+    public static byte[] g_viewportMessageText;             /*!< If not \c null, message text displayed in the viewport. */
 
     public static int g_viewportPosition;                   /*!< Top-left tile of the viewport. */
     public static int g_minimapPosition;                    /*!< Top-left tile of the border in the minimap. */

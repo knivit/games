@@ -93,29 +93,29 @@ public class OpenDuneService extends Game {
     static int g_gameMode = GM_MENU;
     public static int g_campaignID = 0;
     public static int g_scenarioID = 1;
-    public static int g_activeAction = 0xFFFF;      /*!< Action the controlled unit will do. */
-    static long g_tickScenarioStart = 0;            /*!< The tick the scenario started in. */
-    static long s_tickGameTimeout = 0;              /*!< The tick the game will timeout. */
+    public static int g_activeAction = 0xFFFF;              /*!< Action the controlled unit will do. */
+    static long g_tickScenarioStart = 0;                    /*!< The tick the scenario started in. */
+    static long s_tickGameTimeout = 0;                      /*!< The tick the game will timeout. */
 
-    oublic static boolean g_debugGame = false;               /*!< When true, you can control the AI. */
-    public static boolean g_debugScenario = false;    /*!< When true, you can review the scenario. There is no fog. The game is not running (no unit-movement, no structure-building, etc). You can click on individual tiles. */
-    public static boolean g_debugSkipDialogs = false; /*!< When non-zero, you immediately go to house selection, and skip all intros. */
+    public static boolean g_debugGame = false;              /*!< When true, you can control the AI. */
+    public static boolean g_debugScenario = false;          /*!< When true, you can review the scenario. There is no fog. The game is not running (no unit-movement, no structure-building, etc). You can click on individual tiles. */
+    public static boolean g_debugSkipDialogs = false;       /*!< When non-zero, you immediately go to house selection, and skip all intros. */
 
     public static byte[] g_readBuffer = null;
     public static long g_readBufferSize = 0;
 
-    static boolean  s_debugForceWin = false; /*!< When true, you immediately win the level. */
+    static boolean  s_debugForceWin = false;                /*!< When true, you immediately win the level. */
 
-    static int s_enableLog = 0; /*!< 0 = off, 1 = record game, 2 = playback game (stored in 'dune.log'). */
+    static int s_enableLog = 0;                             /*!< 0 = off, 1 = record game, 2 = playback game (stored in 'dune.log'). */
 
-    public static int g_validateStrictIfZero = 0; /*!< 0 = strict validation, basically: no-cheat-mode. */
-    public static boolean g_running = true; /*!< true if game needs to keep running; false to stop the game. */
+    public static int g_validateStrictIfZero = 0;           /*!< 0 = strict validation, basically: no-cheat-mode. */
+    public static boolean g_running = true;                 /*!< true if game needs to keep running; false to stop the game. */
     public static int g_selectionType = 0;
     static int g_selectionTypeNew = 0;
-    public static boolean g_viewport_forceRedraw = false; /*!< Force a full redraw of the screen. */
-    public static boolean g_viewport_fadein = false; /*!< Fade in the screen. */
+    public static boolean g_viewport_forceRedraw = false;   /*!< Force a full redraw of the screen. */
+    public static boolean g_viewport_fadein = false;        /*!< Fade in the screen. */
 
-    public static int g_musicInBattle = 0; /*!< 0 = no battle, 1 = fight is going on, -1 = music of fight is going on is active. */
+    public static int g_musicInBattle = 0;                  /*!< 0 = no battle, 1 = fight is going on, -1 = music of fight is going on is active. */
 
     /**
      * Check if a level is finished, based on the values in WinFlags.
