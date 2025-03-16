@@ -18,16 +18,16 @@ public class GfxService {
     public static final int SCREEN_WIDTH  = 320; /*!< Width of the screen in pixels. */
     public static final int SCREEN_HEIGHT = 200;  /*!< Height of the screen in pixels. */
 
-    static byte[] g_paletteActive = new byte[256 * 3];
+    public static byte[] g_paletteActive = new byte[256 * 3];
     public static byte[] g_palette1 = null;
     static byte[] g_palette2 = null;
     static byte[] g_paletteMapping1 = null;
-    static byte[] g_paletteMapping2 = null;
+    public static byte[] g_paletteMapping2 = null;
 
-    static int s_tileSpacing  = 0;	/* bytes to skip between each line. == SCREEN_WIDTH - 2*s_tileWidth */
-    static int s_tileHeight   = 0;	/* "icon" sprites height (lines) */
-    static int s_tileWidth    = 0;	/* "icon" sprites width in bytes. each bytes contains 2 pixels. 4 MSB = left, 4 LSB = right */
-    static int  s_tileMode     = 0;
+    static int s_tileSpacing = 0;	/* bytes to skip between each line. == SCREEN_WIDTH - 2*s_tileWidth */
+    static int s_tileHeight = 0;	/* "icon" sprites height (lines) */
+    static int s_tileWidth = 0; 	/* "icon" sprites width in bytes. each bytes contains 2 pixels. 4 MSB = left, 4 LSB = right */
+    static int  s_tileMode = 0;
     static int  s_tileByteSize = 0;	/* size in byte of one sprite pixel data = s_tileHeight * s_tileWidth / 2 */
 
     /* SCREEN_0 = 320x200 = 64000 = 0xFA00   The main screen buffer, 0xA0000 Video RAM in DOS Dune 2
@@ -50,8 +50,9 @@ public class GfxService {
      * @return Some size value.
      */
     public static int GFX_Screen_GetSize_ByIndex(int screenID) {
-        if (screenID == SCREEN_ACTIVE)
+        if (screenID == SCREEN_ACTIVE) {
             screenID = s_screenActiveID;
+        }
         assert(screenID >= 0 && screenID < GFX_SCREEN_BUFFER_COUNT);
         return s_screenBufferSize[screenID];
     }
@@ -62,8 +63,9 @@ public class GfxService {
      * @return A pointer to the screenbuffer.
      */
     public static byte[] GFX_Screen_Get_ByIndex(int screenID) {
-        if (screenID == SCREEN_ACTIVE)
+        if (screenID == SCREEN_ACTIVE) {
             screenID = s_screenActiveID;
+        }
         assert(screenID >= 0 && screenID < GFX_SCREEN_BUFFER_COUNT);
         return s_screenBuffer[screenID];
     }
@@ -92,20 +94,19 @@ public class GfxService {
     }
 
     public static void GFX_Screen_SetDirty(int screenID, int left, int top, int right, int bottom) {
-        long mask;
-        int y;
-
-        if(screenID == SCREEN_ACTIVE) screenID = s_screenActiveID;
-        if(screenID != SCREEN_0) return;
+        if (screenID == SCREEN_ACTIVE) screenID = s_screenActiveID;
+        if (screenID != SCREEN_0) return;
         s_screen0_is_dirty = true;
         if (left < s_screen0_dirty_area.left) s_screen0_dirty_area.left = left;
         if (top < s_screen0_dirty_area.top) s_screen0_dirty_area.top = top;
         if (right > s_screen0_dirty_area.right) s_screen0_dirty_area.right = right;
         if (bottom > s_screen0_dirty_area.bottom) s_screen0_dirty_area.bottom = bottom;
 
-        mask = (1 << ((right + 15) >> 4)) - 1;
+        long mask = (1 << ((right + 15) >> 4)) - 1;
         mask -= (1 << (left >> 4)) - 1;
-        for (y = top; y < bottom; y++) g_dirty_blocks[y] |= mask;
+        for (int y = top; y < bottom; y++) {
+            g_dirty_blocks[y] |= mask;
+        }
     }
 
     public static void GFX_Screen_SetClean(int screenID) {
@@ -232,7 +233,7 @@ public class GfxService {
      * @param widthSize Value between 0 and 2, indicating the width of the sprite. x8 to get actual width of sprite
      * @param heightSize Value between 0 and 2, indicating the width of the sprite. x8 to get actual width of sprite
      */
-    static void GFX_Init_TilesInfo(int widthSize, int heightSize) {
+    public static void GFX_Init_TilesInfo(int widthSize, int heightSize) {
         /* NOTE : shouldn't it be (heightSize < 3 && widthSize < 3) ??? */
         if (widthSize == heightSize && widthSize < 3) {
             s_tileMode = widthSize & 2;
@@ -500,7 +501,7 @@ public class GfxService {
      * @param height The height.
      * @param buffer The buffer to copy to.
      */
-    static void GFX_CopyToBuffer(int left, int top, int width, int height, byte[] buffer) {
+    public static void GFX_CopyToBuffer(int left, int top, int width, int height, byte[] buffer) {
         if (width == 0) return;
         if (height == 0) return;
 

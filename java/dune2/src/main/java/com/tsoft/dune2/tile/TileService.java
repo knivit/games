@@ -99,23 +99,19 @@ public class TileService {
      * @param radius The radius to remove fog around.
      */
     public static void Tile_RemoveFogInRadius(Tile32 tile, int radius) {
-        int packed;
-        int x, y;
-        int i, j;
-
         /* TODO this code could be simplified */
-        packed = Tile_PackTile(tile);
+        int packed = Tile_PackTile(tile);
 
         if (!Map_IsValidPosition(packed)) return;
 
         /* setting tile from its packed position equals removing the
          * non integer part */
-        x = Tile_GetPackedX(packed);
-        y = Tile_GetPackedY(packed);
+        int x = Tile_GetPackedX(packed);
+        int y = Tile_GetPackedY(packed);
         Tile_MakeXY(tile, x, y);
 
-        for (i = -radius; i <= radius; i++) {
-            for (j = -radius; j <= radius; j++) {
+        for (int i = -radius; i <= radius; i++) {
+            for (int j = -radius; j <= radius; j++) {
                 Tile32 t = new Tile32();
 
                 if ((x + i) < 0 || (x + i) >= 64) continue;
@@ -139,28 +135,21 @@ public class TileService {
      * @return A packed tile.
      */
     public static int Tile_GetTileInDirectionOf(int packed_from, int packed_to) {
-        int distance;
-        int direction;
-
         if (packed_from == 0 || packed_to == 0) return 0;
 
-        distance = Tile_GetDistancePacked(packed_from, packed_to);
-        direction = Tile_GetDirectionPacked(packed_to, packed_from);
+        int distance = Tile_GetDistancePacked(packed_from, packed_to);
+        int direction = Tile_GetDirectionPacked(packed_to, packed_from);
 
         if (distance <= 10) return 0;
 
         while (true) {
-            int dir;
-            Tile32 position;
-            int packed;
-
-            dir = 31 + (Tools_Random_256() & 0x3F);
+            int dir = 31 + (Tools_Random_256() & 0x3F);
 
             if ((Tools_Random_256() & 1) != 0) dir = -dir;
 
-            position = Tile_UnpackTile(packed_to);
+            Tile32 position = Tile_UnpackTile(packed_to);
             position = Tile_MoveByDirection(position, direction + dir, Math.min(distance, 20) << 8);
-            packed = Tile_PackTile(position);
+            int packed = Tile_PackTile(position);
 
             if (Map_IsValidPosition(packed)) return packed;
         }
@@ -258,19 +247,16 @@ public class TileService {
      * @return The tile.
      */
     public static Tile32 Tile_MoveByDirection(Tile32 tile, int orientation, int distance) {
-        int diffX, diffY;
-        int roundingOffsetX, roundingOffsetY;
-
         distance = Math.min(distance, 0xFF);
 
         if (distance == 0) return tile;
 
-        diffX = _stepX[orientation & 0xFF];
-        diffY = _stepY[orientation & 0xFF];
+        int diffX = _stepX[orientation & 0xFF];
+        int diffY = _stepY[orientation & 0xFF];
 
         /* Always round away from zero */
-        roundingOffsetX = diffX < 0 ? -64 : 64;
-        roundingOffsetY = diffY < 0 ? -64 : 64;
+        int roundingOffsetX = diffX < 0 ? -64 : 64;
+        int roundingOffsetY = diffY < 0 ? -64 : 64;
 
         tile.x += (diffX * distance + roundingOffsetX) / 128;
         tile.y -= (diffY * distance + roundingOffsetY) / 128;
@@ -287,27 +273,22 @@ public class TileService {
      * @return The tile.
      */
     public static Tile32 Tile_MoveByRandom(Tile32 tile, int distance, boolean center) {
-        int x;
-        int y;
-        Tile32 ret = new Tile32();
-        int orientation;
-        int newDistance;
-
         if (distance == 0) return tile;
 
-        x = Tile_GetX(tile);
-        y = Tile_GetY(tile);
+        int x = Tile_GetX(tile);
+        int y = Tile_GetY(tile);
 
-        newDistance = Tools_Random_256();
+        int newDistance = Tools_Random_256();
         while (newDistance > distance) newDistance /= 2;
         distance = newDistance;
 
-        orientation = Tools_Random_256();
+        int orientation = Tools_Random_256();
         x += ((_stepX[orientation] * distance) / 128) * 16;
         y -= ((_stepY[orientation] * distance) / 128) * 16;
 
         if (x > 16384 || y > 16384) return tile;
 
+        Tile32 ret = new Tile32();
         ret.x = x;
         ret.y = y;
 
@@ -330,16 +311,14 @@ public class TileService {
             0x17F, 0x16B, 0x159, 0x148,  0x137, 0x128, 0x11A, 0x10C
         };
 
-        int dx;
-        int dy;
         int i;
         int gradient;
         int baseOrientation;
         boolean invert;
         int quadrant = 0;
 
-        dx = to.x - from.x;
-        dy = to.y - from.y;
+        int dx = to.x - from.x;
+        int dy = to.y - from.y;
 
         if (Math.abs(dx) + Math.abs(dy) > 8000) {
             dx /= 2;
@@ -390,11 +369,9 @@ public class TileService {
     public static Tile32 Tile_MoveByOrientation(Tile32 position, int orientation) {
         int[] xOffsets = new int[] {0, 256, 256, 256, 0, -256, -256, -256};
         int[] yOffsets = new int[] {-256, -256, 0, 256, 256, 256, 0, -256};
-        int x;
-        int y;
 
-        x = Tile_GetX(position);
-        y = Tile_GetY(position);
+        int x = Tile_GetX(position);
+        int y = Tile_GetY(position);
 
         orientation = Orientation_Orientation256ToOrientation8(orientation);
 
@@ -539,8 +516,8 @@ public class TileService {
      */
     /*extern tile32 Tile_MakeXY(uint16 x, uint16 y);*/
     public static Tile32 Tile_MakeXY(Tile32 tile, int x, int y) {
-        (tile).x = (x) << 8;
-        (tile).y = (y) << 8;
+        (tile).x = x << 8;
+        (tile).y = y << 8;
         return tile;
     }
 }

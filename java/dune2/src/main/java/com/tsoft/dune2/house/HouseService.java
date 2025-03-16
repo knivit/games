@@ -6,6 +6,7 @@ import com.tsoft.dune2.structure.StructureInfo;
 import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 
+import static com.tsoft.dune2.audio.DriverService.Driver_Voice_IsPlaying;
 import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
 import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_GetSize_ByIndex;
 import static com.tsoft.dune2.gfx.GfxService.GFX_Screen_Get_ByIndex;
@@ -58,13 +59,11 @@ public class HouseService {
      * Loop over all houses, preforming various of tasks.
      */
     public static void GameLoop_House() {
-        PoolFindStruct find = new PoolFindStruct();
-        House h = null;
-        boolean tickHouse                = false;
-        boolean tickPowerMaintenance     = false;
-        boolean tickStarport             = false;
-        boolean tickReinforcement        = false;
-        boolean tickMissileCountdown     = false;
+        boolean tickHouse = false;
+        boolean tickPowerMaintenance = false;
+        boolean tickStarport = false;
+        boolean tickReinforcement = false;
+        boolean tickMissileCountdown = false;
         boolean tickStarportAvailability = false;
 
         if (g_debugScenario) return;
@@ -109,10 +108,8 @@ public class HouseService {
         }
 
         if (tickStarportAvailability) {
-            int type;
-
             /* Pick a random unit to increase starport availability */
-            type = Tools_RandomLCG_Range(0, UNIT_MAX - 1);
+            int type = Tools_RandomLCG_Range(0, UNIT_MAX - 1);
 
             /* Increase how many of this unit is available via starport by one */
             if (g_starportAvailable[type] != 0 && g_starportAvailable[type] < 10) {
@@ -126,21 +123,16 @@ public class HouseService {
 
         if (tickReinforcement) {
             Unit nu = null;
-            int i;
 
-            for (i = 0; i < 16; i++) {
-                int locationID;
-                boolean deployed;
-                Unit u;
-
+            for (int i = 0; i < 16; i++) {
                 if (g_scenario.reinforcement[i].unitID == UNIT_INDEX_INVALID) continue;
                 if (g_scenario.reinforcement[i].timeLeft == 0) continue;
                 if (--g_scenario.reinforcement[i].timeLeft != 0) continue;
 
-                u = Unit_Get_ByIndex(g_scenario.reinforcement[i].unitID);
+                Unit u = Unit_Get_ByIndex(g_scenario.reinforcement[i].unitID);
 
-                locationID = g_scenario.reinforcement[i].locationID;
-                deployed   = false;
+                int locationID = g_scenario.reinforcement[i].locationID;
+                boolean deployed   = false;
 
                 if (locationID >= 4) {
                     if (nu == null) {
@@ -183,12 +175,13 @@ public class HouseService {
             }
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
         find.index = 0xFFFF;
         find.type = 0xFFFF;
 
         while (true) {
-            h = House_Find(find);
+            House h = House_Find(find);
             if (h == null) break;
 
             if (tickHouse) {
@@ -233,14 +226,11 @@ public class HouseService {
                 if (h.starportTimeLeft < 0) h.starportTimeLeft = 0;
 
                 if (h.starportTimeLeft == 0) {
-                    Structure s;
-
-                    s = Structure_Get_ByIndex(g_structureIndex);
+                    Structure s = Structure_Get_ByIndex(g_structureIndex);
                     if (s.o.type == STRUCTURE_STARPORT && s.o.houseID == h.index) {
                         u = Unit_CreateWrapper(h.index, UNIT_FRIGATE, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
                     } else {
                         PoolFindStruct find2 = new PoolFindStruct();
-
                         find2.houseID = h.index;
                         find2.index = 0xFFFF;
                         find2.type = STRUCTURE_STARPORT;
@@ -291,10 +281,9 @@ public class HouseService {
      *  HOUSE_INVALID if not found.
      */
     public static int House_StringToType(String name) {
-        int index;
         if (name == null) return HOUSE_INVALID;
 
-        for (index = 0; index < 6; index++) {
+        for (int index = 0; index < 6; index++) {
             if (g_table_houseInfo[index].name.equalsIgnoreCase(name)) {
                 return index;
             }
@@ -310,15 +299,14 @@ public class HouseService {
      */
     static void House_EnsureHarvesterAvailable(int houseID) {
         PoolFindStruct find = new PoolFindStruct();
-        Structure s;
-
         find.houseID = houseID;
         find.type    = 0xFFFF;
         find.index   = 0xFFFF;
 
         while (true) {
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
+
             /* ENHANCEMENT -- Dune2 checked the wrong type to skip. LinkedID is a structure for a Construction Yard */
             if (!g_dune2_enhanced && s.o.type == STRUCTURE_HEAVY_VEHICLE) continue;
             if (g_dune2_enhanced && s.o.type == STRUCTURE_CONSTRUCTION_YARD) continue;
@@ -331,9 +319,7 @@ public class HouseService {
         find.index = 0xFFFF;
 
         while (true) {
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
             if (u.o.linkedID == UNIT_INVALID) continue;
             if (Unit_Get_ByIndex(u.o.linkedID).o.type == UNIT_HARVESTER) return;
@@ -345,7 +331,7 @@ public class HouseService {
         find.type = STRUCTURE_REFINERY;
         find.index = 0xFFFF;
 
-        s = Structure_Find(find);
+        Structure s = Structure_Find(find);
         if (s == null) return;
 
         if (Unit_CreateWrapper(houseID, UNIT_HARVESTER, Tools_Index_Encode(s.o.index, IT_STRUCTURE)) == null) return;
@@ -384,18 +370,11 @@ public class HouseService {
      * @return True if and only if the radar has been activated.
      */
     public static boolean House_UpdateRadarState(House h) {
-        byte[] wsa;
-        int frame;
-        int frameCount;
-        boolean activate;
-
         if (h == null || h.index != g_playerHouseID) {
             return false;
         }
 
-        wsa = null;
-
-        activate = h.flags.radarActivated;
+        boolean activate = h.flags.radarActivated;
 
         if (h.flags.radarActivated) {
             /* Deactivate radar */
@@ -409,8 +388,8 @@ public class HouseService {
             return false;
         }
 
-        wsa = WSA_LoadFile("STATIC.WSA", GFX_Screen_Get_ByIndex(SCREEN_1), GFX_Screen_GetSize_ByIndex(SCREEN_1), true);
-        frameCount = WSA_GetFrameCount(wsa);
+        byte[] wsa = WSA_LoadFile("STATIC.WSA", GFX_Screen_Get_ByIndex(SCREEN_1), GFX_Screen_GetSize_ByIndex(SCREEN_1), true);
+        int frameCount = WSA_GetFrameCount(wsa);
 
         g_textDisplayNeedsUpdate = true;
 
@@ -424,7 +403,7 @@ public class HouseService {
 
         frameCount = WSA_GetFrameCount(wsa);
 
-        for (frame = 0; frame < frameCount; frame++) {
+        for (int frame = 0; frame < frameCount; frame++) {
             WSA_DisplayFrame(wsa, activate ? frameCount - frame : frame, 256, 136, SCREEN_0);
             GUI_PaletteAnimate();
 
@@ -450,25 +429,20 @@ public class HouseService {
      * @param houseID The house to check the storage for.
      */
     public static void House_UpdateCreditsStorage(int houseID) {
-        PoolFindStruct find = new PoolFindStruct();
-        int creditsStorage;
-
         int oldValidateStrictIfZero = g_validateStrictIfZero;
         g_validateStrictIfZero = 0;
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = houseID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
-        creditsStorage = 0;
+        int creditsStorage = 0;
         while (true) {
-		    StructureInfo si;
-            Structure s;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
 
-            si = g_table_structureInfo[s.o.type];
+            StructureInfo si = g_table_structureInfo[s.o.type];
             creditsStorage += si.creditsStorage;
         }
 
@@ -485,28 +459,25 @@ public class HouseService {
      * @param h The house to calculate the numbers for.
      */
     public static void House_CalculatePowerAndCredit(House h) {
-        PoolFindStruct find = new PoolFindStruct();
-
         if (h == null) return;
 
-        h.powerUsage      = 0;
+        h.powerUsage = 0;
         h.powerProduction = 0;
-        h.creditsStorage  = 0;
+        h.creditsStorage = 0;
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = h.index;
         find.index   = 0xFFFF;
         find.type    = 0xFFFF;
 
         while (true) {
-		    StructureInfo si;
-            Structure s;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
+
             /* ENHANCEMENT -- Only count structures that are placed on the map, not ones we are building. */
             if (g_dune2_enhanced && s.o.flags.isNotOnMap) continue;
 
-            si = g_table_structureInfo[s.o.type];
+            StructureInfo si = g_table_structureInfo[s.o.type];
 
             h.creditsStorage += si.creditsStorage;
 

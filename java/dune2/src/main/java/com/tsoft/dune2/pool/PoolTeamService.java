@@ -52,7 +52,7 @@ public class PoolTeamService {
     /**
      * Initialize the Team array.
      */
-    static void Team_Init() {
+    public static void Team_Init() {
         Arrays.fill(g_teamArray, null);
         Arrays.fill(g_teamFindArray, null);
         g_teamFindCount = 0;
@@ -62,11 +62,9 @@ public class PoolTeamService {
      * Recount all Teams, ignoring the cache array.
      */
     public static void Team_Recount() {
-        int index;
-
         g_teamFindCount = 0;
 
-        for (index = 0; index < TEAM_INDEX_MAX; index++) {
+        for (int index = 0; index < TEAM_INDEX_MAX; index++) {
             Team t = Team_Get_ByIndex(index);
             if (t.flags.used) g_teamFindArray[g_teamFindCount++] = t;
         }
@@ -122,6 +120,7 @@ public class PoolTeamService {
 
         /* If needed, close the gap */
         if (i == g_teamFindCount) return;
-        memmove(g_teamFindArray[i], g_teamFindArray[i + 1], (g_teamFindCount - i) * sizeof(g_teamFindArray[0]));
+
+        System.arraycopy(g_teamFindArray, i + 1, g_teamFindArray, i, (g_teamFindCount - i));
     }
 }

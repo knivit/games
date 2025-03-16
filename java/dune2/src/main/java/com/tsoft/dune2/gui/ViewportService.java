@@ -9,9 +9,13 @@ import com.tsoft.dune2.opendune.XYPosition;
 import com.tsoft.dune2.pool.PoolFindStruct;
 import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.structure.StructureInfo;
+import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 import com.tsoft.dune2.unit.UnitInfo;
 
+import static com.tsoft.dune2.audio.SoundService.Sound_StartSound;
+import static com.tsoft.dune2.config.ConfigService.g_enableVoices;
+import static com.tsoft.dune2.config.ConfigService.g_gameConfig;
 import static com.tsoft.dune2.explosion.ExplosionService.Explosion_Get_ByIndex;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_MAX;
 import static com.tsoft.dune2.gfx.GfxService.*;
@@ -22,21 +26,28 @@ import static com.tsoft.dune2.gui.Gui.*;
 import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.gui.SelectionType.*;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
-import static com.tsoft.dune2.house.HouseService.House_UpdateRadarState;
-import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
+import static com.tsoft.dune2.house.HouseService.*;
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 import static com.tsoft.dune2.input.MouseService.*;
 import static com.tsoft.dune2.map.LandscapeType.*;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Find;
+import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.structure.StructureType.*;
+import static com.tsoft.dune2.table.TableActionInfo.g_table_actionInfo;
+import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
+import static com.tsoft.dune2.table.TableLandscapeInfo.g_table_landscapeInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
+import static com.tsoft.dune2.table.TileDiff.g_table_tilediff;
 import static com.tsoft.dune2.tile.TileService.*;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.tools.IndexType.IT_STRUCTURE;
 import static com.tsoft.dune2.tools.IndexType.IT_TILE;
 import static com.tsoft.dune2.tools.ToolsService.*;
@@ -53,9 +64,9 @@ import static org.lwjgl.system.libc.LibCString.memset;
 
 public class ViewportService {
 
-    static long s_tickCursor;                                 /*!< Stores last time Viewport changed the cursor spriteID. */
-    static long s_tickMapScroll;                              /*!< Stores last time Viewport ran MapScroll function. */
-    static long s_tickClick;                                  /*!< Stores last time Viewport handled a click. */
+    static long s_tickCursor;                /* Stores last time Viewport changed the cursor spriteID. */
+    static long s_tickMapScroll;             /* Stores last time Viewport ran MapScroll function. */
+    static long s_tickClick;                 /* Stores last time Viewport handled a click. */
 
     /**
      * Handles the Click events for the Viewport widget.
@@ -63,15 +74,8 @@ public class ViewportService {
      * @param w The widget.
      */
     static boolean GUI_Widget_Viewport_Click(Widget w) {
-        int direction;
-        int x, y;
-        int spriteID;
-        int packed;
-        boolean click, drag;
-
-        spriteID = g_cursorSpriteID;
+        int spriteID = g_cursorSpriteID;
         switch (w.index) {
-            default: break;
             case 39: spriteID = 1; break;
             case 40: spriteID = 2; break;
             case 41: spriteID = 4; break;
@@ -79,6 +83,7 @@ public class ViewportService {
             case 43: spriteID = g_cursorDefaultSpriteID; break;
             case 44: spriteID = g_cursorDefaultSpriteID; break;
             case 45: spriteID = 0; break;
+            default: break;
         }
 
         if (spriteID != g_cursorSpriteID) {
@@ -97,8 +102,8 @@ public class ViewportService {
 
         if (w.index == 45) return true;
 
-        click = false;
-        drag = false;
+        boolean click = false;
+        boolean drag = false;
 
         if ((w.state.buttonState & 0x11) != 0) {
             click = true;
@@ -113,13 +118,13 @@ public class ViewportService {
             s_tickClick = g_timerGame;
         }
 
-        direction = 0xFFFF;
+        int direction = 0xFFFF;
         switch (w.index) {
-            default: break;
             case 39: direction = 0; break;
             case 40: direction = 2; break;
             case 41: direction = 6; break;
             case 42: direction = 4; break;
+            default: break;
         }
 
         if (direction != 0xFFFF) {
@@ -137,6 +142,7 @@ public class ViewportService {
             return true;
         }
 
+        int x, y;
         if (click) {
             x = g_mouseClickX;
             y = g_mouseClickY;
@@ -146,26 +152,19 @@ public class ViewportService {
         }
 
         if (w.index == 43) {
-            x =  x / 16 + Tile_GetPackedX(g_minimapPosition);
+            x = x / 16 + Tile_GetPackedX(g_minimapPosition);
             y = (y - 40) / 16 + Tile_GetPackedY(g_minimapPosition);
         } else if (w.index == 44) {
-            int mapScale;
-		    MapInfo mapInfo;
-
-            mapScale = g_scenario.mapScale;
-            mapInfo = g_mapInfos[mapScale];
+            int mapScale = g_scenario.mapScale;
+            MapInfo mapInfo = g_mapInfos[mapScale];
 
             x = min((max(x, 256) - 256) / (mapScale + 1), mapInfo.sizeX - 1) + mapInfo.minX;
             y = min((max(y, 136) - 136) / (mapScale + 1), mapInfo.sizeY - 1) + mapInfo.minY;
         }
 
-        packed = Tile_PackXY(x, y);
+        int packed = Tile_PackXY(x, y);
 
         if (click && g_selectionType == SELECTIONTYPE_TARGET) {
-            Unit u;
-            int action;
-            int encoded;
-
             GUI_DisplayText(null, -1);
 
             if (g_unitHouseMissile != null) {
@@ -173,15 +172,16 @@ public class ViewportService {
                 return true;
             }
 
-            u = g_unitActive;
+            Unit u = g_unitActive;
 
-            action = g_activeAction;
+            int action = g_activeAction;
 
             Object_Script_Variable4_Clear(u.o);
-            u.targetAttack   = 0;
-            u.targetMove     = 0;
+            u.targetAttack = 0;
+            u.targetMove = 0;
             u.route[0] = 0xFF;
 
+            int encoded;
             if (action != ACTION_MOVE && action != ACTION_HARVEST) {
                 encoded = Tools_Index_Encode(Unit_FindTargetAround(packed), IT_TILE);
             } else {
@@ -202,7 +202,7 @@ public class ViewportService {
                 if (target != null) target.blinkCounter = 8;
             }
 
-            if (g_enableVoices == 0) {
+            if (!g_enableVoices) {
                 Driver_Sound_Play(36, 0xFF);
             } else if (g_table_unitInfo[u.o.type].movementType == MOVEMENT_FOOT) {
                 Sound_StartSound(g_table_actionInfo[action].soundID);
@@ -218,24 +218,20 @@ public class ViewportService {
         }
 
         if (click && g_selectionType == SELECTIONTYPE_PLACE) {
-		    StructureInfo si;
-            Structure s;
-            House h;
-
-            s = g_structureActive;
-            si = g_table_structureInfo[g_structureActiveType];
-            h = g_playerHouse;
+            Structure s = g_structureActive;
+            StructureInfo si = g_table_structureInfo[g_structureActiveType];
+            House h = g_playerHouse;
 
             if (Structure_Place(s, g_selectionPosition)) {
                 Voice_Play(20);
 
-                if (s.o.type == STRUCTURE_PALACE) House_Get_ByIndex(s.o.houseID).palacePosition = s.o.position;
+                if (s.o.type == STRUCTURE_PALACE) {
+                    House_Get_ByIndex(s.o.houseID).palacePosition = s.o.position;
+                }
 
                 if (g_structureActiveType == STRUCTURE_REFINERY && g_validateStrictIfZero == 0) {
-                    Unit u;
-
                     g_validateStrictIfZero++;
-                    u = Unit_CreateWrapper(g_playerHouseID, UNIT_HARVESTER, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
+                    Unit u = Unit_CreateWrapper(g_playerHouseID, UNIT_HARVESTER, Tools_Index_Encode(s.o.index, IT_STRUCTURE));
                     g_validateStrictIfZero--;
 
                     if (u == null) {
@@ -253,8 +249,8 @@ public class ViewportService {
                 }
 
                 g_structureActiveType = 0xFFFF;
-                g_structureActive     = null;
-                g_selectionState      = 0; /* Invalid. */
+                g_structureActive = null;
+                g_selectionState = 0; /* Invalid. */
 
                 GUI_DisplayHint(si.o.hintStringID, si.o.spriteID);
 
@@ -281,7 +277,6 @@ public class ViewportService {
 
         if (click && w.index == 43) {
             int position;
-
             if (g_debugScenario) {
                 position = packed;
             } else {
@@ -342,6 +337,7 @@ public class ViewportService {
                 paletteHouse[i] = v;
             }
         }
+
         return true;
     }
 
@@ -353,41 +349,30 @@ public class ViewportService {
      * @param drawToMainScreen True if and only if we are drawing to the main screen and not some buffer screen.
      */
     static void GUI_Widget_Viewport_Draw(boolean forceRedraw, boolean hasScrolled, boolean drawToMainScreen) {
-        int[][] values_32A4 = new int[][] {	/* index, flag passed to GUI_DrawSprite() */
+        int[][] values_32A4 = new int[][] {	  /* index, flag passed to GUI_DrawSprite() */
             {0, 0}, {1, 0}, {2, 0}, {3, 0},
             {4, 0}, {3, 1}, {2, 1}, {1, 1}
         };
 
-        int[] paletteHouse = new int[16];    /*!< Used for palette manipulation to get housed coloured units etc. */
-        int x;
-        int y;
-        int i;
-        int curPos;
-        boolean updateDisplay;
-        int oldScreenID;
-        int oldWidgetID;
+        byte[] paletteHouse = new byte[16];    /* Used for palette manipulation to get housed coloured units etc. */
         int[] minX = new int[10];
         int[] maxX = new int[10];
 
-        PoolFindStruct find = new PoolFindStruct();
-
-        updateDisplay = forceRedraw;
+        boolean updateDisplay = forceRedraw;
 
         memset(minX, 0xF);
         memset(maxX, 0);
 
-        oldScreenID = GFX_Screen_SetActive(SCREEN_1);
+        int oldScreenID = GFX_Screen_SetActive(SCREEN_1);
 
-        oldWidgetID = Widget_SetCurrentWidget(2);
+        int oldWidgetID = Widget_SetCurrentWidget(2);
 
         if (g_dirtyViewportCount != 0 || forceRedraw) {
-            for (y = 0; y < 10; y++) {
+            for (int y = 0; y < 10; y++) {
                 int top = (y << 4) + 0x28;	/* 40 */
-                for (x = 0; x < (drawToMainScreen ? 15 : 16); x++) {
-                    Tile t;
-                    int left;
 
-                    curPos = g_viewportPosition + Tile_PackXY(x, y);
+                for (int x = 0; x < (drawToMainScreen ? 15 : 16); x++) {
+                    int curPos = g_viewportPosition + Tile_PackXY(x, y);
 
                     if (x < 15 && !forceRedraw && BitArray_Test(g_dirtyViewport, curPos)) {
                         if (maxX[y] < x) maxX[y] = x;
@@ -405,12 +390,12 @@ public class ViewportService {
                         if (minX[y] > x) minX[y] = x;
                     }
 
-                    t = g_map[curPos];
-                    left = x << 4;
+                    Tile t = g_map[curPos];
+                    int left = x << 4;
 
                     if (!g_debugScenario && g_veiledTileID == t.overlayTileID) {
                         /* draw a black rectangle */
-                        GUI_DrawFilledRectangle(left, top, left + 15, top + 15, 12);
+                        GUI_DrawFilledRectangle(left, top, left + 15, top + 15, (byte)12);
                         continue;
                     }
 
@@ -421,20 +406,20 @@ public class ViewportService {
                     }
                 }
             }
+
             g_dirtyViewportCount = 0;
         }
 
         /* Draw Sandworm */
-        find.type    = UNIT_SANDWORM;
-        find.index   = 0xFFFF;
+        PoolFindStruct find = new PoolFindStruct();
+        find.type = UNIT_SANDWORM;
+        find.index = 0xFFFF;
         find.houseID = HOUSE_INVALID;
 
         while (true) {
-            Unit u;
             byte[] sprite;
 
-            u = Unit_Find(find);
-
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
             if (!u.o.flags.isDirty && !forceRedraw) continue;
@@ -445,17 +430,18 @@ public class ViewportService {
             sprite = g_sprites[g_table_unitInfo[u.o.type].groundSpriteID];
             GUI_Widget_Viewport_GetSprite_HousePalette(sprite, Unit_GetHouseID(u), paletteHouse);
 
-            if (Map_IsPositionInViewport(u.o.position, &x, &y)) {
-                GUI_DrawSprite(SCREEN_ACTIVE, sprite, x, y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
+            Tile32 xy = new Tile32();
+            if (Map_IsPositionInViewport(u.o.position, xy)) {
+                GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x, xy.y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
             }
-            if (Map_IsPositionInViewport(u.targetLast, &x, &y)) {
-                GUI_DrawSprite(SCREEN_ACTIVE, sprite, x, y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
+            if (Map_IsPositionInViewport(u.targetLast, xy)) {
+                GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x, xy.y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
             }
-            if (Map_IsPositionInViewport(u.targetPreLast, &x, &y)) {
-                GUI_DrawSprite(SCREEN_ACTIVE, sprite, x, y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
+            if (Map_IsPositionInViewport(u.targetPreLast, xy)) {
+                GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x, xy.y, 2, DRAWSPRITE_FLAG_BLUR | DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
             }
-            if (u == g_unitSelected && Map_IsPositionInViewport(u.o.position, &x, &y)) {
-                GUI_DrawSprite(SCREEN_ACTIVE, g_sprites[6], x, y, 2, DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
+            if (u == g_unitSelected && Map_IsPositionInViewport(u.o.position, xy)) {
+                GUI_DrawSprite(SCREEN_ACTIVE, g_sprites[6], xy.x, xy.y, 2, DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER);
             }
         }
 
@@ -466,11 +452,11 @@ public class ViewportService {
             int y2 = y1 + (g_selectionHeight << 4) - 1;
 
             GUI_SetClippingArea(0, 40, 239, SCREEN_HEIGHT - 1);
-            GUI_DrawWiredRectangle(x1, y1, x2, y2, 0xFF);
+            GUI_DrawWiredRectangle(x1, y1, x2, y2, (byte)0xFF);
 
             if (g_selectionState == 0 && g_selectionType == SELECTIONTYPE_PLACE) {
-                GUI_DrawLine(x1, y1, x2, y2, 0xFF);
-                GUI_DrawLine(x2, y1, x1, y2, 0xFF);
+                GUI_DrawLine(x1, y1, x2, y2, (byte)0xFF);
+                GUI_DrawLine(x2, y1, x1, y2, (byte)0xFF);
             }
 
             GUI_SetClippingArea(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
@@ -480,39 +466,36 @@ public class ViewportService {
 
         /* Draw ground units */
         if (g_dirtyUnitCount != 0 || forceRedraw || updateDisplay) {
-            find.type    = 0xFFFF;
-            find.index   = 0xFFFF;
+            find.type = 0xFFFF;
+            find.index = 0xFFFF;
             find.houseID = HOUSE_INVALID;
 
             while (true) {
-                Unit u;
-                UnitInfo ui;
-                int packed;
-                int orientation;
                 int index;
                 int spriteFlags = 0;
 
-                u = Unit_Find(find);
+                Unit u = Unit_Find(find);
 
                 if (u == null) break;
 
                 if (u.o.index < 20 || u.o.index > 101) continue;
 
-                packed = Tile_PackTile(u.o.position);
+                int packed = Tile_PackTile(u.o.position);
 
                 if ((!u.o.flags.isDirty || u.o.flags.isNotOnMap) && !forceRedraw && !BitArray_Test(g_dirtyViewport, packed)) continue;
                 u.o.flags.isDirty = false;
 
                 if (!g_map[packed].isUnveiled && !g_debugScenario) continue;
 
-                ui = g_table_unitInfo[u.o.type];
+                UnitInfo ui = g_table_unitInfo[u.o.type];
 
-                if (!Map_IsPositionInViewport(u.o.position, &x, &y)) continue;
+                Tile32 xy = new Tile32();
+                if (!Map_IsPositionInViewport(u.o.position, xy)) continue;
 
-                x += g_table_tilediff[0][u.wobbleIndex].x;
-                y += g_table_tilediff[0][u.wobbleIndex].y;
+                int x = xy.x + g_table_tilediff[0][u.wobbleIndex].x;
+                int y = xy.y + g_table_tilediff[0][u.wobbleIndex].y;
 
-                orientation = Orientation_Orientation256ToOrientation8(u.orientation[0].current);
+                int orientation = Orientation_Orientation256ToOrientation8(u.orientation[0].current);
 
                 if (u.spriteOffset >= 0 || ui.destroyedSpriteID == 0) {
                     int[][] values_32C4 = new int[][] {	/* index, flag */
@@ -650,10 +633,10 @@ public class ViewportService {
         }
 
         /* draw explosions */
-        for (i = 0; i < EXPLOSION_MAX; i++) {
+        for (int i = 0; i < EXPLOSION_MAX; i++) {
             Explosion e = Explosion_Get_ByIndex(i);
 
-            curPos = Tile_PackTile(e.position);
+            int curPos = Tile_PackTile(e.position);
 
             if (BitArray_Test(g_dirtyViewport, curPos)) e.isDirty = true;
 
@@ -664,16 +647,18 @@ public class ViewportService {
             e.isDirty = false;
 
             if (!g_map[curPos].isUnveiled && !g_debugScenario) continue;
-            if (!Map_IsPositionInViewport(e.position, &x, &y)) continue;
+
+            Tile32 xy = new Tile32();
+            if (!Map_IsPositionInViewport(e.position, xy)) continue;
 
             /*GUI_Widget_Viewport_GetSprite_HousePalette(g_sprites[e.spriteID], e.houseID, paletteHouse);*/
-            GUI_DrawSprite(SCREEN_ACTIVE, g_sprites[e.spriteID], x, y, 2, DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER/*, paletteHouse*/);
+            GUI_DrawSprite(SCREEN_ACTIVE, g_sprites[e.spriteID], xy.x, xy.y, 2, DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER/*, paletteHouse*/);
         }
 
         /* draw air units */
         if (g_dirtyAirUnitCount != 0 || forceRedraw || updateDisplay) {
-            find.type    = 0xFFFF;
-            find.index   = 0xFFFF;
+            find.type = 0xFFFF;
+            find.index = 0xFFFF;
             find.houseID = HOUSE_INVALID;
 
             while (true) {
@@ -682,33 +667,26 @@ public class ViewportService {
                     {0, 2}, {1, 3}, {2, 1}, {1, 1}
                 };
 
-                Unit u;
-                UnitInfo ui;
-                int orientation;
-                int *sprite;
-                int index;
-                int spriteFlags;
-
-                u = Unit_Find(find);
-
+                Unit u = Unit_Find(find);
                 if (u == null) break;
 
                 if (u.o.index > 15) continue;
 
-                curPos = Tile_PackTile(u.o.position);
+                int curPos = Tile_PackTile(u.o.position);
 
                 if ((!u.o.flags.isDirty || u.o.flags.isNotOnMap) && !forceRedraw && !BitArray_Test(g_dirtyViewport, curPos)) continue;
                 u.o.flags.isDirty = false;
 
                 if (!g_map[curPos].isUnveiled && !g_debugScenario) continue;
 
-                ui = g_table_unitInfo[u.o.type];
+                UnitInfo ui = g_table_unitInfo[u.o.type];
 
-                if (!Map_IsPositionInViewport(u.o.position, &x, &y)) continue;
+                Tile32 xy = new Tile32();
+                if (!Map_IsPositionInViewport(u.o.position, xy)) continue;
 
-                index = ui.groundSpriteID;
-                orientation = u.orientation[0].current;
-                spriteFlags = DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER;
+                int index = ui.groundSpriteID;
+                int orientation = u.orientation[0].current;
+                int spriteFlags = DRAWSPRITE_FLAG_WIDGETPOS | DRAWSPRITE_FLAG_CENTER;
 
                 switch (ui.displayMode) {
                     case DISPLAYMODE_SINGLE_FRAME:
@@ -753,17 +731,17 @@ public class ViewportService {
                 if (ui.flags.hasAnimationSet && u.o.flags.animationFlip) index += 5;
                 if (u.o.type == UNIT_CARRYALL && u.o.flags.inTransport) index += 3;
 
-                sprite = g_sprites[index];
+                byte[] sprite = g_sprites[index];
 
                 if (ui.o.flags.hasShadow) {
-                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, x + 1, y + 3, 2, (spriteFlags & ~DRAWSPRITE_FLAG_PAL) | DRAWSPRITE_FLAG_REMAP | DRAWSPRITE_FLAG_BLUR, g_paletteMapping1, 1);
+                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x + 1, xy.y + 3, 2, (spriteFlags & ~DRAWSPRITE_FLAG_PAL) | DRAWSPRITE_FLAG_REMAP | DRAWSPRITE_FLAG_BLUR, g_paletteMapping1, 1);
                 }
                 if (ui.o.flags.blurTile) spriteFlags |= DRAWSPRITE_FLAG_BLUR;
 
                 if (GUI_Widget_Viewport_GetSprite_HousePalette(sprite, Unit_GetHouseID(u), paletteHouse)) {
-                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, x, y, 2, spriteFlags | DRAWSPRITE_FLAG_PAL, paletteHouse);
+                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x, xy.y, 2, spriteFlags | DRAWSPRITE_FLAG_PAL, paletteHouse);
                 } else {
-                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, x, y, 2, spriteFlags);
+                    GUI_DrawSprite(SCREEN_ACTIVE, sprite, xy.x, xy.y, 2, spriteFlags);
                 }
             }
 
@@ -782,8 +760,8 @@ public class ViewportService {
             int maxY = 0;
             int oldScreenID2 = SCREEN_1;
 
-            for (i = 0; i < g_changedTilesCount; i++) {
-                curPos = g_changedTiles[i];
+            for (int i = 0; i < g_changedTilesCount; i++) {
+                int curPos = g_changedTiles[i];
                 BitArray_Clear(g_changedTilesMap, curPos);
 
                 if (!init) {
@@ -795,7 +773,7 @@ public class ViewportService {
                 }
 
                 if (GUI_Widget_Viewport_DrawTile(curPos)) {
-                    y = Tile_GetPackedY(curPos) - g_mapInfos[g_scenario.mapScale].minY; /* +136 */
+                    int y = Tile_GetPackedY(curPos) - g_mapInfos[g_scenario.mapScale].minY; /* +136 */
                     y *= (g_scenario.mapScale + 1);
                     if (y > maxY) maxY = y;
                     if (y < minY) minY = y;
@@ -811,6 +789,7 @@ public class ViewportService {
                     minY = 0;
                     maxY = 63 - g_scenario.mapScale;
                 }
+
                 /* MiniMap : redraw only line that changed */
                 if (minY < maxY) GUI_Screen_Copy(32, 136 + minY, 32, 136 + minY, 8, maxY + 1 + g_scenario.mapScale - minY, SCREEN_ACTIVE, SCREEN_0);
 
@@ -819,13 +798,13 @@ public class ViewportService {
                 GUI_Mouse_Show_InWidget();
             }
 
-            if (g_changedTilesCount == lengthof(g_changedTiles)) {
+            if (g_changedTilesCount == g_changedTiles.length) {
                 g_changedTilesCount = 0;
 
-                for (i = 0; i < 4096; i++) {
+                for (int i = 0; i < 4096; i++) {
                     if (!BitArray_Test(g_changedTilesMap, i)) continue;
                     g_changedTiles[g_changedTilesCount++] = i;
-                    if (g_changedTilesCount == lengthof(g_changedTiles)) break;
+                    if (g_changedTilesCount == g_changedTiles.length) break;
                 }
             } else {
                 g_changedTilesCount = 0;
@@ -856,7 +835,7 @@ public class ViewportService {
             } else {
                 boolean init = false;
 
-                for (i = 0; i < 10; i++) {
+                for (int i = 0; i < 10; i++) {
                     int width;
                     int height;
 
@@ -867,8 +846,8 @@ public class ViewportService {
 
                     if (maxX[i] < minX[i]) continue;
 
-                    x = minX[i] * 2;
-                    y = (i << 4) + 0x28;
+                    int x = minX[i] * 2;
+                    int y = (i << 4) + 0x28;
                     width  = (maxX[i] - minX[i] + 1) * 2;
                     height = 16;
 
@@ -896,24 +875,19 @@ public class ViewportService {
      * @param packed The tile to draw.
      */
     public static boolean GUI_Widget_Viewport_DrawTile(int packed) {
-        int x;
-        int y;
         int colour;
-        int spriteID;
-        int mapScale;
 
         colour = 12;
-        spriteID = 0xFFFF;
+        int spriteID = 0xFFFF;
 
         if (Tile_IsOutOfMap(packed) || !Map_IsValidPosition(packed)) return false;
 
-        mapScale = g_scenario.mapScale + 1;
+        int mapScale = g_scenario.mapScale + 1;
 
         if (mapScale == 0 || BitArray_Test(g_displayedMinimap, packed)) return false;
 
         if ((g_map[packed].isUnveiled && g_playerHouse.flags.radarActivated) || g_debugScenario) {
             int type = Map_GetLandscapeType(packed);
-            Unit u;
 
             if (mapScale > 1) {
                 spriteID = g_scenario.mapScale + g_table_landscapeInfo[type].spriteID - 1;
@@ -929,7 +903,7 @@ public class ViewportService {
                 }
             }
 
-            u = Unit_Get_ByPackedTile(packed);
+            Unit u = Unit_Get_ByPackedTile(packed);
 
             if (u != null) {
                 if (mapScale > 1) {
@@ -947,9 +921,7 @@ public class ViewportService {
                 }
             }
         } else {
-            Structure s;
-
-            s = Structure_Get_ByPackedTile(packed);
+            Structure s = Structure_Get_ByPackedTile(packed);
 
             if (s != null && s.o.houseID == g_playerHouseID) {
                 if (mapScale > 1) {
@@ -966,8 +938,8 @@ public class ViewportService {
             }
         }
 
-        x = Tile_GetPackedX(packed);
-        y = Tile_GetPackedY(packed);
+        int x = Tile_GetPackedX(packed);
+        int y = Tile_GetPackedY(packed);
 
         x -= g_mapInfos[g_scenario.mapScale].minX;
         y -= g_mapInfos[g_scenario.mapScale].minY;
@@ -977,8 +949,9 @@ public class ViewportService {
             y *= g_scenario.mapScale + 1;
             GUI_DrawSprite(SCREEN_ACTIVE, g_sprites[spriteID], x, y, 3, DRAWSPRITE_FLAG_WIDGETPOS);
         } else {
-            GFX_PutPixel(x + 256, y + 136, colour & 0xFF);
+            GFX_PutPixel(x + 256, y + 136, (byte)(colour & 0xFF));
         }
+
         return true;
     }
 
@@ -989,11 +962,12 @@ public class ViewportService {
      */
     public static void GUI_Widget_Viewport_RedrawMap(int screenID) {
         int oldScreenID = SCREEN_1;
-        int i;
 
         if (screenID == SCREEN_0) oldScreenID = GFX_Screen_SetActive(SCREEN_1);
 
-        for (i = 0; i < 4096; i++) GUI_Widget_Viewport_DrawTile(i);
+        for (int i = 0; i < 4096; i++) {
+            GUI_Widget_Viewport_DrawTile(i);
+        }
 
         Map_UpdateMinimapPosition(g_minimapPosition, true);
 

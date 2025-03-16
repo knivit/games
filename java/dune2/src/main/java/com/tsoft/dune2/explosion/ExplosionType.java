@@ -5,7 +5,7 @@ package com.tsoft.dune2.explosion;
  */
 public class ExplosionType {
 
-    public static final int EXPLOSION_MAX = 32;           /*!< The maximum amount of active explosions we can have. */
+    public static final int EXPLOSION_MAX = 32;           /* The maximum amount of active explosions we can have. */
 
     public static final int EXPLOSION_IMPACT_SMALL        = 0;
     public static final int EXPLOSION_IMPACT_MEDIUM       = 1;

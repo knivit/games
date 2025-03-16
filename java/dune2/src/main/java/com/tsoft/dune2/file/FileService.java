@@ -170,16 +170,16 @@ public class FileService {
      * @return An index value refering to the opened file, or FILE_INVALID.
      */
     static int _File_Open(int dir, String filename, int mode) {
-        int fileIndex;
-        FileInfo fileInfo;
         FileInfo pakInfo = null;
 
         if ((mode & FILE_MODE_READ_WRITE) == 0) return FILE_INVALID;
 
         /* Find a free spot in our limited array */
+        int fileIndex;
         for (fileIndex = 0; fileIndex < FILE_MAX; fileIndex++) {
             if (s_file[fileIndex].fp == null) break;
         }
+
         if (fileIndex >= FILE_MAX) {
             Warning("Limit of %d open files reached.\n", FILE_MAX);
             return FILE_INVALID;
@@ -187,8 +187,9 @@ public class FileService {
 
         if (mode == FILE_MODE_READ && dir != SEARCHDIR_PERSONAL_DATA_DIR) {
             /* Look in PAK only for READ only files, and not Personnal files */
-            fileInfo = FileInfo_Find_ByName(filename, &pakInfo);
+            FileInfo fileInfo = FileInfo_Find_ByName(filename, pakInfo);
             if (fileInfo == null) return FILE_INVALID;
+
             if (pakInfo == null) {
                 /* Check if we can find the file outside any PAK file */
                 s_file[fileIndex].fp = fopendatadir(dir, filename, "rb");
@@ -306,9 +307,10 @@ public class FileService {
             return false;
         }
         if (!fread_le_long(&nextposition, f)) {
-          fclose(f);
-         return false;
+            fclose(f);
+            return false;
         }
+
         while (nextposition != 0) {
             position = nextposition;
             for (i = 0; i < sizeof(filename); i++) {
@@ -326,12 +328,14 @@ public class FileService {
                 fclose(f);
                 return false;
             }
+
             size = (nextposition != 0) ? nextposition - position : paksize - position;
             if (_File_Init_AddFileInPak(filename, size, position, pakInfo) == null) {
                 fclose(f);
                 return false;
             }
         }
+
         fclose(f);
         return true;
     }
@@ -349,6 +353,7 @@ public class FileService {
 
         fileInfo = _File_Init_AddFileInRootDir(name, size);
         if (fileInfo == null) return false;
+
         String ext = strrchr(path, '.');
         if (ext != null) {
             if (".pak".equalsIgnoreCase(ext)) {
@@ -358,6 +363,7 @@ public class FileService {
                 }
             }
         }
+
         return true;
     }
 
@@ -422,7 +428,7 @@ public class FileService {
     /**
      * Free all ressources loaded in memory.
      */
-    static void File_Uninit() {
+    public static void File_Uninit() {
         if (s_currentPakFp != null) fclose(s_currentPakFp);
         s_currentPakFp = null;
         s_currentPakInfo = null;
@@ -458,8 +464,7 @@ public class FileService {
                 if (fileSize != null) *fileSize = fileInfo.fileSize;
             }
         } else {
-            int index;
-            index = _File_Open(dir, filename, FILE_MODE_READ);
+            int index = _File_Open(dir, filename, FILE_MODE_READ);
             if (index != FILE_INVALID) {
                 exists = true;
                 if (fileSize != null) *fileSize = File_GetSize(index);
@@ -475,12 +480,10 @@ public class FileService {
      *
      * @param filename The name of the file to open.
      * @param mode The mode to open the file in. Bit 1 means reading, bit 2 means writing.
-     * @return An index value refering to the opened file, or FILE_INVALID.
+     * @return An index value referring to the opened file, or FILE_INVALID.
      */
     public static int File_Open_Ex(int dir, String filename, int mode) {
-        int res;
-
-        res = _File_Open(dir, filename, mode);
+        int res = _File_Open(dir, filename, mode);
 
         if (res == FILE_INVALID) {
             if(dir == SEARCHDIR_PERSONAL_DATA_DIR) {
@@ -528,7 +531,7 @@ public class FileService {
 
         if (length > s_file[index].size - s_file[index].position) length = s_file[index].size - s_file[index].position;
 
-        byte[] buffer =  s_file[index].fp.fread(length);
+        byte[] buffer = s_file[index].fp.fread(length);
         if (buffer == null) {
             Error("Read error\n");
             File_Close(index);
@@ -557,9 +560,9 @@ public class FileService {
      * @param index The index given by File_Open() of the file.
      * @return The integer read.
      */
-    public static long File_Read_LE32(int index) {
+    public static Long File_Read_LE32(int index) {
         byte[] buffer = File_Read(index, 4);
-        return READ_LE_long(buffer, 0);
+        return (buffer == null) ? null : (long)READ_LE_long(buffer, 0);
     }
 
     /**
@@ -582,7 +585,9 @@ public class FileService {
         }
 
         s_file[index].position += length;
-        if (s_file[index].position > s_file[index].size) s_file[index].size = s_file[index].position;
+        if (s_file[index].position > s_file[index].size) {
+            s_file[index].size = s_file[index].position;
+        }
         return length;
     }
 
@@ -636,7 +641,7 @@ public class FileService {
      * @param index The index given by File_Open() of the file.
      * @return The size of the file.
      */
-    public static long File_GetSize(int index) {
+    public static int File_GetSize(int index) {
         if (index >= FILE_MAX) return 0;
         if (s_file[index].fp == null) return 0;
 
@@ -666,9 +671,7 @@ public class FileService {
      * @param filename The filename to create.
      */
     public static void File_Create_Personal(String filename) {
-        int index;
-
-        index = _File_Open(SEARCHDIR_PERSONAL_DATA_DIR, filename, FILE_MODE_WRITE);
+        int index = _File_Open(SEARCHDIR_PERSONAL_DATA_DIR, filename, FILE_MODE_WRITE);
         if (index != FILE_INVALID) File_Close(index);
     }
 
@@ -681,9 +684,7 @@ public class FileService {
      * @return The amount of bytes truly read, or 0 if there was a failure.
      */
     static byte[] File_ReadBlockFile_Ex(int dir, String filename, long length) {
-        int index;
-
-        index = File_Open_Ex(dir, filename, FILE_MODE_READ);
+        int index = File_Open_Ex(dir, filename, FILE_MODE_READ);
         if (index == FILE_INVALID) return null;
         byte[] buffer = File_Read(index, length);
         File_Close(index);
@@ -697,19 +698,16 @@ public class FileService {
      * @return The pointer to allocated memory where the file has been read.
      */
     public static byte[] File_ReadWholeFile(String filename) {
-        int index;
-        long length;
-        byte[] buffer;
-
-        index = File_Open(filename, FILE_MODE_READ);
+        int index = File_Open(filename, FILE_MODE_READ);
         if (index == FILE_INVALID) return null;
-        length = File_GetSize(index);
+        int length = File_GetSize(index);
 
-        buffer = malloc(length + 1);
+        byte[] buffer = new byte[length + 1];
         if (buffer == null) {
             Error("Failed to allocate %lu bytes of memory.\n", length + 1);
             return null;
         }
+
         if (File_Read(index, buffer, length) != length) {
             free(buffer);
             return null;
@@ -732,14 +730,10 @@ public class FileService {
      * @return The pointer to allocated memory where the file has been read.
      */
     public static byte[] File_ReadWholeFileLE16(String filename) {
-        int index;
-        long count;
-        byte[] buffer;
+        int index = File_Open(filename, FILE_MODE_READ);
+        int count = File_GetSize(index) / 2;
 
-        index = File_Open(filename, FILE_MODE_READ);
-        count = File_GetSize(index) / sizeof(int);
-
-        buffer = malloc(count * sizeof(int));
+        byte[] buffer = new byte[count * 2];
         if (File_Read(index, buffer, count * sizeof(int)) != count * sizeof(int)) {
             free(buffer);
             return null;
@@ -758,11 +752,8 @@ public class FileService {
      * @return The length of the file.
      */
     static byte[] File_ReadFile(String filename) {
-        int index;
-        long length;
-
-        index = File_Open(filename, FILE_MODE_READ);
-        length = File_GetSize(index);
+        int index = File_Open(filename, FILE_MODE_READ);
+        int length = File_GetSize(index);
         byte[] buf = File_Read(index, length);
         File_Close(index);
 
@@ -776,14 +767,11 @@ public class FileService {
      * @return An index value refering to the opened file, or FILE_INVALID.
      */
     public static int ChunkFile_Open_Ex(int dir, String filename) {
-        int index;
-        byte[] header;
+        int index = File_Open_Ex(dir, filename, FILE_MODE_READ);
 
-        index = File_Open_Ex(dir, filename, FILE_MODE_READ);
+        if (index == FILE_INVALID) return index;
 
-        if(index == FILE_INVALID) return index;
-
-        header = File_Read(index, 4);
+        byte[] header = File_Read(index, 4);
 
         if (header != HTOBE32(CC_FORM)) {
             File_Close(index);
@@ -819,9 +807,9 @@ public class FileService {
         boolean first = true;
 
         while (true) {
-            if (File_Read(index, &value, 4) != 4 && !first) return 0;
+            if (File_Read(index, value, 4) != 4 && !first) return 0;
 
-            if (value == 0 && File_Read(index, &value, 4) != 4 && !first) return 0;
+            if (value == 0 && File_Read(index, value, 4) != 4 && !first) return 0;
 
             if (File_Read(index, &length, 4) != 4 && !first) return 0;
 
@@ -892,7 +880,7 @@ public class FileService {
         }
     }
 
-    public static int File_Exists(String FILENAME) {
+    public static boolean File_Exists(String FILENAME) {
         return File_Exists_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, null);
     }
 
@@ -900,12 +888,12 @@ public class FileService {
         return File_Exists_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, FILESIZE);
     }
 
-    public static int File_Exists_Personal(String FILENAME) {
+    public static boolean File_Exists_Personal(String FILENAME) {
         return File_Exists_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME, null);
     }
 
     public static int File_Open(String FILENAME, int MODE) {
-        return File_Open_Ex(SEARCHDIR_GLOBAL_DATA_DIR,   FILENAME, MODE);
+        return File_Open_Ex(SEARCHDIR_GLOBAL_DATA_DIR, FILENAME, MODE);
     }
 
     public static int File_Open_Personal(String FILENAME, int MODE) {

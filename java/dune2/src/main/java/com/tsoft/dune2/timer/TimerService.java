@@ -38,9 +38,7 @@ public class TimerService {
     private static volatile boolean timerLock;
 
     static void Timer_InterruptRun(int arg) {
-        TimerNode[] node;
         long new_time, usec_delta, delta;
-        int i;
 
         /* Lock the timer, to avoid double-calls */
         timerLock = false;
@@ -48,34 +46,34 @@ public class TimerService {
         timerLock = true;
 
         /* Calculate the time between calls */
-        new_time   = Timer_GetTime();
+        new_time = Timer_GetTime();
         usec_delta = (new_time - s_timerLastTime) * 1000;
         s_timerLastTime = new_time;
 
         /* Walk all our timers, see which (and how often) it should be triggered */
-        node = s_timerNodes;
-        for (i = 0; i < s_timerNodeCount; i++) {
+        for (TimerNode node : s_timerNodes) {
             delta = usec_delta;
 
             /* No delay means: as often as possible, but don't worry about it */
-            if (node[i].usec_delay == 0) {
-                node[i].callback.get();
+            if (node.usec_delay == 0) {
+                node.callback.get();
                 continue;
             }
 
-            if (node[i].callonce) {
-                if (node[i].usec_left <= delta) {
-                    delta -= node[i].usec_left;
-                    node[i].usec_left = node[i].usec_delay;
-                    if(arg == 0) node[i].callback.get();
-                    while (node[i].usec_left <= delta) delta -= node[i].usec_left;
+            if (node.callonce) {
+                if (node.usec_left <= delta) {
+                    delta -= node.usec_left;
+                    node.usec_left = node.usec_delay;
+                    if(arg == 0) node.callback.get();
+                    while (node.usec_left <= delta) delta -= node.usec_left;
                 }
-            } else while (node[i].usec_left <= delta) {
-                delta -= node[i].usec_left;
-                node[i].usec_left = node[i].usec_delay;
-                node[i].callback.get();
+            } else while (node.usec_left <= delta) {
+                delta -= node.usec_left;
+                node.usec_left = node.usec_delay;
+                node.callback.get();
             }
-            node[i].usec_left -= delta;
+
+            node.usec_left -= delta;
         }
 
         timerLock = false;
@@ -100,6 +98,7 @@ public class TimerService {
         if (s_timer_count > 1) {
             Warning("s_timer_count = %d\n", (int)s_timer_count);
         }
+
         s_timer_count = 0;
         Timer_InterruptRun(0);
         if (s_timer_count > 0) {
@@ -129,7 +128,7 @@ public class TimerService {
      */
     static void Timer_InterruptResume() {
         long timerTime = s_timerSpeed / 1000;
-        CreateTimerQueueTimer(&s_timerThread, null, Timer_InterruptWindows, null, timerTime, timerTime, WT_EXECUTEINTIMERTHREAD);
+        CreateTimerQueueTimer(s_timerThread, null, Timer_InterruptWindows, null, timerTime, timerTime, WT_EXECUTEINTIMERTHREAD);
     }
 
     /**
@@ -146,7 +145,7 @@ public class TimerService {
     /**
      * Uninitialize the timer.
      */
-    static void Timer_Uninit() {
+    public static void Timer_Uninit() {
         CloseHandle(s_timerMainThread);
 
         s_timerNodes.clear();
@@ -169,10 +168,10 @@ public class TimerService {
 
         node = s_timerNodes.get(s_timerNodeCount++);
 
-        node.usec_left  = usec_delay;
+        node.usec_left = usec_delay;
         node.usec_delay = usec_delay;
-        node.callback   = callback;
-        node.callonce   = callonce;
+        node.callback = callback;
+        node.callonce = callonce;
     }
 
     /**
@@ -181,11 +180,9 @@ public class TimerService {
      * @param usec_delay The interval.
      */
     static void Timer_Change(Supplier<Void> callback, long usec_delay) {
-        int i;
-
-        for (i = 0; i < s_timerNodeCount; i++) {
-            if (s_timerNodes[i].callback == callback) {
-                s_timerNodes[i].usec_delay = usec_delay;
+        for (TimerNode node : s_timerNodes) {
+            if (node.callback == callback) {
+                node.usec_delay = usec_delay;
                 return;
             }
         }
@@ -226,11 +223,8 @@ public class TimerService {
      * @return True if timer was set, false if it was not set.
      */
     public static boolean Timer_SetTimer(int timer, boolean set) {
-        int t;
-        boolean ret;
-
-        t = (1 << (timer - 1));
-        ret = (s_timersActive & t) != 0;
+        int t = (1 << (timer - 1));
+        boolean ret = (s_timersActive & t) != 0;
 
         if (set) {
             s_timersActive |= t;
@@ -250,4 +244,3 @@ public class TimerService {
         while (tick >= g_timerSleep) sleepIdle();
     }
 }
-

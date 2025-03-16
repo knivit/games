@@ -1,5 +1,7 @@
 package com.tsoft.dune2.house;
 
+import com.tsoft.dune2.tile.Tile32;
+
 /**
  * A House as stored in the memory.
  */
@@ -19,7 +21,7 @@ public class House {
     public int powerUsage;                                /* Amount of power the House requires. */
     public int windtrapCount;                             /* Amount of windtraps the House currently has. */
     public int creditsQuota;                              /* Quota house has to reach to win the mission. */
-    public long palacePosition;                           /* Position of the Palace. */
+    public Tile32 palacePosition;                         /* Position of the Palace. */
     public int timerUnitAttack;                           /* Timer to count down when next 'unit approaching' message can be showed again. */
     public int timerSandwormAttack;                       /* Timer to count down when next 'sandworm approaching' message can be showed again. */
     public int timerStructureAttack;                      /* Timer to count down when next 'base is under attack' message can be showed again. */

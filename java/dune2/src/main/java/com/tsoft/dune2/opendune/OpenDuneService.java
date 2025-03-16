@@ -13,25 +13,31 @@ import com.tsoft.dune2.pool.PoolFindStruct;
 import com.tsoft.dune2.structure.Structure;
 import com.tsoft.dune2.unit.Unit;
 import com.tsoft.dune2.unit.UnitInfo;
+import com.tsoft.dune2.video.VideoScaleFilter;
 
+import java.util.Arrays;
+
+import static com.tsoft.dune2.animation.AnimationService.Animation_Init;
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
 import static com.tsoft.dune2.config.ConfigService.*;
 import static com.tsoft.dune2.explosion.ExplosionService.Explosion_Init;
-import static com.tsoft.dune2.file.FileService.File_Init;
+import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.gfx.GfxService.*;
-import static com.tsoft.dune2.gfx.Screen.SCREEN_0;
-import static com.tsoft.dune2.gfx.Screen.SCREEN_1;
+import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.GuiService.*;
 import static com.tsoft.dune2.gui.SelectionType.*;
 import static com.tsoft.dune2.gui.font.FontService.*;
-import static com.tsoft.dune2.gui.mentat.MentatService.GUI_Mentat_ShowBriefing;
-import static com.tsoft.dune2.gui.mentat.MentatService.GUI_Mentat_ShowWin;
+import static com.tsoft.dune2.gui.mentat.MentatService.*;
 import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseService.*;
 import static com.tsoft.dune2.house.HouseType.HOUSE_INVALID;
 import static com.tsoft.dune2.house.HouseType.HOUSE_MERCENARY;
+import static com.tsoft.dune2.ini.IniFileService.IniFile_GetInteger;
+import static com.tsoft.dune2.ini.IniFileService.IniFile_GetString;
+import static com.tsoft.dune2.input.InputFlagsEnum.*;
 import static com.tsoft.dune2.input.InputMouseMode.INPUT_MOUSE_MODE_NORMAL;
-import static com.tsoft.dune2.input.InputService.Input_Init;
+import static com.tsoft.dune2.input.InputService.*;
 import static com.tsoft.dune2.input.MouseService.*;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.GameMode.*;
@@ -39,12 +45,12 @@ import static com.tsoft.dune2.pool.PoolHouseService.*;
 import static com.tsoft.dune2.pool.PoolStructureService.*;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Init;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Recount;
+import static com.tsoft.dune2.pool.PoolUnitService.*;
 import static com.tsoft.dune2.scenario.ScenarioService.Scenario_Load;
 import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.SpritesService.*;
-import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
-import static com.tsoft.dune2.strings.StringService.String_Uninit;
+import static com.tsoft.dune2.strings.StringService.*;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
@@ -54,12 +60,16 @@ import static com.tsoft.dune2.team.TeamService.GameLoop_Team;
 import static com.tsoft.dune2.tile.TileService.Tile_Center;
 import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
 import static com.tsoft.dune2.timer.TimerService.*;
+import static com.tsoft.dune2.timer.TimerType.TIMER_GAME;
+import static com.tsoft.dune2.timer.TimerType.TIMER_GUI;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Seed;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.UNIT_INVALID;
 import static com.tsoft.dune2.unit.UnitType.UNIT_MAX;
-import static com.tsoft.dune2.video.VideoWin32Service.Video_Init;
+import static com.tsoft.dune2.video.VideoScaleFilter.FILTER_NEAREST_NEIGHBOR;
+import static com.tsoft.dune2.video.VideoWin32Service.*;
+import static java.lang.Long.max;
 
 public class OpenDuneService extends Game {
 
@@ -84,22 +94,22 @@ public class OpenDuneService extends Game {
     
     static String window_caption = "OpenDUNE - v0.9";
 
-    public static boolean g_dune2_enhanced = true; /*!< If false, the game acts exactly like the original Dune2, including bugs. */
-    static boolean g_starPortEnforceUnitLimit = false;	/*!< If true, one cannot circumvent unit cap using starport */
-    static boolean g_unpackSHPonLoad = true;	/*!< If true, Format80 encoded sprites from SHP files will be decoded on load. set to false to save memory */
+    public static boolean g_dune2_enhanced = true;             /* If false, the game acts exactly like the original Dune2, including bugs. */
+    public static boolean g_starPortEnforceUnitLimit = false;  /* If true, one cannot circumvent unit cap using starport */
+    static boolean g_unpackSHPonLoad = true;	               /* If true, Format80 encoded sprites from SHP files will be decoded on load. set to false to save memory */
 
-    static long g_hintsShown1 = 0;          /*!< A bit-array to indicate which hints has been show already (0-31). */
-    static long g_hintsShown2 = 0;          /*!< A bit-array to indicate which hints has been show already (32-63). */
+    static long g_hintsShown1 = 0;          /* A bit-array to indicate which hints has been show already (0-31). */
+    static long g_hintsShown2 = 0;          /* A bit-array to indicate which hints has been show already (32-63). */
     static int g_gameMode = GM_MENU;
     public static int g_campaignID = 0;
     public static int g_scenarioID = 1;
-    public static int g_activeAction = 0xFFFF;              /*!< Action the controlled unit will do. */
-    static long g_tickScenarioStart = 0;                    /*!< The tick the scenario started in. */
-    static long s_tickGameTimeout = 0;                      /*!< The tick the game will timeout. */
+    public static int g_activeAction = 0xFFFF;              /* Action the controlled unit will do. */
+    public static long g_tickScenarioStart = 0;             /* The tick the scenario started in. */
+    static long s_tickGameTimeout = 0;                      /* The tick the game will timeout. */
 
-    public static boolean g_debugGame = false;              /*!< When true, you can control the AI. */
-    public static boolean g_debugScenario = false;          /*!< When true, you can review the scenario. There is no fog. The game is not running (no unit-movement, no structure-building, etc). You can click on individual tiles. */
-    public static boolean g_debugSkipDialogs = false;       /*!< When non-zero, you immediately go to house selection, and skip all intros. */
+    public static boolean g_debugGame = false;              /* When true, you can control the AI. */
+    public static boolean g_debugScenario = false;          /* When true, you can review the scenario. There is no fog. The game is not running (no unit-movement, no structure-building, etc). You can click on individual tiles. */
+    public static boolean g_debugSkipDialogs = false;       /* When non-zero, you immediately go to house selection, and skip all intros. */
 
     public static byte[] g_readBuffer = null;
     public static long g_readBufferSize = 0;
@@ -132,19 +142,17 @@ public class OpenDuneService extends Game {
 
         /* Check for structure counts hitting zero */
         if ((g_scenario.winFlags & 0x3) != 0) {
-            PoolFindStruct find = new PoolFindStruct();
             int countStructureEnemy = 0;
             int countStructureFriendly = 0;
 
+            PoolFindStruct find = new PoolFindStruct();
             find.houseID = HOUSE_INVALID;
-            find.type    = 0xFFFF;
-            find.index   = 0xFFFF;
+            find.type = 0xFFFF;
+            find.index = 0xFFFF;
 
             /* Calculate how many structures are left on the map */
             while (true) {
-                Structure s;
-
-                s = Structure_Find(find);
+                Structure s = Structure_Find(find);
                 if (s == null) break;
 
                 if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL) continue;
@@ -203,14 +211,12 @@ public class OpenDuneService extends Game {
             int countStructureFriendly = 0;
 
             find.houseID = HOUSE_INVALID;
-            find.type    = 0xFFFF;
-            find.index   = 0xFFFF;
+            find.type = 0xFFFF;
+            find.index = 0xFFFF;
 
             /* Calculate how many structures are left on the map */
             while (true) {
-                Structure s;
-
-                s = Structure_Find(find);
+                Structure s = Structure_Find(find);
                 if (s == null) break;
 
                 if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL) continue;
@@ -321,7 +327,7 @@ public class OpenDuneService extends Game {
                 if (g_campaignID == 1 || g_campaignID == 7) {
                     if (!GUI_Security_Show()) {
                         PrepareEnd();
-                        exit(0);
+                        System.exit(0);
                     }
                 }
             } else {
@@ -374,11 +380,8 @@ public class OpenDuneService extends Game {
         Input_History_Clear();
     }
 
-    static void GameLoop_DrawText2(String string, int left, int top, int fgColourNormal, int fgColourSelected, int bgColour)
-    {
-        int i;
-
-        for (i = 0; i < 3; i++) {
+    static void GameLoop_DrawText2(String string, int left, int top, int fgColourNormal, int fgColourSelected, int bgColour) {
+        for (int i = 0; i < 3; i++) {
             GUI_Mouse_Hide_Safe();
 
             GUI_DrawText_Wrapper(string, left, top, fgColourSelected, bgColour, 0x22);
@@ -1134,8 +1137,7 @@ public class OpenDuneService extends Game {
      * Initialize Timer, Video, Mouse, GFX, Fonts, Random number generator
      * and current Widget
      */
-    static boolean OpenDune_Init(int screen_magnification, VideoScaleFilter filter, int frame_rate)
-    {
+    static boolean OpenDune_Init(int screen_magnification, VideoScaleFilter filter, int frame_rate) {
         if (!Font_Init()) {
             Error(
                 "--------------------------\n" +
@@ -1257,7 +1259,7 @@ public class OpenDuneService extends Game {
         }
 
         /* reading config from opendune.ini which prevail over dune.cfg */
-        SetLanguage_From_IniFile(&g_config);
+        SetLanguage_From_IniFile(g_config);
 
         /* Writing config to dune.cfg */
         if (commit_dune_cfg && !Config_Write("dune.cfg", g_config)) {
@@ -1305,41 +1307,35 @@ public class OpenDuneService extends Game {
      *  sanity-check and corrects stuff all over the place.
      */
     public static void Game_Prepare() {
-        PoolFindStruct find = new PoolFindStruct();
-        int oldSelectionType;
-        Tile t;
         int i;
 
         g_validateStrictIfZero++;
 
-        oldSelectionType = g_selectionType;
+        int oldSelectionType = g_selectionType;
         g_selectionType = SELECTIONTYPE_MENTAT;
 
         Structure_Recount();
         Unit_Recount();
         Team_Recount();
 
-        t = g_map[0];
-        for (i = 0; i < 64 * 64; i++, t++) {
-            Structure s;
-            Unit u;
+        int tOff = 0;
+        for (i = 0; i < 64 * 64; i++, tOff++) {
+            Unit u = Unit_Get_ByPackedTile(i);
+            Structure s = Structure_Get_ByPackedTile(i);
 
-            u = Unit_Get_ByPackedTile(i);
-            s = Structure_Get_ByPackedTile(i);
-
+            Tile t = g_map[tOff];
             if (u == null || !u.o.flags.used) t.hasUnit = false;
             if (s == null || !s.o.flags.used) t.hasStructure = false;
             if (t.isUnveiled) Map_UnveilTile(i, g_playerHouseID);
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
         find.index   = 0xFFFF;
         find.type    = 0xFFFF;
 
         while (true) {
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
             if (u.o.flags.isNotOnMap) continue;
@@ -1349,13 +1345,11 @@ public class OpenDuneService extends Game {
         }
 
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Structure s;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
             if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL) continue;
 
@@ -1385,17 +1379,15 @@ public class OpenDuneService extends Game {
         }
 
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            House h;
-
-            h = House_Find(find);
+            House h = House_Find(find);
             if (h == null) break;
 
             h.structuresBuilt = Structure_GetStructuresBuilt(h);
-            House_UpdateCreditsStorage((int)h.index);
+            House_UpdateCreditsStorage(h.index);
             House_CalculatePowerAndCredit(h);
         }
 
@@ -1433,30 +1425,30 @@ public class OpenDuneService extends Game {
 
         Animation_Init();
         Explosion_Init();
-        memset(g_map, 0, 64 * 64 * sizeof(Tile));
+        Arrays.fill(g_map, null);
 
-        memset(g_displayedViewport, 0, sizeof(g_displayedViewport));
-        memset(g_displayedMinimap,  0, sizeof(g_displayedMinimap));
-        memset(g_changedTilesMap,   0, sizeof(g_changedTilesMap));
-        memset(g_dirtyViewport,     0, sizeof(g_dirtyViewport));
-        memset(g_dirtyMinimap,      0, sizeof(g_dirtyMinimap));
+        Arrays.fill(g_displayedViewport, 0);
+        Arrays.fill(g_displayedMinimap, 0);
+        Arrays.fill(g_changedTilesMap, 0));
+        Arrays.fill(g_dirtyViewport, 0);
+        Arrays.fill(g_dirtyMinimap, 0);
 
-        memset(g_mapTileID, 0, 64 * 64 * sizeof(int));
-        memset(g_starportAvailable, 0, sizeof(g_starportAvailable));
+        Arrays.fill(g_mapTileID, 0);
+        Arrays.fill(g_starportAvailable, 0);
 
         Sound_Output_Feedback(0xFFFE);
 
-        g_playerCreditsNoSilo     = 0;
-        g_houseMissileCountdown   = 0;
-        g_selectionState          = 0; /* Invalid. */
+        g_playerCreditsNoSilo = 0;
+        g_houseMissileCountdown = 0;
+        g_selectionState = 0; /* Invalid. */
         g_structureActivePosition = 0;
 
         g_unitHouseMissile = null;
-        g_unitActive       = null;
-        g_structureActive  = null;
+        g_unitActive = null;
+        g_structureActive = null;
 
-        g_activeAction          = 0xFFFF;
-        g_structureActiveType   = 0xFFFF;
+        g_activeAction = 0xFFFF;
+        g_structureActiveType = 0xFFFF;
 
         GUI_DisplayText(null, -1);
 

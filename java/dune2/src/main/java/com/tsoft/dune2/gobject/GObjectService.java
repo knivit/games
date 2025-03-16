@@ -7,6 +7,7 @@ import com.tsoft.dune2.tile.Tile32;
 
 import static com.tsoft.dune2.map.MapService.g_map;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
 import static com.tsoft.dune2.structure.StructureService.Structure_GetLinkedUnit;
 import static com.tsoft.dune2.structure.StructureService.Structure_SetState;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
@@ -25,14 +26,11 @@ public class GObjectService {
      * @param encodedTo To where the link goes.
      */
     public static void Object_Script_Variable4_Link(int encodedFrom, int encodedTo) {
-        GObject objectFrom;
-        GObject objectTo;
-
         if (!Tools_Index_IsValid(encodedFrom)) return;
         if (!Tools_Index_IsValid(encodedTo)) return;
 
-        objectFrom = Tools_Index_GetObject(encodedFrom);
-        objectTo = Tools_Index_GetObject(encodedTo);
+        GObject objectFrom = Tools_Index_GetObject(encodedFrom);
+        GObject objectTo = Tools_Index_GetObject(encodedTo);
 
         if (objectFrom == null) return;
         if (objectTo == null) return;
@@ -54,35 +52,31 @@ public class GObjectService {
      * @param encoded The encoded index to set it to.
      */
     public static void Object_Script_Variable4_Set(GObject o, int encoded) {
-        StructureInfo si;
-        Structure s;
-
         if (o == null) return;
 
         o.script.variables[4] = encoded;
 
         if (o.flags.isUnit) return;
 
-        si = g_table_structureInfo[o.type];
+        StructureInfo si = g_table_structureInfo[o.type];
         if (!si.o.flags.busyStateIsIncoming) return;
 
-        s = (Structure)o;
-        if (Structure_GetLinkedUnit(s) != null) return;
+        if (Structure_GetLinkedUnit(o) != null) return;
 
+        Structure s = (Structure)o;
         Structure_SetState(s, (encoded == 0) ? STRUCTURE_STATE_IDLE : STRUCTURE_STATE_BUSY);
     }
 
     /**
      * Clear variable4 in a safe (and recursive) way from an object.
-     * @param object The Oject to clear variable4 of.
+     * @param object The Object to clear variable4 of.
      */
     public static void Object_Script_Variable4_Clear(GObject object) {
-        GObject objectVariable;
         int encoded = object.script.variables[4];
 
         if (encoded == 0) return;
 
-        objectVariable = Tools_Index_GetObject(encoded);
+        GObject objectVariable = Tools_Index_GetObject(encoded);
 
         Object_Script_Variable4_Set(object, 0);
         Object_Script_Variable4_Set(objectVariable, 0);
@@ -94,11 +88,9 @@ public class GObjectService {
      * @return The object.
      */
     public static GObject Object_GetByPackedTile(int packed) {
-        Tile t;
-
         if (Tile_IsOutOfMap(packed)) return null;
 
-        t = g_map[packed];
+        Tile t = g_map[packed];
         if (t.hasUnit) return Unit_Get_ByIndex(t.index - 1).o;
         if (t.hasStructure) return Structure_Get_ByIndex(t.index - 1).o;
         return null;
@@ -111,16 +103,12 @@ public class GObjectService {
      * @return The distance.
      */
     public static int Object_GetDistanceToEncoded(GObject o, int encoded) {
-        Structure s;
+        Structure s = Tools_Index_GetStructure(encoded);
+
         Tile32 position;
-
-        s = Tools_Index_GetStructure(encoded);
-
         if (s != null) {
-            int packed;
-
             position = s.o.position;
-            packed = Tile_PackTile(position);
+            int packed = Tile_PackTile(position);
 
             /* ENHANCEMENT -- Originally this was o.type, where 'o' refers to a unit. */
             packed += g_table_structure_layoutEdgeTiles[g_table_structureInfo[s.o.type].layout][(Orientation_Orientation256ToOrientation8(Tile_GetDirection(o.position, position)) + 4) & 7];

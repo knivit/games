@@ -9,6 +9,9 @@ import static com.tsoft.dune2.gobject.GObjectService.Object_GetByPackedTile;
 import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
 import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.os.EndianService.BETOH16;
+import static com.tsoft.dune2.pool.PoolTeamService.Team_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.Unit_Find;
+import static com.tsoft.dune2.script.Script.STACK_PEEK;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_KAMIKAZE;
@@ -186,30 +189,27 @@ public class ScriptTeamService {
      * @return The number of moving units.
      */
     static int Script_Team_Unknown0543(ScriptEngine script) {
-        Team t;
         int count = 0;
         int distance;
-        PoolFindStruct find;
 
-        t = g_scriptCurrentTeam;
-        distance = STACK_PEEK(1);
+        Team t = g_scriptCurrentTeam;
+        distance = STACK_PEEK(script,  1);
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = t.houseID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Unit u;
-            Tile32 tile;
             int distanceUnitDest;
             int distanceUnitTeam;
             int distanceTeamDest;
 
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
             if (t.index != u.team - 1) continue;
 
-            tile = Tools_Index_GetTile(u.targetMove);
+            Tile32 tile = Tools_Index_GetTile(u.targetMove);
             distanceUnitTeam = Tile_GetDistanceRoundedUp(u.o.position, t.position);
 
             if (u.targetMove != 0) {
@@ -245,23 +245,19 @@ public class ScriptTeamService {
      * @return The encoded index of the best target or 0 if none found.
      */
     static int Script_Team_FindBestTarget(ScriptEngine script) {
-        Team t;
+        Team t = g_scriptCurrentTeam;
+
         PoolFindStruct find = new PoolFindStruct();
-
-        t = g_scriptCurrentTeam;
-
         find.houseID = t.houseID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Unit u;
-            int target;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
             if (u.team - 1 != t.index) continue;
-            target = Unit_FindBestTargetEncoded(u, t.action == TEAM_ACTION_KAMIKAZE ? 4 : 0);
+
+            int target = Unit_FindBestTargetEncoded(u, t.action == TEAM_ACTION_KAMIKAZE ? 4 : 0);
             if (target == 0) continue;
             if (t.target == target) return target;
 
@@ -282,11 +278,8 @@ public class ScriptTeamService {
      * @return The value 0. Always.
      */
     static int Script_Team_Load(ScriptEngine script) {
-        Team t;
-        int type;
-
-        t = g_scriptCurrentTeam;
-        type = STACK_PEEK(1);
+        Team t = g_scriptCurrentTeam;
+        int type = STACK_PEEK(script, 1);
 
         if (t.action == type) return 0;
 
@@ -307,11 +300,8 @@ public class ScriptTeamService {
      * @return The value 0. Always.
      */
     static int Script_Team_Load2(ScriptEngine script) {
-        Team t;
-        int type;
-
-        t = g_scriptCurrentTeam;
-        type = t.actionStart;
+        Team t = g_scriptCurrentTeam;
+        int type = t.actionStart;
 
         if (t.action == type) return 0;
 
@@ -332,26 +322,18 @@ public class ScriptTeamService {
      * @return The value 0. Always.
      */
     static int Script_Team_Unknown0788(ScriptEngine script) {
-        Team t;
-        Tile32 tile;
-        PoolFindStruct find = new PoolFindStruct();
-
-        t = g_scriptCurrentTeam;
+        Team t = g_scriptCurrentTeam;
         if (t.target == 0) return 0;
 
-        tile = Tools_Index_GetTile(t.target);
+        Tile32 tile = Tools_Index_GetTile(t.target);
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = t.houseID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Unit u;
-            int distance;
-            int packed;
-            int orientation;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
             if (u.team - 1 != t.index) continue;
             if (t.target == 0) {
@@ -359,7 +341,7 @@ public class ScriptTeamService {
                 continue;
             }
 
-            distance = g_table_unitInfo[u.o.type].fireDistance << 8;
+            int distance = g_table_unitInfo[u.o.type].fireDistance << 8;
             if (u.actionID == ACTION_ATTACK && u.targetAttack == t.target) {
                 if (u.targetMove != 0) continue;
                 if (Tile_GetDistance(u.o.position, tile) >= distance) continue;
@@ -367,10 +349,10 @@ public class ScriptTeamService {
 
             if (u.actionID != ACTION_ATTACK) Unit_SetAction(u, ACTION_ATTACK);
 
-            orientation = (Tile_GetDirection(tile, u.o.position) & 0xC0) + Tools_RandomLCG_Range(0, 127);
+            int orientation = (Tile_GetDirection(tile, u.o.position) & 0xC0) + Tools_RandomLCG_Range(0, 127);
             if (orientation < 0) orientation += 256;
 
-            packed = Tile_PackTile(Tile_MoveByDirection(tile, orientation, distance));
+            int packed = Tile_PackTile(Tile_MoveByDirection(tile, orientation, distance));
 
             if (Object_GetByPackedTile(packed) == null) {
                 Unit_SetDestination(u, Tools_Index_Encode(packed, IT_TILE));
@@ -393,18 +375,14 @@ public class ScriptTeamService {
      * @param script The script engine to operate on.
      * @return The value 0. Always.
      */
-    static int Script_Team_DisplayText(ScriptEngine script) {
-        Team t;
-        String text;
-        int offset;
-
-        t = g_scriptCurrentTeam;
+    public static int Script_Team_DisplayText(ScriptEngine script) {
+        Team t = g_scriptCurrentTeam;
         if (t.houseID == g_playerHouseID) return 0;
 
-        offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(1)));
-        text = (char *)script.scriptInfo.text + offset;
+        int offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(script, 1)));
+        String text = (char *)script.scriptInfo.text + offset;
 
-        GUI_DisplayText(text, 0, STACK_PEEK(2), STACK_PEEK(3), STACK_PEEK(4));
+        GUI_DisplayText(text, 0, STACK_PEEK(script, 2), STACK_PEEK(script, 3), STACK_PEEK(script, 4));
 
         return 0;
     }

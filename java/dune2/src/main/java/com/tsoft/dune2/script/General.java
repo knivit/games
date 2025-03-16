@@ -8,11 +8,13 @@ import com.tsoft.dune2.unit.Unit;
 
 import static com.tsoft.dune2.gobject.GObjectService.Object_GetDistanceToEncoded;
 import static com.tsoft.dune2.gui.GuiService.GUI_DisplayModalMessage;
+import static com.tsoft.dune2.gui.GuiService.GUI_DisplayText;
 import static com.tsoft.dune2.map.MapService.Map_SearchSpice;
 import static com.tsoft.dune2.os.EndianService.BETOH16;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
 import static com.tsoft.dune2.pool.PoolUnitService.Unit_Find;
 import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
+import static com.tsoft.dune2.script.Script.STACK_PEEK;
 import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentObject;
 import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentUnit;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_IDLE;
@@ -36,9 +38,7 @@ public class General {
      *  can't delay your script for 4 ticks or less.
      */
     public static int Script_General_Delay(ScriptEngine script) {
-        int delay;
-
-        delay = STACK_PEEK(1) / 5;
+        int delay = STACK_PEEK(script, 1) / 5;
 
         script.delay = delay;
 
@@ -55,9 +55,7 @@ public class General {
      * @return Amount of ticks the script will be suspended, divided by 5.
      */
     public static int Script_General_DelayRandom(ScriptEngine script) {
-        int delay;
-
-        delay = Tools_Random_256() * STACK_PEEK(1) / 256;
+        int delay = Tools_Random_256() * STACK_PEEK(script, 1) / 256;
         delay /= 5;
 
         script.delay = delay;
@@ -74,11 +72,8 @@ public class General {
      * @return Distance to it, where distance is (longest(x,y) + shortest(x,y) / 2).
      */
     public static int Script_General_GetDistanceToTile(ScriptEngine script) {
-        GObject o;
-        int encoded;
-
-        encoded = STACK_PEEK(1);
-        o = g_scriptCurrentObject;
+        int encoded = STACK_PEEK(script, 1);
+        GObject o = g_scriptCurrentObject;
 
         if (!Tools_Index_IsValid(encoded)) return 0xFFFF;
 
@@ -108,13 +103,10 @@ public class General {
      * @return The value 0. Always.
      */
     public static int Script_General_DisplayText(ScriptEngine script) {
-        String text;
-        int offset;
+        int offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(script, 1)));
+        String text = (String)script.scriptInfo.text + offset;
 
-        offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(1)));
-        text = (String)script.scriptInfo.text + offset;
-
-        GUI_DisplayText(text, 0, STACK_PEEK(2), STACK_PEEK(3), STACK_PEEK(4));
+        GUI_DisplayText(text, 0, STACK_PEEK(script, 2), STACK_PEEK(script, 3), STACK_PEEK(script, 4));
 
         return 0;
     }
@@ -141,11 +133,8 @@ public class General {
      * @return unknown.
      */
     public static int Script_General_DisplayModalMessage(ScriptEngine script) {
-        String text;
-        int offset;
-
-        offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(1)));
-        text = (String)script.scriptInfo.text + offset;
+        int offset = BETOH16(*(script.scriptInfo.text + STACK_PEEK(script, 1)));
+        String text = (String)script.scriptInfo.text + offset;
 
         return GUI_DisplayModalMessage(text, 0xFFFF);
     }
@@ -159,9 +148,7 @@ public class General {
      * @return Distance to it, where distance is (longest(x,y) + shortest(x,y) / 2).
      */
     public static int Script_General_GetDistanceToObject(ScriptEngine script) {
-        int index;
-
-        index = STACK_PEEK(1);
+        int index = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(index)) return 0xFFFF;
 
@@ -177,11 +164,8 @@ public class General {
      * @return unknown.
      */
     public static int Script_General_Unknown0288(ScriptEngine script) {
-        int index;
-        Structure s;
-
-        index = STACK_PEEK(1);
-        s = Tools_Index_GetStructure(index);
+        int index = STACK_PEEK(script, 1);
+        Structure s = Tools_Index_GetStructure(index);
 
         if (s != null && Tools_Index_Encode(s.o.index, IT_STRUCTURE) != index) return 1;
 
@@ -197,9 +181,7 @@ public class General {
      * @return The orientation of the unit.
      */
     public static int Script_General_GetOrientation(ScriptEngine script) {
-        Unit u;
-
-        u = Tools_Index_GetUnit(STACK_PEEK(1));
+        Unit u = Tools_Index_GetUnit(STACK_PEEK(script, 1));
 
         if (u == null) return 128;
 
@@ -216,11 +198,11 @@ public class General {
      */
     public static int Script_General_UnitCount(ScriptEngine script) {
         int count = 0;
-        PoolFindStruct find = new PoolFindStruct();
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = g_scriptCurrentObject.houseID;
-        find.type    = STACK_PEEK(1);
-        find.index   = 0xFFFF;
+        find.type = STACK_PEEK(script, 1);
+        find.index = 0xFFFF;
 
         while (true) {
             Unit u = Unit_Find(find);
@@ -240,9 +222,7 @@ public class General {
      * @return The decoded index, or 0xFFFF if invalid.
      */
     public static int Script_General_DecodeIndex(ScriptEngine script) {
-        int index;
-
-        index = STACK_PEEK(1);
+        int index = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(index)) return 0xFFFF;
 
@@ -258,9 +238,7 @@ public class General {
      * @return The type, or 0xFFFF if invalid.
      */
     public static int Script_General_GetIndexType(ScriptEngine script) {
-        int index;
-
-        index = STACK_PEEK(1);
+        int index = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(index)) return 0xFFFF;
 
@@ -276,9 +254,7 @@ public class General {
      * @return The type, or 0xFFFF if no linked unit.
      */
     public static int Script_General_GetLinkedUnitType(ScriptEngine script) {
-        int linkedID;
-
-        linkedID = g_scriptCurrentObject.linkedID;
+        int linkedID = g_scriptCurrentObject.linkedID;
 
         if (linkedID == 0xFF) return 0xFFFF;
 
@@ -294,11 +270,9 @@ public class General {
      * @return The value 0. Always.
      */
     public static int Script_General_VoicePlay(ScriptEngine script) {
-        Tile32 position;
+        Tile32 position = g_scriptCurrentObject.position;
 
-        position = g_scriptCurrentObject.position;
-
-        Voice_PlayAtTile(STACK_PEEK(1), position);
+        Voice_PlayAtTile(STACK_PEEK(script, 1), position);
 
         return 0;
     }
@@ -312,12 +286,9 @@ public class General {
      * @return Encoded position with spice, or \c 0 if no spice nearby.
      */
     public static int Script_General_SearchSpice(ScriptEngine script) {
-        Tile32 position;
-        int packedSpicePos;
+        Tile32 position = g_scriptCurrentObject.position;
 
-        position = g_scriptCurrentObject.position;
-
-        packedSpicePos = Map_SearchSpice(Tile_PackTile(position), STACK_PEEK(1));
+        int packedSpicePos = Map_SearchSpice(Tile_PackTile(position), STACK_PEEK(script, 1));
 
         if (packedSpicePos == 0) return 0;
         return Tools_Index_Encode(packedSpicePos, IT_TILE);
@@ -332,17 +303,13 @@ public class General {
      * @return Either 1 (friendly) or -1 (enemy).
      */
     public static int Script_General_IsFriendly(ScriptEngine script) {
-        int index;
-        GObject o;
-        int res;
+        int index = STACK_PEEK(script, 1);
 
-        index = STACK_PEEK(1);
-
-        o = Tools_Index_GetObject(index);
+        GObject o = Tools_Index_GetObject(index);
 
         if (o == null || o.flags.isNotOnMap || !o.flags.used) return 0;
 
-        res = Script_General_IsEnemy(script);
+        int res = Script_General_IsEnemy(script);
 
         return (res == 0) ? 1 : -1;
     }
@@ -356,14 +323,11 @@ public class General {
      * @return Zero if and only if the Unit/Structure is friendly.
      */
     public static int Script_General_IsEnemy(ScriptEngine script) {
-        int houseID;
-        int index;
-
-        index = STACK_PEEK(1);
+        int index = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(index)) return 0;
 
-        houseID = (g_scriptCurrentUnit != null) ? Unit_GetHouseID(g_scriptCurrentUnit) : g_scriptCurrentObject.houseID;
+        int houseID = (g_scriptCurrentUnit != null) ? Unit_GetHouseID(g_scriptCurrentUnit) : g_scriptCurrentObject.houseID;
 
         switch (Tools_Index_GetType(index)) {
             case IT_UNIT:      return (Unit_GetHouseID(Tools_Index_GetUnit(index)) != houseID) ? 1 : 0;
@@ -384,32 +348,29 @@ public class General {
      * @return Zero or one to indicate idle, or the index of the structure which is idle, depending on the input parameter.
      */
     public static int Script_General_FindIdle(ScriptEngine script) {
-        int houseID;
-        int index;
-        Structure s;
-        PoolFindStruct find = new PoolFindStruct();
+        int index = STACK_PEEK(script, 1);
 
-        index = STACK_PEEK(1);
-
-        houseID = g_scriptCurrentObject.houseID;
+        int houseID = g_scriptCurrentObject.houseID;
 
         if (Tools_Index_GetType(index) == IT_UNIT) return 0;
         if (Tools_Index_GetType(index) == IT_TILE) return 0;
 
         if (Tools_Index_GetType(index) == IT_STRUCTURE) {
-            s = Tools_Index_GetStructure(index);
+            Structure s = Tools_Index_GetStructure(index);
             if (s.o.houseID != houseID) return 0;
             if (s.state != STRUCTURE_STATE_IDLE) return 0;
             return 1;
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = houseID;
-        find.index   = 0xFFFF;
-        find.type    = index;
+        find.index = 0xFFFF;
+        find.type = index;
 
         while (true) {
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) return 0;
+
             if (s.state != STRUCTURE_STATE_IDLE) continue;
             return Tools_Index_Encode(s.o.index, IT_STRUCTURE);
         }

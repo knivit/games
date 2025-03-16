@@ -7,11 +7,10 @@ import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
 import static com.tsoft.dune2.utils.CFunc.uint8;
 
 public class StringService {
-    
-    
-/* 941 strings and 38356 chars in English,
-   833 and 39582 in French,
-   899 and 42868 in German */
+
+    /* 941 strings and 38356 chars in English,
+       833 and 39582 in French,
+       899 and 42868 in German */
     static final int MAX_STRING_COUNT = 950;
     static final int MAX_CHARACTER_COUNT = 48*1024;
     static int * s_strings = NULL;
@@ -79,7 +78,7 @@ public class StringService {
      * @param name The string to append extension to.
      * @return The new string.
      */
-    static String String_GenerateFilename(String name) {
+    public static String String_GenerateFilename(String name) {
         assert(g_config.language < g_languageSuffixes.length);
         return name + "." + g_languageSuffixes[g_config.language];
     }
@@ -153,7 +152,7 @@ public class StringService {
     /**
      * Loads the language files in the memory, which is used after that with String_GetXXX_ByIndex().
      */
-    static void String_Init() {
+    public static void String_Init() {
         s_stringsCount = 0;
         s_strings = malloc(sizeof(int) * MAX_STRING_COUNT);
         s_strings[s_stringsCount] = 0;	/* points to available space in buffer */
@@ -204,7 +203,7 @@ public class StringService {
     static void String_Trim(char *string) {
         char *s = string + strlen(string) - 1;
         while (s >= string && isspace((uint8)*s)) {
-		*s = '\0';
+		    *s = '\0';
             s--;
         }
     }

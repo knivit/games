@@ -916,7 +916,7 @@ public class WidgetDrawService {
      * @param borderType The type of border. 0 = normal, 1 = thick depth, 2 = double, 3 = thin depth.
      * @param pressed True if the button is pressed.
      */
-    static void GUI_Widget_DrawBorder(int widgetIndex, int borderType, boolean pressed) {
+    public static void GUI_Widget_DrawBorder(int widgetIndex, int borderType, boolean pressed) {
         int[][] borderIndexSize = new int[][] {
             {0, 0}, {2, 4}, {1, 1}, {2, 1}
         };

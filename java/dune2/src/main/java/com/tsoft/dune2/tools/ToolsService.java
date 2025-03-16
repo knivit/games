@@ -81,9 +81,7 @@ public class ToolsService {
     public static int Tools_Index_Encode(int index, int type) {
         switch (type) {
             case IT_TILE: {
-                int ret;
-
-                ret  = ((Tile_GetPackedX(index) << 1) + 1) << 0;
+                int ret = ((Tile_GetPackedX(index) << 1) + 1) << 0;
                 ret |= ((Tile_GetPackedY(index) << 1) + 1) << 7;
                 return ret | 0xC000;
             }
@@ -233,11 +231,8 @@ public class ToolsService {
      * @return The random value.
      */
     public static int Tools_Random_256() {
-        long val16;
-        long val8;
-
-        val16 = (s_randomSeed[1] << 8) | s_randomSeed[2];
-        val8 = ((val16 ^ 0x8000) >> 15) & 1;
+        long val16 = (s_randomSeed[1] << 8) | s_randomSeed[2];
+        long val8 = ((val16 ^ 0x8000) >> 15) & 1;
         val16 = (val16 << 1) | ((s_randomSeed[0] >> 1) & 1);
         val8 = (s_randomSeed[0] >> 2) - s_randomSeed[0] - val8;
         s_randomSeed[0] = (val8 << 7) | (s_randomSeed[0] >> 1);

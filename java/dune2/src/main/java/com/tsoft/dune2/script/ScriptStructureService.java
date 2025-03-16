@@ -8,6 +8,8 @@ import com.tsoft.dune2.structure.StructureInfo;
 import com.tsoft.dune2.tile.Tile32;
 import com.tsoft.dune2.unit.Unit;
 
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
+import static com.tsoft.dune2.audio.SoundService.Voice_PlayAtTile;
 import static com.tsoft.dune2.config.ConfigService.g_config;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_STRUCTURE;
 import static com.tsoft.dune2.gobject.GObjectService.Object_Script_Variable4_Clear;
@@ -23,6 +25,7 @@ import static com.tsoft.dune2.opendune.OpenDuneService.g_dune2_enhanced;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolUnitService.*;
 import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
+import static com.tsoft.dune2.script.Script.STACK_PEEK;
 import static com.tsoft.dune2.script.ScriptService.g_scriptCurrentStructure;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_ROCKET_TURRET;
@@ -57,9 +60,7 @@ public class ScriptStructureService {
      * @return State of current structure.
      */
     public static int Script_Structure_GetState(ScriptEngine script) {
-        Structure s;
-
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
         return s.state;
     }
 
@@ -72,11 +73,8 @@ public class ScriptStructureService {
      * @return The value 0. Always.
      */
     public static int Script_Structure_SetState(ScriptEngine script) {
-        Structure s;
-        int state;
-
-        s = g_scriptCurrentStructure;
-        state = STACK_PEEK(1);
+        Structure s = g_scriptCurrentStructure;
+        int state = STACK_PEEK(script, 1);
 
         if (state == STRUCTURE_STATE_DETECT) {
             if (s.o.linkedID == 0xFF) {
@@ -119,29 +117,23 @@ public class ScriptStructureService {
      * @return 0 if there is no spice to refine, otherwise 1.
      */
     public static int Script_Structure_RefineSpice(ScriptEngine script) {
-	    StructureInfo si;
-        Structure s;
-        Unit u;
-        House h;
-        int harvesterStep, creditsStep;
-
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
 
         if (s.o.linkedID == 0xFF) {
             Structure_SetState(s, STRUCTURE_STATE_IDLE);
             return 0;
         }
 
-        u = Unit_Get_ByIndex(s.o.linkedID);
-        si = g_table_structureInfo[s.o.type];
+        Unit u = Unit_Get_ByIndex(s.o.linkedID);
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
-        harvesterStep = (s.o.hitpoints * 256 / si.o.hitpoints) * 3 / 256;
+        int harvesterStep = (s.o.hitpoints * 256 / si.o.hitpoints) * 3 / 256;
 
         if (u.amount < harvesterStep) harvesterStep = u.amount;
         if (u.amount != 0 && harvesterStep < 1) harvesterStep = 1;
         if (harvesterStep == 0) return 0;
 
-        creditsStep = 7;
+        int creditsStep = 7;
         if (u.o.houseID != g_playerHouseID) {
             creditsStep += (Tools_Random_256() % 4) - 1;
         }
@@ -156,7 +148,7 @@ public class ScriptStructureService {
             if (g_scenario.harvestedEnemy > 65000) g_scenario.harvestedEnemy = 65000;
         }
 
-        h = House_Get_ByIndex(s.o.houseID);
+        House h = House_Get_ByIndex(s.o.houseID);
         h.credits += creditsStep;
         u.amount -= harvesterStep;
 
@@ -174,21 +166,17 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_Unknown0A81(ScriptEngine script) {
-        int structureIndex;
-        Structure s;
-        Unit u;
+        Structure s = g_scriptCurrentStructure;
 
-        s = g_scriptCurrentStructure;
+        int structureIndex = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
 
-        structureIndex = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
-
-        u = Tools_Index_GetUnit(s.o.script.variables[4]);
+        Unit u = Tools_Index_GetUnit(s.o.script.variables[4]);
         if (u != null) {
             if (structureIndex == u.o.script.variables[4]) return s.o.script.variables[4];
-            Object_Script_Variable4_Clear(&u.o);
+            Object_Script_Variable4_Clear(u.o);
         }
 
-        Object_Script_Variable4_Clear(&s.o);
+        Object_Script_Variable4_Clear(s.o);
 
         return 0;
     }
@@ -203,33 +191,26 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_FindUnitByType(ScriptEngine script) {
-        Structure s;
-        Unit u;
-        Unit carryall;
-        int type;
-        int position;
-        int carryallIndex;
-
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
 
         if (s.state != STRUCTURE_STATE_READY) return IT_NONE;
         if (s.o.linkedID == 0xFF) return IT_NONE;
 
-        type = STACK_PEEK(1);
+        int type = STACK_PEEK(script, 1);
 
-        position = Structure_FindFreePosition(s, false);
+        int position = Structure_FindFreePosition(s, false);
 
-        u = Unit_Get_ByIndex(s.o.linkedID);
+        Unit u = Unit_Get_ByIndex(s.o.linkedID);
 
         if (g_playerHouseID == s.o.houseID && u.o.type == UNIT_HARVESTER && (u.targetLast.x == 0 && u.targetLast.y == 0) && position != 0) {
             return IT_NONE;
         }
 
-        carryall = Unit_CallUnitByType(type, s.o.houseID, Tools_Index_Encode(s.o.index, IT_STRUCTURE), position == 0);
+        Unit carryall = Unit_CallUnitByType(type, s.o.houseID, Tools_Index_Encode(s.o.index, IT_STRUCTURE), position == 0);
 
         if (carryall == null) return IT_NONE;
 
-        carryallIndex = Tools_Index_Encode(carryall.o.index, IT_UNIT);
+        int carryallIndex = Tools_Index_Encode(carryall.o.index, IT_UNIT);
         Object_Script_Variable4_Set(s.o, carryallIndex);
 
         return carryallIndex;
@@ -244,35 +225,30 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_Unknown0C5A(ScriptEngine script) {
-        Tile32 tile;
-        Structure s;
-        Unit u;
-        int position;
-
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
 
         if (s.o.linkedID == 0xFF) return 0;
 
-        u = Unit_Get_ByIndex(s.o.linkedID);
+        Unit u = Unit_Get_ByIndex(s.o.linkedID);
 
         if (g_table_unitInfo[u.o.type].movementType == MOVEMENT_WINGER && Unit_SetPosition(u, s.o.position)) {
             s.o.linkedID = u.o.linkedID;
             u.o.linkedID = 0xFF;
 
             if (s.o.linkedID == 0xFF) Structure_SetState(s, STRUCTURE_STATE_IDLE);
-            Object_Script_Variable4_Clear(&s.o);
+            Object_Script_Variable4_Clear(s.o);
 
             if (s.o.houseID == g_playerHouseID) Sound_Output_Feedback(g_playerHouseID + 49);
 
             return 1;
         }
 
-        position = Structure_FindFreePosition(s, u.o.type == UNIT_HARVESTER);
+        int position = Structure_FindFreePosition(s, u.o.type == UNIT_HARVESTER);
         if (position == 0) return 0;
 
         u.o.seenByHouses |= s.o.seenByHouses;
 
-        tile = Tile_Center(Tile_UnpackTile(position));
+        Tile32 tile = Tile_Center(Tile_UnpackTile(position));
 
         if (!Unit_SetPosition(u, tile)) return 0;
 
@@ -307,21 +283,17 @@ public class ScriptStructureService {
      *   or 0 if none exists.
      */
     public static int Script_Structure_FindTargetUnit(ScriptEngine script) {
-        PoolFindStruct find = new PoolFindStruct();
-        Structure s;
-        Unit u;
-        long distanceCurrent;
-        long targetRange;
         Tile32 position;
 
-        s = g_scriptCurrentStructure;
-        targetRange = STACK_PEEK(1);
-        distanceCurrent = 32000;
-        u = null;
+        Structure s = g_scriptCurrentStructure;
+        int targetRange = STACK_PEEK(script, 1);
+        int distanceCurrent = 32000;
+        Unit u = null;
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         /* ENHANCEMENT -- The original code calculated distances from the top-left corner of the structure. */
         if (g_dune2_enhanced) {
@@ -331,10 +303,7 @@ public class ScriptStructureService {
         }
 
         while (true) {
-            int distance;
-            Unit uf;
-
-            uf = Unit_Find(find);
+            Unit uf = Unit_Find(find);
             if (uf == null) break;
 
             if (House_AreAllied(s.o.houseID, Unit_GetHouseID(uf))) continue;
@@ -343,7 +312,7 @@ public class ScriptStructureService {
                 if ((uf.o.seenByHouses & (1 << s.o.houseID)) == 0) continue;
             }
 
-            distance = Tile_GetDistance(uf.o.position, position);
+            int distance = Tile_GetDistance(uf.o.position, position);
             if (distance >= distanceCurrent) continue;
 
             if (g_dune2_enhanced) {
@@ -378,22 +347,16 @@ public class ScriptStructureService {
      * @return 0 if looking at target, otherwise 1.
      */
     public static int Script_Structure_RotateTurret(ScriptEngine script) {
-        Structure s;
-        Tile32 lookAt;
-        Tile tile;
         int baseTileID;
-        int encoded;
-        int rotation;
         int rotationNeeded;
-        int rotateDiff;
 
-        encoded = STACK_PEEK(1);
+        int encoded = STACK_PEEK(script, 1);
 
         if (encoded == 0) return 0;
 
-        s      = g_scriptCurrentStructure;
-        lookAt = Tools_Index_GetTile(encoded);
-        tile   = g_map[Tile_PackTile(s.o.position)];
+        Structure s = g_scriptCurrentStructure;
+        Tile32 lookAt = Tools_Index_GetTile(encoded);
+        Tile32 tile = g_map[Tile_PackTile(s.o.position)];
 
         /* Find the base sprite of the structure */
         if (s.o.type == STRUCTURE_ROCKET_TURRET) {
@@ -402,7 +365,7 @@ public class ScriptStructureService {
             baseTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_BASE_DEFENSE_TURRET] + 2];
         }
 
-        rotation = tile.groundTileID - baseTileID;
+        int rotation = tile.groundTileID - baseTileID;
         if (rotation < 0 || rotation > 7) return 1;
 
         /* Find what rotation we should have to look at the target */
@@ -412,7 +375,7 @@ public class ScriptStructureService {
         if (rotationNeeded == rotation) return 0;
 
         /* Find the fastest way to rotate to the correct rotation */
-        rotateDiff = rotationNeeded - rotation;
+        int rotateDiff = rotationNeeded - rotation;
         if (rotateDiff < 0) rotateDiff += 8;
 
         if (rotateDiff < 4) {
@@ -442,16 +405,12 @@ public class ScriptStructureService {
      * @return The direction (value between 0 and 7, shifted to the left with 5).
      */
     public static int Script_Structure_GetDirection(ScriptEngine script) {
-        Structure s;
-        Tile32 tile;
-        int encoded;
-
-        s = g_scriptCurrentStructure;
-        encoded = STACK_PEEK(1);
+        Structure s = g_scriptCurrentStructure;
+        int encoded = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(encoded)) return s.rotationSpriteDiff << 5;
 
-        tile = Tools_Index_GetTile(encoded);
+        Tile32 tile = Tools_Index_GetTile(encoded);
 
         return Orientation_Orientation256ToOrientation8(Tile_GetDirection(s.o.position, tile)) << 5;
     }
@@ -465,18 +424,15 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_Unknown11B9(ScriptEngine script) {
-        int encoded;
-        Unit u;
-
-        encoded = STACK_PEEK(1);
+        int encoded = STACK_PEEK(script, 1);
 
         if (!Tools_Index_IsValid(encoded)) return 0;
         if (Tools_Index_GetType(encoded) != IT_UNIT) return 0;
 
-        u = Tools_Index_GetUnit(encoded);
+        Unit u = Tools_Index_GetUnit(encoded);
         if (u == null) return 0;
 
-        Object_Script_Variable4_Clear(&u.o);
+        Object_Script_Variable4_Clear(u.o);
         u.targetMove = 0;
 
         return 0;
@@ -491,13 +447,11 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_VoicePlay(ScriptEngine script) {
-        Structure s;
-
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
 
         if (s.o.houseID != g_playerHouseID) return 0;
 
-        Voice_PlayAtTile(STACK_PEEK(1), s.o.position);
+        Voice_PlayAtTile(STACK_PEEK(script, 1), s.o.position);
 
         return 0;
     }
@@ -512,32 +466,29 @@ public class ScriptStructureService {
      * @return The time between this and the next time firing.
      */
     public static int Script_Structure_Fire(ScriptEngine script) {
-        Structure s;
-        Unit u;
         Tile32 position = new Tile32();
-        int target;
         int damage;
         int fireDelay;
         int type;
 
-        s = g_scriptCurrentStructure;
+        Structure s = g_scriptCurrentStructure;
 
-        target = script.variables[2];
+        int target = script.variables[2];
         if (target == 0) return 0;
 
         if (s.o.type == STRUCTURE_ROCKET_TURRET && Tile_GetDistance(Tools_Index_GetTile(target), s.o.position) >= 0x300) {
-            type      = UNIT_MISSILE_TURRET;
-            damage    = 30;
+            type = UNIT_MISSILE_TURRET;
+            damage = 30;
             fireDelay = Tools_AdjustToGameSpeed(g_table_unitInfo[UNIT_LAUNCHER].fireDelay, 1, 0xFFFF, true);
         } else {
-            type      = UNIT_BULLET;
-            damage    = 20;
+            type = UNIT_BULLET;
+            damage = 20;
             fireDelay = Tools_AdjustToGameSpeed(g_table_unitInfo[UNIT_TANK].fireDelay, 1, 0xFFFF, true);
         }
 
         position.x = s.o.position.x + 0x80;
         position.y = s.o.position.y + 0x80;
-        u = Unit_CreateBullet(position, type, s.o.houseID, damage, target);
+        Unit u = Unit_CreateBullet(position, type, s.o.houseID, damage, target);
 
         if (u == null) return 0;
 
@@ -555,16 +506,11 @@ public class ScriptStructureService {
      * @return unknown.
      */
     public static int Script_Structure_Explode(ScriptEngine script) {
-        Structure s;
-        int position;
-        int layout;
-        int i;
+        Structure s = g_scriptCurrentStructure;
+        int layout = g_table_structureInfo[s.o.type].layout;
+        int position = Tile_PackTile(s.o.position);
 
-        s = g_scriptCurrentStructure;
-        layout = g_table_structureInfo[s.o.type].layout;
-        position = Tile_PackTile(s.o.position);
-
-        for (i = 0; i < g_table_structure_layoutTileCount[layout]; i++) {
+        for (int i = 0; i < g_table_structure_layoutTileCount[layout]; i++) {
             Tile32 tile;
 
             tile = Tile_UnpackTile(position + g_table_structure_layoutTiles[layout][i]);
@@ -584,26 +530,18 @@ public class ScriptStructureService {
      * @return Always 0.
      */
     public static int Script_Structure_Destroy(ScriptEngine script) {
-        Structure s;
-        int position;
-        int layout;
-        int i;
-
-        s = g_scriptCurrentStructure;
-        layout = g_table_structureInfo[s.o.type].layout;
-        position = Tile_PackTile(s.o.position);
+        Structure s = g_scriptCurrentStructure;
+        int layout = g_table_structureInfo[s.o.type].layout;
+        int position = Tile_PackTile(s.o.position);
 
         Structure_Remove(s);
 
-        for (i = 0; i < g_table_structure_layoutTileCount[layout]; i++) {
-            Tile32 tile;
-            Unit u;
-
-            tile = Tile_UnpackTile(position + g_table_structure_layoutTiles[layout][i]);
+        for (int i = 0; i < g_table_structure_layoutTileCount[layout]; i++) {
+            Tile32 tile = Tile_UnpackTile(position + g_table_structure_layoutTiles[layout][i]);
 
             if (g_table_structureInfo[s.o.type].o.spawnChance < Tools_Random_256()) continue;
 
-            u = Unit_Create(UNIT_INDEX_INVALID, UNIT_SOLDIER, s.o.houseID, tile, Tools_Random_256());
+            Unit u = Unit_Create(UNIT_INDEX_INVALID, UNIT_SOLDIER, s.o.houseID, tile, Tools_Random_256());
             if (u == null) continue;
 
             u.o.hitpoints = g_table_unitInfo[UNIT_SOLDIER].o.hitpoints * (Tools_Random_256() & 3) / 256;

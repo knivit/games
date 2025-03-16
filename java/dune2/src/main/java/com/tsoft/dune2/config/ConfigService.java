@@ -10,7 +10,7 @@ public class ConfigService {
 
     public static DuneCfg g_config;
     public static boolean g_enableSoundMusic = true;
-    static boolean g_enableVoices = true;
+    public static boolean g_enableVoices = true;
 
     /**
      * Reads and decode the config.
@@ -54,7 +54,7 @@ public class ConfigService {
      * @param config The address where the config will be read.
      * @return True if successful.
      */
-    static boolean Config_Write(String filename, DuneCfg config) {
+    public static boolean Config_Write(String filename, DuneCfg config) {
         FILE *f;
         size_t write;
         uint8 coded[sizeof(DuneCfg)];
@@ -99,7 +99,7 @@ public class ConfigService {
      *
      * @return True if loading is successful.
      */
-    static boolean GameOptions_Load() {
+    public static boolean GameOptions_Load() {
         int index;
 
         index = File_Open_Personal("OPTIONS.CFG", FILE_MODE_READ);

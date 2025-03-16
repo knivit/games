@@ -47,7 +47,7 @@ public class PoolHouseService {
     /**
      * Initialize the House array.
      */
-    static void House_Init() {
+    public static void House_Init() {
         g_houseArray = new House[HOUSE_INDEX_MAX];
         g_houseFindArray = new House[HOUSE_INDEX_MAX];
         g_houseFindCount = 0;
@@ -60,17 +60,15 @@ public class PoolHouseService {
      * @return The House allocated, or null on failure.
      */
     public static House House_Allocate(int index) {
-        House h;
-
         if (index >= HOUSE_INDEX_MAX) return null;
 
-        h = House_Get_ByIndex(index);
+        House h = House_Get_ByIndex(index);
         if (h.flags.used) return null;
 
         /* Initialize the House */
         h = new House();
-        h.index            = index;
-        h.flags.used       = true;
+        h.index = index;
+        h.flags.used = true;
         h.starportLinkedID = UNIT_INDEX_INVALID;
 
         g_houseFindArray[g_houseFindCount++] = h;
@@ -82,10 +80,9 @@ public class PoolHouseService {
      * Free a House.
      */
     static void House_Free(House h) {
-        int i;
-
         /* Walk the array to find the House we are removing */
-        for (i = 0; i < g_houseFindCount; i++) {
+        int i;
+        for (int i = 0; i < g_houseFindCount; i++) {
             if (g_houseFindArray[i] == h) break;
         }
 
@@ -95,6 +92,7 @@ public class PoolHouseService {
 
         /* If needed, close the gap */
         if (i == g_houseFindCount) return;
+
         System.arraycopy(g_houseFindArray, i + 1, g_houseFindArray, i, (g_houseFindCount - i));
     }
 }

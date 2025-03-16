@@ -7,6 +7,7 @@ import com.tsoft.dune2.tile.Tile32;
 import java.util.Arrays;
 
 import static com.tsoft.dune2.animation.AnimationCommand.*;
+import static com.tsoft.dune2.audio.SoundService.Voice_PlayAtTile;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_ROCKET_TURRET;
@@ -23,7 +24,7 @@ public class AnimationService {
     public static final int ANIMATION_MAX = 112;
 
     static Animation[] g_animations = new Animation[ANIMATION_MAX];
-    static long s_animationTimer; /*!< Timer for animations. */
+    static long s_animationTimer;           /* Timer for animations. */
 
     /**
      * Stop with this Animation.
@@ -34,12 +35,11 @@ public class AnimationService {
 	    int[] layout = g_table_structure_layoutTiles[animation.tileLayout];
         int layoutTileCount = g_table_structure_layoutTileCount[animation.tileLayout];
         int packed = Tile_PackTile(animation.tile);
-        int i;
 
         g_map[packed].hasAnimation = false;
         animation.commands = null;
 
-        for (i = 0; i < layoutTileCount; i++) {
+        for (int i = 0; i < layoutTileCount; i++) {
             int position = packed + layout[i];
             Tile t = g_map[position];
 
@@ -133,8 +133,9 @@ public class AnimationService {
             iconMap = specialMap;
         }
 
+        int layoutOff = 0;
         for (i = 0; i < layoutTileCount; i++) {
-            int position = packed + (*layout++);
+            int position = packed + (layout[layoutOff++]);
             int tileID = *iconMap++;
             Tile t = g_map[position];
 
@@ -170,7 +171,7 @@ public class AnimationService {
     static void Animation_Func_SetIconGroup(Animation animation, int parameter) {
         assert(parameter >= 0);
 
-        animation.iconGroup = (int)parameter;
+        animation.iconGroup = parameter;
     }
 
     /**
@@ -182,7 +183,7 @@ public class AnimationService {
         Voice_PlayAtTile(parameter, animation.tile);
     }
 
-    static void Animation_Init() {
+    public static void Animation_Init() {
         Arrays.fill(g_animations, null);
     }
 
@@ -197,22 +198,20 @@ public class AnimationService {
     public static void Animation_Start(AnimationCommandStruct[] commands, Tile32 tile, int tileLayout, int houseID, int iconGroup) {
         Animation[] animation = g_animations;
         int packed = Tile_PackTile(tile);
-        Tile t;
-        int i;
 
-        t = g_map[packed];
+        Tile t = g_map[packed];
         Animation_Stop_ByTile(packed);
 
-        for (i = 0; i < ANIMATION_MAX; i++) {
+        for (int i = 0; i < ANIMATION_MAX; i++) {
             if (animation[i].commands != null) continue;
 
-            animation[i].tickNext   = g_timerGUI;
+            animation[i].tickNext = g_timerGUI;
             animation[i].tileLayout = tileLayout;
-            animation[i].houseID    = houseID;
-            animation[i].current    = 0;
-            animation[i].iconGroup  = iconGroup;
-            animation[i].commands   = commands;
-            animation[i].tile       = tile;
+            animation[i].houseID = houseID;
+            animation[i].current = 0;
+            animation[i].iconGroup = iconGroup;
+            animation[i].commands = commands;
+            animation[i].tile = tile;
 
             s_animationTimer = 0;
 
@@ -229,11 +228,10 @@ public class AnimationService {
     public static void Animation_Stop_ByTile(int packed) {
         Animation[] animation = g_animations;
         Tile t = g_map[packed];
-        int i;
 
         if (!t.hasAnimation) return;
 
-        for (i = 0; i < ANIMATION_MAX; i++) {
+        for (int i = 0; i < ANIMATION_MAX; i++) {
             if (animation[i].commands == null) continue;
             if (Tile_PackTile(animation[i].tile) != packed) continue;
 
@@ -247,25 +245,21 @@ public class AnimationService {
      */
     public static void Animation_Tick() {
         Animation[] animation = g_animations;
-        int i;
 
         if (s_animationTimer > g_timerGUI) return;
         s_animationTimer += 10000;
 
-        for (i = 0; i < ANIMATION_MAX; i++) {
+        for (int i = 0; i < ANIMATION_MAX; i++) {
             if (animation[i].commands == null) continue;
 
             if (animation[i].tickNext <= g_timerGUI) {
-			    AnimationCommandStruct[] commands = animation[i].commands + animation[i].current;
+			    AnimationCommandStruct commands = animation[i].commands + animation[i].current;
                 int parameter = commands.parameter;
                 assert((parameter & 0x0800) == 0 || (parameter & 0xF000) != 0); /* Validate if the compiler sign-extends correctly */
 
                 animation[i].current++;
 
                 switch (commands.command) {
-                    case ANIMATION_STOP:
-                    default:                           Animation_Func_Stop(animation[i], parameter); break;
-
                     case ANIMATION_ABORT:              Animation_Func_Abort(animation[i], parameter); break;
                     case ANIMATION_SET_OVERLAY_TILE:   Animation_Func_SetOverlayTile(animation[i], parameter); break;
                     case ANIMATION_PAUSE:              Animation_Func_Pause(animation[i], parameter); break;
@@ -274,6 +268,8 @@ public class AnimationService {
                     case ANIMATION_SET_GROUND_TILE:    Animation_Func_SetGroundTile(animation[i], parameter); break;
                     case ANIMATION_FORWARD:            Animation_Func_Forward(animation[i], parameter); break;
                     case ANIMATION_SET_ICONGROUP:      Animation_Func_SetIconGroup(animation[i], parameter); break;
+                    case ANIMATION_STOP:
+                    default:                           Animation_Func_Stop(animation[i], parameter); break;
                 }
 
                 if (animation[i].commands == null) continue;

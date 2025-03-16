@@ -176,17 +176,18 @@ public class VideoWin32Service {
         return 0x0000;
     }
 
+    static boolean s_FullScreen = false;
+    static int s_screen_magnification_backup = 0;
+
     static void Video_ToggleFullscreen() {
-        static boolean s_FullScreen = false;
         int width, height;
         long style;
         static RECT s_pos_backup = { 0 };
-        static int s_screen_magnification_backup = 0;
 
-        if(s_hwnd == null) return;
+        if (s_hwnd == null) return;
 
         style = GetWindowlong(s_hwnd, GWL_STYLE);
-        if(s_FullScreen) {
+        if (s_FullScreen) {
             style &= ~WS_POPUP;
             style |= WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU;
             /* allow window to be resized with NEAREST NEIGHBOR filter */
@@ -495,8 +496,7 @@ public class VideoWin32Service {
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
-    static boolean Video_AllocateDib(void)
-    {
+    static boolean Video_AllocateDib() {
         BITMAPINFO *bi;
         HDC dc;
         boolean has_palette_backup = false;
@@ -630,7 +630,7 @@ public class VideoWin32Service {
         return true;
     }
 
-    static void Video_Uninit() {
+    public static void Video_Uninit() {
         if (!s_init) return;
 
         if (s_dib != null) {

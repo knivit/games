@@ -558,7 +558,7 @@ public class InputService {
      * Wait for input, and return the read event.
      * @return New input.
      */
-    static int Input_Wait() {
+    public static int Input_Wait() {
         int value = 0;
 
         for (;; sleepIdle()) {
@@ -662,7 +662,7 @@ public class InputService {
      * Wait for valid input.
      * @return Read input. (ASCII VALUE or > 0x80)
      */
-    static int Input_WaitForValidInput() {
+    public static int Input_WaitForValidInput() {
         int index = 0;
         int value, i;
 
@@ -689,7 +689,7 @@ public class InputService {
      * Get the next key.
      * @return Next key.
      */
-    static int Input_Keyboard_NextKey() {
+    public static int Input_Keyboard_NextKey() {
         int i;
         int value;
 

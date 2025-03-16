@@ -25,8 +25,7 @@ import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Allocate;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Find;
 import static com.tsoft.dune2.pool.PoolStructureService.STRUCTURE_INDEX_INVALID;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
-import static com.tsoft.dune2.pool.PoolUnitService.Unit_Free;
+import static com.tsoft.dune2.pool.PoolUnitService.*;
 import static com.tsoft.dune2.sprites.SpritesService.*;
 import static com.tsoft.dune2.structure.StructureService.*;
 import static com.tsoft.dune2.structure.StructureState.STRUCTURE_STATE_IDLE;
@@ -35,9 +34,10 @@ import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
 import static com.tsoft.dune2.team.TeamActionType.TEAM_ACTION_INVALID;
+import static com.tsoft.dune2.team.TeamService.Team_ActionStringToType;
 import static com.tsoft.dune2.team.TeamService.Team_Create;
-import static com.tsoft.dune2.tile.TileService.Tile_PackTile;
-import static com.tsoft.dune2.tile.TileService.Tile_PackXY;
+import static com.tsoft.dune2.tile.TileService.*;
+import static com.tsoft.dune2.timer.TimerService.g_timerGame;
 import static com.tsoft.dune2.unit.ActionType.ACTION_INVALID;
 import static com.tsoft.dune2.unit.MovementType.MOVEMENT_INVALID;
 import static com.tsoft.dune2.unit.UnitService.*;
@@ -51,25 +51,24 @@ public class ScenarioService {
     public static byte[] s_scenarioBuffer = null;
 
     static void Scenario_Load_General() {
-        g_scenario.winFlags          = Ini_GetInteger("BASIC", "WinFlags",    0,                            s_scenarioBuffer);
-        g_scenario.loseFlags         = Ini_GetInteger("BASIC", "LoseFlags",   0,                            s_scenarioBuffer);
-        g_scenario.mapSeed           = Ini_GetInteger("MAP",   "Seed",        0,                            s_scenarioBuffer);
-        g_scenario.timeOut           = Ini_GetInteger("BASIC", "TimeOut",     0,                            s_scenarioBuffer);
-        g_minimapPosition            = Ini_GetInteger("BASIC", "TacticalPos", g_minimapPosition,            s_scenarioBuffer);
-        g_selectionRectanglePosition = Ini_GetInteger("BASIC", "CursorPos",   g_selectionRectanglePosition, s_scenarioBuffer);
-        g_scenario.mapScale          = Ini_GetInteger("BASIC", "MapScale",    0,                            s_scenarioBuffer);
+        g_scenario.winFlags = Ini_GetInteger("BASIC", "WinFlags",    0,                            s_scenarioBuffer);
+        g_scenario.loseFlags = Ini_GetInteger("BASIC", "LoseFlags",   0,                            s_scenarioBuffer);
+        g_scenario.mapSeed = Ini_GetInteger("MAP",   "Seed",        0,                            s_scenarioBuffer);
+        g_scenario.timeOut = Ini_GetInteger("BASIC", "TimeOut",     0,                            s_scenarioBuffer);
+        g_minimapPosition = Ini_GetInteger("BASIC", "TacticalPos", g_minimapPosition, s_scenarioBuffer);
+        g_selectionRectanglePosition = Ini_GetInteger("BASIC", "CursorPos", g_selectionRectanglePosition, s_scenarioBuffer);
+        g_scenario.mapScale = Ini_GetInteger("BASIC", "MapScale",    0,                            s_scenarioBuffer);
 
-        Ini_GetString("BASIC", "BriefPicture", "HARVEST.WSA",  g_scenario.pictureBriefing, 14, s_scenarioBuffer);
-        Ini_GetString("BASIC", "WinPicture",   "WIN1.WSA",     g_scenario.pictureWin,      14, s_scenarioBuffer);
+        Ini_GetString("BASIC", "BriefPicture", "HARVEST.WSA", g_scenario.pictureBriefing, 14, s_scenarioBuffer);
+        Ini_GetString("BASIC", "WinPicture",   "WIN1.WSA", g_scenario.pictureWin,      14, s_scenarioBuffer);
         Ini_GetString("BASIC", "LosePicture",  "LOSTBILD.WSA", g_scenario.pictureLose,     14, s_scenarioBuffer);
 
-        g_viewportPosition  = g_minimapPosition;
+        g_viewportPosition = g_minimapPosition;
         g_selectionPosition = g_selectionRectanglePosition;
     }
 
     static void Scenario_Load_House(int houseID) {
 	    String houseName = g_table_houseInfo[houseID].name;
-        String houseType;
         char buf[128];
         char *b;
         House h;
@@ -77,47 +76,44 @@ public class ScenarioService {
         /* Get the type of the House (CPU / Human) */
         Ini_GetString(houseName, "Brain", "NONE", buf, 127, s_scenarioBuffer);
         for (b = buf; *b != '\0'; b++) if (*b >= 'a' && *b <= 'z') *b += 'A' - 'a';
-        houseType = strstr("HUMAN$CPU", buf);
+        String houseType = strstr("HUMAN$CPU", buf);
         if (houseType == null) return;
 
         /* Create the house */
         h = House_Allocate(houseID);
 
-        h.credits      = Ini_GetInteger(houseName, "Credits",  0, s_scenarioBuffer);
+        h.credits = Ini_GetInteger(houseName, "Credits",  0, s_scenarioBuffer);
         h.creditsQuota = Ini_GetInteger(houseName, "Quota",    0, s_scenarioBuffer);
         h.unitCountMax = Ini_GetInteger(houseName, "MaxUnit", 39, s_scenarioBuffer);
 
         /* For 'Brain = Human' we have to set a few additional things */
-        if (*houseType != 'H') return;
+        if (houseType.charAt(0) != 'H') return;
 
         h.flags.human = true;
 
-        g_playerHouseID       = houseID;
-        g_playerHouse         = h;
+        g_playerHouseID = houseID;
+        g_playerHouse = h;
         g_playerCreditsNoSilo = h.credits;
     }
 
     static void Scenario_Load_Houses() {
-        House h;
-        int houseID;
-
-        for (houseID = 0; houseID < HOUSE_MAX; houseID++) {
+        for (int houseID = 0; houseID < HOUSE_MAX; houseID++) {
             Scenario_Load_House(houseID);
         }
 
-        h = g_playerHouse;
+        House h = g_playerHouse;
+
         /* In case there was no unitCountMax in the scenario, calculate
          *  it based on values used for the AI controlled houses. */
         if (h.unitCountMax == 0) {
             PoolFindStruct find = new PoolFindStruct();
-            int max;
-            House h2;
-
             find.houseID = HOUSE_INVALID;
             find.index   = 0xFFFF;
             find.type    = 0xFFFF;
 
-            max = 80;
+            int max = 80;
+
+            House h2;
             while ((h2 = House_Find(find)) != null) {
                 /* Skip the human controlled house */
                 if (h2.flags.human) continue;
@@ -128,74 +124,52 @@ public class ScenarioService {
         }
     }
 
-    static void Scenario_Load_Unit(String key, String settings) {
-        int houseType, unitType, actionType;
-        int orientation;
-        int hitpoints;
-        Tile32 position;
-        Unit u;
-        byte[] split;
-
+    private static void Scenario_Load_Unit(String key, String settings) {
         /* The value should have 6 values separated by a ',' */
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        String[] split = settings.split(",");
+        if (split.length == 0) return;
 
         /* First value is the House type */
-        houseType = House_StringToType(settings);
+        int houseType = House_StringToType(split[0]);
         if (houseType == HOUSE_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 1) return;
 
         /* Second value is the Unit type */
-        unitType = Unit_StringToType(settings);
+        int unitType = Unit_StringToType(split[1]);
         if (unitType == UNIT_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 2) return;
 
         /* Third value is the Hitpoints in percent (in base 256) */
-        hitpoints = atoi(settings);
+        int hitpoints = atoi(split[2]);
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 3) return;
 
         /* Fourth value is the position on the map */
-        position = Tile_UnpackTile(atoi(settings));
+        Tile32 position = Tile_UnpackTile(atoi(split[3]));
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 4) return;
 
         /* Fifth value is orientation */
-        orientation = atoi(settings));
+        int orientation = atoi(split[4]);
 
         /* Sixth value is the current state of the unit */
-        settings = split + 1;
-        actionType = Unit_ActionStringToType(settings);
+        int actionType = Unit_ActionStringToType(split[5]);
         if (actionType == ACTION_INVALID) return;
 
-
-        u = Unit_Allocate(UNIT_INDEX_INVALID, unitType, houseType);
+        Unit u = Unit_Allocate(UNIT_INDEX_INVALID, unitType, houseType);
         if (u == null) return;
         u.o.flags.byScenario = true;
 
-        u.o.hitpoints   = hitpoints * g_table_unitInfo[unitType].o.hitpoints / 256;
-        u.o.position    = position;
+        u.o.hitpoints = hitpoints * g_table_unitInfo[unitType].o.hitpoints / 256;
+        u.o.position = position;
         u.orientation[0].current = orientation;
-        u.actionID     = actionType;
+        u.actionID = actionType;
         u.nextActionID = ACTION_INVALID;
 
         /* In case the above function failed and we are passed campaign 2, don't add the unit */
@@ -205,7 +179,7 @@ public class ScenarioService {
         }
 
         /* XXX -- There is no way this is ever possible, as the beingBuilt flag is unset by Unit_Allocate() */
-        if (!u.o.flagsisNotOnMap) Unit_SetAction(u, u.actionID);
+        if (!u.o.flags.isNotOnMap) Unit_SetAction(u, u.actionID);
 
         u.o.seenByHouses = 0x00;
 
@@ -219,24 +193,22 @@ public class ScenarioService {
     static void Scenario_Load_Structure(String key, String settings) {
         int index, houseType, structureType;
         int hitpoints, position;
-        byte[] split;
 
         /* 'GEN' marked keys are Slabs and Walls, where the number following indicates the position on the map */
-        if (strncasecmp(key, "GEN", 3) == 0) {
+        if (key.startsWith("GEN")) {
             /* Position on the map is in the key */
-            position = atoi(key + 3);
+            position = atoi(key.substring(3));
 
             /* The value should have two values separated by a ',' */
-            split = strchr(settings, ',');
-            if (split == null) return;
-		    *split = '\0';
+            String[] split = settings.split(",");
+            if (split.length == 0) return;
+
             /* First value is the House type */
-            houseType = House_StringToType(settings);
+            houseType = House_StringToType(split[0]);
             if (houseType == HOUSE_INVALID) return;
 
             /* Second value is the Structure type */
-            settings = split + 1;
-            structureType = Structure_StringToType(settings);
+            structureType = Structure_StringToType(split[1]);
             if (structureType == STRUCTURE_INVALID) return;
 
             Structure_Create(STRUCTURE_INDEX_INVALID, structureType, houseType, position);
@@ -244,35 +216,28 @@ public class ScenarioService {
         }
 
         /* The key should start with 'ID', followed by the index */
-        index = atoi(key + 2);
+        index = atoi(key.substring(2));
 
         /* The value should have four values separated by a ',' */
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        String[] split = settings.split(",");
+        if (split.length == 0) return;
 
         /* First value is the House type */
-        houseType = House_StringToType(settings);
+        houseType = House_StringToType(split[0]);
         if (houseType == HOUSE_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 1) return;
 
         /* Second value is the Structure type */
-        structureType = Structure_StringToType(settings);
+        structureType = Structure_StringToType(split[1]);
         if (structureType == STRUCTURE_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 2) return;
 
         /* Third value is the Hitpoints in percent (in base 256) */
-        hitpoints = atoi(settings);
+        hitpoints = atoi(split[2]);
         /* ENHANCEMENT -- Dune2 ignores the % hitpoints read from the scenario */
         if (!g_dune2_enhanced) hitpoints = 256;
         else if(hitpoints > 256) hitpoints = 256;
@@ -282,23 +247,18 @@ public class ScenarioService {
          * ID000=Ordos,Light Fctry,14058,1064     */
 
         /* Fourth value is the position of the structure */
-        settings = split + 1;
-        position = atoi(settings);
+        position = atoi(split[3]);
 
         /* Ensure nothing is already on the tile */
         /* XXX -- DUNE2 BUG? -- This only checks the top-left corner? Not really a safety, is it? */
         if (Structure_Get_ByPackedTile(position) != null) return;
 
-        {
-            Structure s;
+        Structure s = Structure_Create(index, structureType, houseType, position);
+        if (s == null) return;
 
-            s = Structure_Create(index, structureType, houseType, position);
-            if (s == null) return;
-
-            s.o.hitpoints = hitpoints * g_table_structureInfo[s.o.type].o.hitpoints / 256;
-            s.o.flags.degrades = false;
-            s.state = STRUCTURE_STATE_IDLE;
-        }
+        s.o.hitpoints = hitpoints * g_table_structureInfo[s.o.type].o.hitpoints / 256;
+        s.o.flags.degrades = false;
+        s.state = STRUCTURE_STATE_IDLE;
     }
 
     static void Scenario_Load_Map(String key, String settings) {
@@ -318,11 +278,11 @@ public class ScenarioService {
 
         s = strtok(settings, ",\r\n");
         value = atoi(s);
-        t.houseID        = value & 0x07;
-        t.isUnveiled     = (value & 0x08) != 0 ? true : false;
-        t.hasUnit        = (value & 0x10) != 0 ? true : false;
-        t.hasStructure   = (value & 0x20) != 0 ? true : false;
-        t.hasAnimation   = (value & 0x40) != 0 ? true : false;
+        t.houseID = value & 0x07;
+        t.isUnveiled = (value & 0x08) != 0 ? true : false;
+        t.hasUnit = (value & 0x10) != 0 ? true : false;
+        t.hasStructure = (value & 0x20) != 0 ? true : false;
+        t.hasAnimation = (value & 0x40) != 0 ? true : false;
         t.hasExplosion = (value & 0x80) != 0 ? true : false;
 
         s = strtok(null, ",\r\n");
@@ -352,21 +312,20 @@ public class ScenarioService {
     }
 
     static void Scenario_Load_Reinforcement(String key, String settings) {
-        int index, houseType, unitType, locationID;
+        int unitType, locationID;
         int timeBetween;
         Tile32 position = new Tile32();
         boolean repeat;
         Unit u;
-        String[] split;
 
-        index = atoi(key);
+        int index = atoi(key);
 
         /* The value should have 4 values separated by a ',' */
-        split = settings.split(",");
+        String[]  split = settings.split(",");
         if (split.length == 0) return;
 
         /* First value is the House type */
-        houseType = House_StringToType(split[0]);
+        int houseType = House_StringToType(split[0]);
         if (houseType == HOUSE_INVALID) return;
 
         /* Find the next value in the ',' separated list */
@@ -401,64 +360,50 @@ public class ScenarioService {
         u = Unit_Create(UNIT_INDEX_INVALID, unitType, houseType, position, 0);
         if (u == null) return;
 
-        g_scenario.reinforcement[index].unitID      = u.o.index;
-        g_scenario.reinforcement[index].locationID  = locationID;
-        g_scenario.reinforcement[index].timeLeft    = timeBetween;
+        g_scenario.reinforcement[index].unitID = u.o.index;
+        g_scenario.reinforcement[index].locationID = locationID;
+        g_scenario.reinforcement[index].timeLeft = timeBetween;
         g_scenario.reinforcement[index].timeBetween = timeBetween;
-        g_scenario.reinforcement[index].repeat      = repeat ? 1 : 0;
+        g_scenario.reinforcement[index].repeat = repeat ? 1 : 0;
     }
 
     static void Scenario_Load_Team(String key, String settings) {
         int houseType, teamActionType, movementType;
         int minMembers, maxMembers;
-        char *split;
 
         /* The value should have 5 values separated by a ',' */
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        String[] split = settings.split(",");
+        if (split.length == 0) return;
 
         /* First value is the House type */
-        houseType = House_StringToType(settings);
+        houseType = House_StringToType(split[0]);
         if (houseType == HOUSE_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 1) return;
 
         /* Second value is the teamAction type */
-        teamActionType = Team_ActionStringToType(settings);
+        teamActionType = Team_ActionStringToType(split[1]);
         if (teamActionType == TEAM_ACTION_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 2) return;
 
         /* Third value is the movement type */
-        movementType = Unit_MovementStringToType(settings);
+        movementType = Unit_MovementStringToType(split[2]);
         if (movementType == MOVEMENT_INVALID) return;
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 3) return;
 
         /* Fourth value is minimum amount of members in team */
-        minMembers = atoi(settings);
+        minMembers = atoi(split[3]);
 
         /* Find the next value in the ',' separated list */
-        settings = split + 1;
-        split = strchr(settings, ',');
-        if (split == null) return;
-	    *split = '\0';
+        if (split.length == 4) return;
 
         /* Fifth value is maximum amount of members in team */
-        maxMembers = atoi(settings);
+        maxMembers = atoi(split[4]);
 
         Team_Create(houseType, teamActionType, movementType, minMembers, maxMembers);
     }
@@ -469,9 +414,7 @@ public class ScenarioService {
      * @param settings Count to set.
      */
     static void Scenario_Load_Choam(String key, String settings) {
-        int unitType;
-
-        unitType = Unit_StringToType(key);
+        int unitType = Unit_StringToType(key);
         if (unitType == UNIT_INVALID) return;
 
         g_starportAvailable[unitType] = atoi(settings);
@@ -514,8 +457,6 @@ public class ScenarioService {
     }
 
     public static boolean Scenario_Load(int scenarioID, int houseID) {
-        int i;
-
         if (houseID >= HOUSE_MAX) return false;
 
         g_scenarioID = scenarioID;
@@ -531,26 +472,27 @@ public class ScenarioService {
         Sprites_LoadTiles();
         Map_CreateLandscape(g_scenario.mapSeed);
 
-        for (i = 0; i < 16; i++) {
+        for (int i = 0; i < 16; i++) {
             g_scenario.reinforcement[i].unitID = UNIT_INDEX_INVALID;
         }
 
         Scenario_Load_Houses();
 
-        Scenario_Load_Chunk("UNITS", Scenario_Load_Unit);
-        Scenario_Load_Chunk("STRUCTURES", Scenario_Load_Structure);
-        Scenario_Load_Chunk("MAP", Scenario_Load_Map);
-        Scenario_Load_Chunk("REINFORCEMENTS", Scenario_Load_Reinforcement);
-        Scenario_Load_Chunk("TEAMS", Scenario_Load_Team);
-        Scenario_Load_Chunk("CHOAM", Scenario_Load_Choam);
+        Scenario_Load_Chunk("UNITS", ScenarioService::Scenario_Load_Unit);
+        Scenario_Load_Chunk("STRUCTURES", ScenarioService::Scenario_Load_Structure);
+        Scenario_Load_Chunk("MAP", ScenarioService::Scenario_Load_Map);
+        Scenario_Load_Chunk("REINFORCEMENTS", ScenarioService::Scenario_Load_Reinforcement);
+        Scenario_Load_Chunk("TEAMS", ScenarioService::Scenario_Load_Team);
+        Scenario_Load_Chunk("CHOAM", ScenarioService::Scenario_Load_Choam);
 
-        Scenario_Load_MapParts("Bloom", Scenario_Load_Map_Bloom);
-        Scenario_Load_MapParts("Field", Scenario_Load_Map_Field);
-        Scenario_Load_MapParts("Special", Scenario_Load_Map_Special);
+        Scenario_Load_MapParts("Bloom", ScenarioService::Scenario_Load_Map_Bloom);
+        Scenario_Load_MapParts("Field", ScenarioService::Scenario_Load_Map_Field);
+        Scenario_Load_MapParts("Special", ScenarioService::Scenario_Load_Map_Special);
 
         g_tickScenarioStart = g_timerGame;
 
-        free(s_scenarioBuffer); s_scenarioBuffer = null;
+        free(s_scenarioBuffer);
+        s_scenarioBuffer = null;
         return true;
     }
 }

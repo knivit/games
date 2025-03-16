@@ -5,7 +5,7 @@ package com.tsoft.dune2.house;
  *  stops when voiceID is 0xFF.
  */
 public class HouseAnimation_SoundEffect {
-    int  animationID;                       /* The which AnimationID this SoundEffect belongs. */
-    int  voiceID;                           /* The SoundEffect to play. */
-    int  wait;                              /* How long to wait before we play this SoundEffect. */
+    int animationID;                       /* The which AnimationID this SoundEffect belongs. */
+    int voiceID;                           /* The SoundEffect to play. */
+    int wait;                              /* How long to wait before we play this SoundEffect. */
 }

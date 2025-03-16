@@ -462,7 +462,7 @@ public class MentatService {
     /**
      * Show the lose screen.
      */
-    static void GUI_Mentat_ShowLose() {
+    public static void GUI_Mentat_ShowLose() {
         GUI_Mentat_ShowDialog(g_playerHouseID, g_campaignID * 4 + 6, g_scenario.pictureLose, g_table_houseInfo[g_playerHouseID].musicLose);
     }
 

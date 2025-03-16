@@ -64,7 +64,7 @@ public class PoolUnitService {
     /**
      * Initialize the Unit array.
      */
-    static void Unit_Init() {
+    public static void Unit_Init() {
         g_unitArray = new Unit[UNIT_INDEX_MAX];
         g_unitFindArray = new Unit[UNIT_INDEX_MAX];
         g_unitFindCount = 0;
@@ -74,8 +74,7 @@ public class PoolUnitService {
      * Recount all Units, ignoring the cache array. Also set the unitCount
      *  of all houses to zero.
      */
-    static void Unit_Recount() {
-        int index;
+    public static void Unit_Recount() {
         PoolFindStruct find = new PoolFindStruct(-1, -1, -1);
         House h = House_Find(find);
 
@@ -86,7 +85,7 @@ public class PoolUnitService {
 
         g_unitFindCount = 0;
 
-        for (index = 0; index < UNIT_INDEX_MAX; index++) {
+        for (int index = 0; index < UNIT_INDEX_MAX; index++) {
             Unit u = Unit_Get_ByIndex(index);
             if (!u.o.flags.used) continue;
 
@@ -106,12 +105,11 @@ public class PoolUnitService {
      * @return The Unit allocated, or NULL on failure.
      */
     public static Unit Unit_Allocate(int index, int type, int houseID) {
-        House h;
         Unit u = null;
 
         if (type == 0xFF || houseID == 0xFF) return null;
 
-        h = House_Get_ByIndex(houseID);
+        House h = House_Get_ByIndex(houseID);
         if (h.unitCount >= h.unitCountMax) {
             if (g_table_unitInfo[type].movementType != MOVEMENT_WINGER && g_table_unitInfo[type].movementType != MOVEMENT_SLITHER) {
                 if (g_validateStrictIfZero == 0) return null;
@@ -136,9 +134,9 @@ public class PoolUnitService {
 
         /* Initialize the Unit */
         u = new Unit();
-        u.o.index           = index;
-        u.o.type            = type;
-        u.o.houseID         = houseID;
+        u.o.index = index;
+        u.o.type = type;
+        u.o.houseID = houseID;
         u.o.linkedID        = 0xFF;
         u.o.flags.used      = true;
         u.o.flags.allocated = true;
@@ -176,6 +174,7 @@ public class PoolUnitService {
 
         /* If needed, close the gap */
         if (i == g_unitFindCount) return;
+
         System.arraycopy(g_unitFindArray, i + 1, g_unitFindArray, i, (g_unitFindCount - i));
     }
 }

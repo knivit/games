@@ -14,8 +14,9 @@ import com.tsoft.dune2.unit.UnitInfo;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
 import static com.tsoft.dune2.animation.AnimationService.Animation_Stop_ByTile;
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_IMPACT_LARGE;
-import static com.tsoft.dune2.gfx.GfxService.GFX_SetPalette;
+import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gobject.GObjectService.Object_GetByPackedTile;
 import static com.tsoft.dune2.gobject.GObjectService.Object_Script_Variable4_Clear;
 import static com.tsoft.dune2.gui.FactoryResult.*;
@@ -33,8 +34,7 @@ import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.*;
 import static com.tsoft.dune2.pool.PoolTeamService.Team_Find;
-import static com.tsoft.dune2.pool.PoolUnitService.UNIT_INDEX_INVALID;
-import static com.tsoft.dune2.pool.PoolUnitService.Unit_Get_ByIndex;
+import static com.tsoft.dune2.pool.PoolUnitService.*;
 import static com.tsoft.dune2.scenario.ScenarioService.g_scenario;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.ICM_ICONGROUP_BASE_DEFENSE_TURRET;
@@ -49,19 +49,23 @@ import static com.tsoft.dune2.table.TableStructureInfo.*;
 import static com.tsoft.dune2.structure.StructureState.*;
 import static com.tsoft.dune2.structure.StructureType.*;
 import static com.tsoft.dune2.table.TableUnitInfo.g_table_unitInfo;
+import static com.tsoft.dune2.table.TileDiff.g_table_mapDiff;
 import static com.tsoft.dune2.tile.TileService.*;
+import static com.tsoft.dune2.timer.TimerService.Timer_SetTimer;
 import static com.tsoft.dune2.timer.TimerService.g_timerGame;
+import static com.tsoft.dune2.timer.TimerType.TIMER_GAME;
 import static com.tsoft.dune2.tools.IndexType.IT_STRUCTURE;
 import static com.tsoft.dune2.tools.ToolsService.*;
 import static com.tsoft.dune2.unit.ActionType.*;
 import static com.tsoft.dune2.unit.UnitFlag.*;
 import static com.tsoft.dune2.unit.UnitService.*;
 import static com.tsoft.dune2.unit.UnitType.*;
+import static org.lwjgl.system.libc.LibCString.memmove;
 
 public class StructureService {
 
-    static Structure g_structureActive = null;
-    static int g_structureActivePosition = 0;
+    public static Structure g_structureActive = null;
+    public static int g_structureActivePosition = 0;
     public static int g_structureActiveType = 0;
 
     static boolean s_debugInstantBuild = false;   /* When non-zero, constructions are almost instant. */
@@ -76,11 +80,10 @@ public class StructureService {
      * Loop over all structures, preforming various of tasks.
      */
     public static void GameLoop_Structure() {
-        PoolFindStruct find = new PoolFindStruct();
-        boolean tickDegrade   = false;
+        boolean tickDegrade = false;
         boolean tickStructure = false;
-        boolean tickScript    = false;
-        boolean tickPalace    = false;
+        boolean tickScript = false;
+        boolean tickPalace = false;
 
         if (s_tickStructureDegrade <= g_timerGame && g_campaignID > 1) {
             tickDegrade = true;
@@ -102,27 +105,24 @@ public class StructureService {
             s_tickStructurePalace = g_timerGame + 60;
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         if (g_debugScenario) return;
 
         while (true) {
-		    StructureInfo si;
-		    HouseInfo hi;
-            Structure s;
-            House h;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
+
             if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL) {
                 continue;
             }
 
-            si = g_table_structureInfo[s.o.type];
-            h  = House_Get_ByIndex(s.o.houseID);
-            hi = g_table_houseInfo[h.index];
+            StructureInfo si = g_table_structureInfo[s.o.type];
+            House h = House_Get_ByIndex(s.o.houseID);
+            HouseInfo hi = g_table_houseInfo[h.index];
 
             g_scriptCurrentObject    = s.o;
             g_scriptCurrentStructure = s;
@@ -172,7 +172,7 @@ public class StructureService {
                 } else if (s.o.flags.repairing) {
                     int repairCost;
 
-                    /* ENHANCEMENT -- The calculation of the repaircost is a bit unfair in Dune2, because of rounding errors (they use a 256 float-resolution, which is not sufficient) */
+                    /* ENHANCEMENT -- The calculation of the repair cost is a bit unfair in Dune2, because of rounding errors (they use a 256 float-resolution, which is not sufficient) */
                     if (g_dune2_enhanced) {
                         repairCost = si.o.buildCredits * 2 / si.o.hitpoints;
                     } else {
@@ -218,7 +218,9 @@ public class StructureService {
 
                         /* For AIs, we slow down building speed in all but the last campaign */
                         if (g_playerHouseID != s.o.houseID) {
-                            if (buildSpeed > g_campaignID * 20 + 95) buildSpeed = g_campaignID * 20 + 95;
+                            if (buildSpeed > g_campaignID * 20 + 95) {
+                                buildSpeed = g_campaignID * 20 + 95;
+                            }
                         }
 
                         buildCost = oi.buildCredits * 256 / oi.buildTime;
@@ -378,10 +380,14 @@ public class StructureService {
      *  STRUCTURE_INVALID if not found.
      */
     public static int Structure_StringToType(String name) {
-        if (name == null) return STRUCTURE_INVALID;
+        if (name == null) {
+            return STRUCTURE_INVALID;
+        }
 
         for (int type = 0; type < STRUCTURE_MAX; type++) {
-            if (g_table_structureInfo[type].o.name.equalsIgnoreCase(name)) return type;
+            if (g_table_structureInfo[type].o.name.equalsIgnoreCase(name)) {
+                return type;
+            }
         }
 
         return STRUCTURE_INVALID;
@@ -407,13 +413,13 @@ public class StructureService {
         s = Structure_Allocate(index, typeID);
         if (s == null) return null;
 
-        s.o.houseID            = houseID;
-        s.creatorHouseID       = houseID;
+        s.o.houseID = houseID;
+        s.creatorHouseID = houseID;
         s.o.flags.isNotOnMap = true;
-        s.o.position.x         = 0;
-        s.o.position.y         = 0;
-        s.o.linkedID           = 0xFF;
-        s.state                = (g_debugScenario) ? STRUCTURE_STATE_IDLE : STRUCTURE_STATE_JUSTBUILT;
+        s.o.position.x = 0;
+        s.o.position.y = 0;
+        s.o.linkedID = 0xFF;
+        s.state = (g_debugScenario) ? STRUCTURE_STATE_IDLE : STRUCTURE_STATE_JUSTBUILT;
 
         if (typeID == STRUCTURE_TURRET) {
             s.rotationSpriteDiff = g_iconMap[g_iconMap[ICM_ICONGROUP_BASE_DEFENSE_TURRET] + 1];
@@ -461,7 +467,7 @@ public class StructureService {
      * Place a structure on the map.
      *
      * @param s The structure to place on the map.
-     * @param position The (packed) tile to place the struction on.
+     * @param position The (packed) tile to place the construction on.
      * @return True if and only if the structure is placed on the map.
      */
     public static boolean Structure_Place(Structure s, int position) {
@@ -512,7 +518,9 @@ public class StructureService {
 
                     g_mapTileID[curPos] |= 0x8000;
 
-                    if (s.o.houseID == g_playerHouseID) Tile_RemoveFogInRadius(Tile_UnpackTile(curPos), 1);
+                    if (s.o.houseID == g_playerHouseID) {
+                        Tile_RemoveFogInRadius(Tile_UnpackTile(curPos), 1);
+                    }
 
                     if (Map_IsPositionUnveiled(curPos)) t.overlayTileID = 0;
 
@@ -548,14 +556,20 @@ public class StructureService {
                 if (result == 0) return false;
 
                 Structure_Free(s);
-            } return true;
+            }
+
+            return true;
         }
 
         validBuildLocation = Structure_IsValidBuildLocation(position, s.o.type);
-        if (validBuildLocation == 0 && s.o.houseID == g_playerHouseID && !g_debugScenario && g_validateStrictIfZero == 0) return false;
+        if (validBuildLocation == 0 && s.o.houseID == g_playerHouseID && !g_debugScenario && g_validateStrictIfZero == 0) {
+            return false;
+        }
 
         /* ENHANCEMENT -- In Dune2, it only removes the fog around the top-left tile of a structure, leaving for big structures the right in the fog. */
-        if (!g_dune2_enhanced && s.o.houseID == g_playerHouseID) Tile_RemoveFogInRadius(Tile_UnpackTile(position), 2);
+        if (!g_dune2_enhanced && s.o.houseID == g_playerHouseID) {
+            Tile_RemoveFogInRadius(Tile_UnpackTile(position), 2);
+        }
 
         s.o.seenByHouses |= 1 << s.o.houseID;
         if (s.o.houseID == g_playerHouseID) s.o.seenByHouses |= 0xFF;
@@ -585,7 +599,7 @@ public class StructureService {
             }
         }
 
-        Script_Reset(&s.o.script, g_scriptStructure);
+        Script_Reset(s.o.script, g_scriptStructure);
 
         s.o.script.variables[0] = 0;
         s.o.script.variables[4] = 0;
@@ -597,44 +611,35 @@ public class StructureService {
             Script_Load(s.o.script, s.o.type);
         }
 
-        {
-            int i;
+        for (int i = 0; i < g_table_structure_layoutTileCount[si.layout]; i++) {
+            int curPos = position + g_table_structure_layoutTiles[si.layout][i];
+            Unit u;
 
-            for (i = 0; i < g_table_structure_layoutTileCount[si.layout]; i++) {
-                int curPos = position + g_table_structure_layoutTiles[si.layout][i];
-                Unit u;
+            u = Unit_Get_ByPackedTile(curPos);
 
-                u = Unit_Get_ByPackedTile(curPos);
+            Unit_Remove(u);
 
-                Unit_Remove(u);
-
-                /* ENHANCEMENT -- In Dune2, it only removes the fog around the top-left tile of a structure, leaving for big structures the right in the fog. */
-                if (g_dune2_enhanced && s.o.houseID == g_playerHouseID) Tile_RemoveFogInRadius(Tile_UnpackTile(curPos), 2);
-
+            /* ENHANCEMENT -- In Dune2, it only removes the fog around the top-left tile of a structure, leaving for big structures the right in the fog. */
+            if (g_dune2_enhanced && s.o.houseID == g_playerHouseID) {
+                Tile_RemoveFogInRadius(Tile_UnpackTile(curPos), 2);
             }
+
         }
 
         if (s.o.type == STRUCTURE_WINDTRAP) {
-            House h;
-
-            h = House_Get_ByIndex(s.o.houseID);
+            House h = House_Get_ByIndex(s.o.houseID);
             h.windtrapCount += 1;
         }
 
         if (g_validateStrictIfZero == 0) {
-            House h;
-
-            h = House_Get_ByIndex(s.o.houseID);
+            House h = House_Get_ByIndex(s.o.houseID);
             House_CalculatePowerAndCredit(h);
         }
 
         Structure_UpdateMap(s);
 
-        {
-            House h;
-            h = House_Get_ByIndex(s.o.houseID);
-            h.structuresBuilt = Structure_GetStructuresBuilt(h);
-        }
+        House h = House_Get_ByIndex(s.o.houseID);
+        h.structuresBuilt = Structure_GetStructuresBuilt(h);
 
         return true;
     }
@@ -839,24 +844,21 @@ public class StructureService {
      * @param s The structure which launches the weapon. Has to be the Palace.
      */
     public static void Structure_ActivateSpecial(Structure s) {
-        House h;
-
         if (s == null) return;
         if (s.o.type != STRUCTURE_PALACE) return;
 
-        h = House_Get_ByIndex(s.o.houseID);
+        House h = House_Get_ByIndex(s.o.houseID);
         if (!h.flags.used) return;
 
         switch (g_table_houseInfo[s.o.houseID].specialWeapon) {
             case HOUSE_WEAPON_MISSILE: {
-                Unit u;
                 Tile32 position = new Tile32();
 
                 position.x = 0xFFFF;
                 position.y = 0xFFFF;
 
                 g_validateStrictIfZero++;
-                u = Unit_Create(UNIT_INDEX_INVALID, UNIT_MISSILE_HOUSE, s.o.houseID, position, Tools_Random_256());
+                Unit u = Unit_Create(UNIT_INDEX_INVALID, UNIT_MISSILE_HOUSE, s.o.houseID, position, Tools_Random_256());
                 g_validateStrictIfZero--;
 
                 g_unitHouseMissile = u;
@@ -866,16 +868,13 @@ public class StructureService {
 
                 if (!h.flags.human) {
                     PoolFindStruct find = new PoolFindStruct();
-
                     find.houseID = HOUSE_INVALID;
                     find.type    = 0xFFFF;
                     find.index   = 0xFFFF;
 
                     /* For the AI, try to find the first structure which is not ours, and launch missile to there */
                     while (true) {
-                        Structure sf;
-
-                        sf = Structure_Find(find);
+                        Structure sf = Structure_Find(find);
                         if (sf == null) break;
                         if (sf.o.type == STRUCTURE_SLAB_1x1 || sf.o.type == STRUCTURE_SLAB_2x2 || sf.o.type == STRUCTURE_WALL) continue;
 
@@ -900,28 +899,20 @@ public class StructureService {
             } break;
 
             case HOUSE_WEAPON_FREMEN: {
-                int location;
-                int i;
-
                 /* Find a random location to appear */
-                location = Map_FindLocationTile(4, HOUSE_INVALID);
+                int location = Map_FindLocationTile(4, HOUSE_INVALID);
 
-                for (i = 0; i < 5; i++) {
-                    Unit u;
-                    Tile32 position;
-                    int orientation;
-                    int unitType;
-
+                for (int i = 0; i < 5; i++) {
                     Tools_Random_256();
 
-                    position = Tile_UnpackTile(location);
+                    Tile32 position = Tile_UnpackTile(location);
                     position = Tile_MoveByRandom(position, 32, true);
 
-                    orientation = Tools_RandomLCG_Range(0, 3);
-                    unitType = (orientation == 1) ? UNIT_TROOPER : UNIT_TROOPERS;
+                    int orientation = Tools_RandomLCG_Range(0, 3);
+                    int unitType = (orientation == 1) ? UNIT_TROOPER : UNIT_TROOPERS;
 
                     g_validateStrictIfZero++;
-                    u = Unit_Create(UNIT_INDEX_INVALID, (int)unitType, HOUSE_FREMEN, position, (int)orientation);
+                    Unit u = Unit_Create(UNIT_INDEX_INVALID, (int)unitType, HOUSE_FREMEN, position, (int)orientation);
                     g_validateStrictIfZero--;
 
                     if (u == null) continue;
@@ -933,11 +924,8 @@ public class StructureService {
             } break;
 
             case HOUSE_WEAPON_SABOTEUR: {
-                Unit u;
-                int position;
-
                 /* Find a spot next to the structure */
-                position = Structure_FindFreePosition(s, false);
+                int position = Structure_FindFreePosition(s, false);
 
                 /* If there is no spot, reset countdown */
                 if (position == 0) {
@@ -946,7 +934,7 @@ public class StructureService {
                 }
 
                 g_validateStrictIfZero++;
-                u = Unit_Create(UNIT_INDEX_INVALID, UNIT_SABOTEUR, s.o.houseID, Tile_UnpackTile(position), Tools_Random_256());
+                Unit u = Unit_Create(UNIT_INDEX_INVALID, UNIT_SABOTEUR, s.o.houseID, Tile_UnpackTile(position), Tools_Random_256());
                 g_validateStrictIfZero--;
 
                 if (u == null) return;
@@ -970,14 +958,11 @@ public class StructureService {
      * @param s The Structure.
      */
     public static void Structure_RemoveFog(Structure s) {
-	    StructureInfo si;
-        Tile32 position;
-
         if (s == null || s.o.houseID != g_playerHouseID) return;
 
-        si = g_table_structureInfo[s.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
-        position = s.o.position;
+        Tile32 position = s.o.position;
 
         /* ENHANCEMENT -- Fog is removed around the top left corner instead of the center of a structure. */
         if (g_dune2_enhanced) {
@@ -994,10 +979,6 @@ public class StructureService {
      * @param s The Structure.
      */
     static void Structure_Destroy(Structure s) {
-	    StructureInfo si;
-        int linkedID;
-        House h;
-
         if (s == null) return;
 
         if (g_debugScenario) {
@@ -1015,7 +996,7 @@ public class StructureService {
 
         Voice_PlayAtTile(44, s.o.position);
 
-        linkedID = s.o.linkedID;
+        int linkedID = s.o.linkedID;
 
         if (linkedID != 0xFF) {
             if (s.o.type == STRUCTURE_CONSTRUCTION_YARD) {
@@ -1032,8 +1013,8 @@ public class StructureService {
             }
         }
 
-        h = House_Get_ByIndex(s.o.houseID);
-        si = g_table_structureInfo[s.o.type];
+        House h = House_Get_ByIndex(s.o.houseID);
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
         h.credits -= (h.creditsStorage == 0) ? h.credits : Math.min(h.credits, (h.credits * 256 / h.creditsStorage) * si.creditsStorage / 256);
 
@@ -1053,13 +1034,11 @@ public class StructureService {
      * @return True if and only if the structure is now destroyed.
      */
     public static boolean Structure_Damage(Structure s, int damage, int range) {
-	    StructureInfo si;
-
         if (s == null) return false;
         if (damage == 0) return false;
         if (s.o.script.variables[0] == 1) return false;
 
-        si = g_table_structureInfo[s.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
         if (s.o.hitpoints >= damage) {
             s.o.hitpoints -= damage;
@@ -1068,9 +1047,7 @@ public class StructureService {
         }
 
         if (s.o.hitpoints == 0) {
-            int score;
-
-            score = si.o.buildCredits / 100;
+            int score = si.o.buildCredits / 100;
             if (score < 1) score = 1;
 
             if (House_AreAllied(g_playerHouseID, s.o.houseID)) {
@@ -1115,70 +1092,66 @@ public class StructureService {
      * @return True if and only if the structure is upgradable.
      */
     public static boolean Structure_IsUpgradable(Structure s) {
-	    StructureInfo si;
-
         if (s == null) return false;
 
-        si = g_table_structureInfo[s.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
         if (s.o.houseID == HOUSE_HARKONNEN && s.o.type == STRUCTURE_HIGH_TECH) return false;
         if (s.o.houseID == HOUSE_ORDOS && s.o.type == STRUCTURE_HEAVY_VEHICLE && s.upgradeLevel == 1 && si.upgradeCampaign[2] > g_campaignID) return false;
 
         if (si.upgradeCampaign[s.upgradeLevel] != 0 && si.upgradeCampaign[s.upgradeLevel] <= g_campaignID + 1) {
-            House h;
-
             if (s.o.type != STRUCTURE_CONSTRUCTION_YARD) return true;
             if (s.upgradeLevel != 1) return true;
 
-            h = House_Get_ByIndex(s.o.houseID);
+            House h = House_Get_ByIndex(s.o.houseID);
             if ((h.structuresBuilt & g_table_structureInfo[STRUCTURE_ROCKET_TURRET].o.structuresRequired) == g_table_structureInfo[STRUCTURE_ROCKET_TURRET].o.structuresRequired) return true;
 
             return false;
         }
 
-        if (s.o.houseID == HOUSE_HARKONNEN && s.o.type == STRUCTURE_WOR_TROOPER && s.upgradeLevel == 0 && g_campaignID > 3) return true;
+        if (s.o.houseID == HOUSE_HARKONNEN && s.o.type == STRUCTURE_WOR_TROOPER && s.upgradeLevel == 0 && g_campaignID > 3) {
+            return true;
+        }
+
         return false;
     }
+
+    private static final int[] wall = new int[] {
+        0,  3,  1,  2,  3,  3,  4,  5,  1,  6,  1,  7,  8,  9, 10, 11,
+        1, 12,  1, 19,  1, 16,  1, 31,  1, 28,  1, 52,  1, 45,  1, 59,
+        3,  3, 13, 20,  3,  3, 22, 32,  3,  3, 13, 53,  3,  3, 38, 60,
+        5,  6,  7, 21,  5,  6,  7, 33,  5,  6,  7, 54,  5,  6,  7, 61,
+        9,  9,  9,  9, 17, 17, 23, 34,  9,  9,  9,  9, 25, 46, 39, 62,
+        11, 12, 11, 12, 13, 18, 13, 35, 11, 12, 11, 12, 13, 47, 13, 63,
+        15, 15, 16, 16, 17, 17, 24, 36, 15, 15, 16, 16, 17, 17, 40, 64,
+        19, 20, 21, 22, 23, 24, 25, 37, 19, 20, 21, 22, 23, 24, 25, 65,
+        27, 27, 27, 27, 27, 27, 27, 27, 14, 29, 14, 55, 26, 48, 41, 66,
+        29, 30, 29, 30, 29, 30, 29, 30, 31, 30, 31, 56, 31, 49, 31, 67,
+        33, 33, 34, 34, 33, 33, 34, 34, 35, 35, 15, 57, 35, 35, 42, 68,
+        37, 38, 39, 40, 37, 38, 39, 40, 41, 42, 43, 58, 41, 42, 43, 69,
+        45, 45, 45, 45, 46, 46, 46, 46, 47, 47, 47, 47, 27, 50, 43, 70,
+        49, 50, 49, 50, 51, 52, 51, 52, 53, 54, 53, 54, 55, 51, 55, 71,
+        57, 57, 58, 58, 59, 59, 60, 60, 61, 61, 62, 62, 63, 63, 44, 72,
+        65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 73
+    };
 
     /**
      * Connect walls around the given position.
      *
      * @param position The packed position.
-     * @param recurse Wether to recurse.
+     * @param recurse Whether to recurse.
      * @return True if and only if a change happened.
      */
     public static boolean Structure_ConnectWall(int position, boolean recurse) {
-        int[] wall = new int[] {
-            0,  3,  1,  2,  3,  3,  4,  5,  1,  6,  1,  7,  8,  9, 10, 11,
-            1, 12,  1, 19,  1, 16,  1, 31,  1, 28,  1, 52,  1, 45,  1, 59,
-            3,  3, 13, 20,  3,  3, 22, 32,  3,  3, 13, 53,  3,  3, 38, 60,
-            5,  6,  7, 21,  5,  6,  7, 33,  5,  6,  7, 54,  5,  6,  7, 61,
-            9,  9,  9,  9, 17, 17, 23, 34,  9,  9,  9,  9, 25, 46, 39, 62,
-            11, 12, 11, 12, 13, 18, 13, 35, 11, 12, 11, 12, 13, 47, 13, 63,
-            15, 15, 16, 16, 17, 17, 24, 36, 15, 15, 16, 16, 17, 17, 40, 64,
-            19, 20, 21, 22, 23, 24, 25, 37, 19, 20, 21, 22, 23, 24, 25, 65,
-            27, 27, 27, 27, 27, 27, 27, 27, 14, 29, 14, 55, 26, 48, 41, 66,
-            29, 30, 29, 30, 29, 30, 29, 30, 31, 30, 31, 56, 31, 49, 31, 67,
-            33, 33, 34, 34, 33, 33, 34, 34, 35, 35, 15, 57, 35, 35, 42, 68,
-            37, 38, 39, 40, 37, 38, 39, 40, 41, 42, 43, 58, 41, 42, 43, 69,
-            45, 45, 45, 45, 46, 46, 46, 46, 47, 47, 47, 47, 27, 50, 43, 70,
-            49, 50, 49, 50, 51, 52, 51, 52, 53, 54, 53, 54, 55, 51, 55, 71,
-            57, 57, 58, 58, 59, 59, 60, 60, 61, 61, 62, 62, 63, 63, 44, 72,
-            65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 73
-        };
-
         int bits = 0;
-        int tileID;
-        boolean isDestroyedWall;
-        int i;
-        Tile tile;
+        boolean isDestroyedWall = Map_GetLandscapeType(position) == LST_DESTROYED_WALL;
 
-        isDestroyedWall = Map_GetLandscapeType(position) == LST_DESTROYED_WALL;
-
-        for (i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
 		    int curPos = position + g_table_mapDiff[i];
 
-            if (recurse && Map_GetLandscapeType(curPos) == LST_WALL) Structure_ConnectWall(curPos, false);
+            if (recurse && Map_GetLandscapeType(curPos) == LST_WALL) {
+                Structure_ConnectWall(curPos, false);
+            }
 
             if (isDestroyedWall) continue;
 
@@ -1193,9 +1166,9 @@ public class StructureService {
 
         if (isDestroyedWall) return false;
 
-        tileID = g_wallTileID + wall[bits] + 1;
+        int tileID = g_wallTileID + wall[bits] + 1;
 
-        tile = g_map[position];
+        Tile tile = g_map[position];
         if (tile.groundTileID == tileID) return false;
 
         tile.groundTileID = tileID;
@@ -1211,8 +1184,12 @@ public class StructureService {
      * @return The linked unit, or NULL if there was none.
      */
     public static Unit Structure_GetLinkedUnit(Structure s) {
-        if (s.o.linkedID == 0xFF) return null;
-        return Unit_Get_ByIndex(s.o.linkedID);
+        return Structure_GetLinkedUnit(s.o);
+    }
+
+    public static Unit Structure_GetLinkedUnit(GObject o) {
+        if (o.linkedID == 0xFF) return null;
+        return Unit_Get_ByIndex(o.linkedID);
     }
 
     /**
@@ -1221,19 +1198,17 @@ public class StructureService {
      * @param s The Structure to untarget.
      */
     public static void Structure_UntargetMe(Structure s) {
-        PoolFindStruct find = new PoolFindStruct();
         int encoded = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
 
         Object_Script_Variable4_Clear(s.o);
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
             if (u.targetMove == encoded) u.targetMove = 0;
@@ -1242,13 +1217,11 @@ public class StructureService {
         }
 
         find.houseID = HOUSE_INVALID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-            Team t;
-
-            t = Team_Find(find);
+            Team t = Team_Find(find);
             if (t == null) break;
 
             if (t.target == encoded) t.target = 0;
@@ -1259,42 +1232,33 @@ public class StructureService {
      * Find a free spot for units next to a structure.
      * @param s Structure that needs a free spot.
      * @param checkForSpice Spot should be as close to spice as possible.
-     * @return Position of the free spot, or \c 0 if no free spot available.
+     * @return Position of the free spot, or 0 if no free spot available.
      */
     public static int Structure_FindFreePosition(Structure s, boolean checkForSpice) {
-	    StructureInfo si;
-        int packed;
-        int spicePacked;  /* Position of the spice, or 0 if not used or if no spice. */
-        int bestPacked;
-        int bestDistance; /* If > 0, distance to the spice from bestPacked. */
-        int i, j;
-
         if (s == null) return 0;
 
-        si = g_table_structureInfo[s.o.type];
-        packed = Tile_PackTile(Tile_Center(s.o.position));
+        StructureInfo si = g_table_structureInfo[s.o.type];
+        int packed = Tile_PackTile(Tile_Center(s.o.position));
 
-        spicePacked = (checkForSpice) ? Map_SearchSpice(packed, 10) : 0;
-        bestPacked = 0;
-        bestDistance = 0;
+        /* Position of the spice, or 0 if not used or if no spice. */
+        int spicePacked = (checkForSpice) ? Map_SearchSpice(packed, 10) : 0;
+        int bestPacked = 0;
 
-        i = Tools_Random_256() & 0xF;
-        for (j = 0; j < 16; j++, i = (i + 1) & 0xF) {
-            int offset;
-            int curPacked;
-            int type;
-            Tile t;
+        /* If > 0, distance to the spice from bestPacked. */
+        int bestDistance = 0;
 
-            offset = g_table_structure_layoutTilesAround[si.layout][i];
+        int i = Tools_Random_256() & 0xF;
+        for (int j = 0; j < 16; j++, i = (i + 1) & 0xF) {
+            int offset = g_table_structure_layoutTilesAround[si.layout][i];
             if (offset == 0) continue;
 
-            curPacked = packed + offset;
+            int curPacked = packed + offset;
             if (!Map_IsValidPosition(curPacked)) continue;
 
-            type = Map_GetLandscapeType(curPacked);
+            int type = Map_GetLandscapeType(curPacked);
             if (type == LST_WALL || type == LST_ENTIRELY_MOUNTAIN || type == LST_PARTIAL_MOUNTAIN) continue;
 
-            t = g_map[curPacked];
+            Tile t = g_map[curPacked];
             if (t.hasUnit || t.hasStructure) continue;
 
             if (!checkForSpice) return curPacked;
@@ -1313,23 +1277,17 @@ public class StructureService {
      * @param s The structure to remove.
      */
     public static void Structure_Remove(Structure s) {
-	    StructureInfo si;
-        int packed;
-        int i;
-        House h;
-
         if (s == null) return;
 
-        si = g_table_structureInfo[s.o.type];
-        packed = Tile_PackTile(s.o.position);
+        StructureInfo si = g_table_structureInfo[s.o.type];
+        int packed = Tile_PackTile(s.o.position);
 
-        for (i = 0; i < g_table_structure_layoutTileCount[si.layout]; i++) {
-            Tile t;
+        for (int i = 0; i < g_table_structure_layoutTileCount[si.layout]; i++) {
             int curPacked = packed + g_table_structure_layoutTiles[si.layout][i];
 
             Animation_Stop_ByTile(curPacked);
 
-            t = g_map[curPacked];
+            Tile t = g_map[curPacked];
             t.hasStructure = false;
 
             if (g_debugScenario) {
@@ -1342,9 +1300,9 @@ public class StructureService {
             Animation_Start(g_table_animation_structure[0], s.o.position, si.layout, s.o.houseID, (int)si.iconGroup);
         }
 
-        h = House_Get_ByIndex(s.o.houseID);
+        House h = House_Get_ByIndex(s.o.houseID);
 
-        for (i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             if (h.ai_structureRebuild[i][0] != 0) continue;
             h.ai_structureRebuild[i][0] = s.o.type;
             h.ai_structureRebuild[i][1] = packed;
@@ -1374,7 +1332,7 @@ public class StructureService {
     }
 
     /**
-     * Check if requested structureType can be build on the map with concrete below.
+     * Check if requested structureType can be built on the map with concrete below.
      *
      * @param structureType The type of structure to check for.
      * @param houseID The house to check for.
@@ -1382,33 +1340,32 @@ public class StructureService {
      *  build requested structure.
      */
     static boolean Structure_CheckAvailableConcrete(int structureType, int houseID) {
-	    StructureInfo si;
-        int tileCount;
-        int i;
+        StructureInfo si = g_table_structureInfo[structureType];
 
-        si = g_table_structureInfo[structureType];
-
-        tileCount = g_table_structure_layoutTileCount[si.layout];
+        int tileCount = g_table_structure_layoutTileCount[si.layout];
 
         if (structureType == STRUCTURE_SLAB_1x1 || structureType == STRUCTURE_SLAB_2x2) {
             return true;
         }
 
-        for (i = 0; i < 4096; i++) {
+        for (int i = 0; i < 4096; i++) {
             boolean stop = true;
-            int j;
 
-            for (j = 0; j < tileCount; j++) {
+            for (int j = 0; j < tileCount; j++) {
                 int packed = i + g_table_structure_layoutTiles[si.layout][j];
                 /* XXX -- This can overflow, and we should check for that */
 
-                if (Map_GetLandscapeType(packed) == LST_CONCRETE_SLAB && g_map[packed].houseID == houseID) continue;
+                if (Map_GetLandscapeType(packed) == LST_CONCRETE_SLAB && g_map[packed].houseID == houseID) {
+                    continue;
+                }
 
                 stop = false;
                 break;
             }
 
-            if (stop) return true;
+            if (stop) {
+                return true;
+            }
         }
 
         return false;
@@ -1420,10 +1377,9 @@ public class StructureService {
      * @param s The Structure.
      */
     static void Structure_CancelBuild(Structure s) {
-        GObjectInfo oi;
-
         if (s == null || s.o.linkedID == 0xFF) return;
 
+        GObjectInfo oi;
         if (s.o.type == STRUCTURE_CONSTRUCTION_YARD) {
             Structure s2 = Structure_Get_ByIndex(s.o.linkedID);
             oi = g_table_structureInfo[s2.o.type].o;
@@ -1449,14 +1405,12 @@ public class StructureService {
      * @return ??.
      */
     public static boolean Structure_BuildObject(Structure s, int objectType) {
-	    StructureInfo si;
 	    String str;
         GObject o;
-        GObjectInfo oi;
 
         if (s == null) return false;
 
-        si = g_table_structureInfo[s.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
         if (!si.o.flags.factory) return false;
 
@@ -1469,7 +1423,6 @@ public class StructureService {
 
         if (objectType == 0xFFFF || objectType == 0xFFFE) {
             int upgradeCost = 0;
-            long buildable;
 
             if (Structure_IsUpgradable(s) && si.o.hitpoints == s.o.hitpoints) {
                 upgradeCost = (si.o.buildCredits + (si.o.buildCredits >> 15)) / 2;
@@ -1478,7 +1431,7 @@ public class StructureService {
             if (upgradeCost != 0 && s.o.type == STRUCTURE_HIGH_TECH && s.o.houseID == HOUSE_HARKONNEN) upgradeCost = 0;
             if (s.o.type == STRUCTURE_STARPORT) upgradeCost = 0;
 
-            buildable = Structure_GetBuildable(s);
+            long buildable = Structure_GetBuildable(s);
 
             if (buildable == 0) {
                 s.objectType = 0;
@@ -1503,15 +1456,12 @@ public class StructureService {
                 if (s.o.type == STRUCTURE_STARPORT) {
                     int linkedID = 0xFF;
                     int[] availableUnits = new int[UNIT_MAX];
-                    Unit u;
                     boolean loop;
 
                     do {
-                        int i;
-
                         loop = false;
 
-                        for (i = 0; i < UNIT_MAX; i++) {
+                        for (int i = 0; i < UNIT_MAX; i++) {
                             int unitsAtStarport = g_starportAvailable[i];
 
                             if (unitsAtStarport == 0) {
@@ -1520,7 +1470,7 @@ public class StructureService {
                                 g_table_unitInfo[i].o.available = -1;
                             } else if (unitsAtStarport > availableUnits[i]) {
                                 g_validateStrictIfZero++;
-                                u = Unit_Allocate(UNIT_INDEX_INVALID, i, s.o.houseID);
+                                Unit u = Unit_Allocate(UNIT_INDEX_INVALID, i, s.o.houseID);
                                 g_validateStrictIfZero--;
 
                                 if (u != null) {
@@ -1535,14 +1485,12 @@ public class StructureService {
                     } while (loop);
 
                     while (linkedID != 0xFF) {
-                        u = Unit_Get_ByIndex(linkedID);
+                        Unit u = Unit_Get_ByIndex(linkedID);
                         linkedID = u.o.linkedID;
                         Unit_Free(u);
                     }
                 } else {
-                    int i;
-
-                    for (i = 0; i < UNIT_MAX; i++) {
+                    for (int i = 0; i < UNIT_MAX; i++) {
                         if ((buildable & (1 << i)) == 0) continue;
                         g_table_unitInfo[i].o.available = 1;
                         if (objectType != 0xFFFE) continue;
@@ -1553,8 +1501,6 @@ public class StructureService {
             }
 
             if (objectType == 0xFFFF) {
-                int res;
-
                 Sprites_UnloadTiles();
 
                 memmove(g_palette1, g_paletteActive, 256 * 3);
@@ -1563,7 +1509,7 @@ public class StructureService {
 
                 Timer_SetTimer(TIMER_GAME, false);
 
-                res = GUI_DisplayFactoryWindow(g_factoryWindowConstructionYard, s.o.type == STRUCTURE_STARPORT ? 1 : 0, upgradeCost);
+                int res = GUI_DisplayFactoryWindow(g_factoryWindowConstructionYard, s.o.type == STRUCTURE_STARPORT ? 1 : 0, upgradeCost);
 
                 Timer_SetTimer(TIMER_GAME, true);
 
@@ -1649,17 +1595,18 @@ public class StructureService {
 
         if (s.o.linkedID != 0xFF || objectType == 0xFFFF) return false;
 
+        GObjectInfo oi;
         if (s.o.type != STRUCTURE_CONSTRUCTION_YARD) {
             Tile32 tile = new Tile32();
             tile.x = 0xFFFF;
             tile.y = 0xFFFF;
 
             oi = g_table_unitInfo[objectType].o;
-            o = Unit_Create(UNIT_INDEX_INVALID, (int)objectType, s.o.houseID, tile, 0).o;
+            o = Unit_Create(UNIT_INDEX_INVALID, objectType, s.o.houseID, tile, 0).o;
             str = String_Get_ByIndex(g_table_unitInfo[objectType].o.stringID_full);
         } else {
             oi = g_table_structureInfo[objectType].o;
-            o = Structure_Create(STRUCTURE_INDEX_INVALID, (int)objectType, s.o.houseID, 0xFFFF).o;
+            o = Structure_Create(STRUCTURE_INDEX_INVALID, objectType, s.o.houseID, 0xFFFF).o;
             str = String_Get_ByIndex(g_table_structureInfo[objectType].o.stringID_full);
         }
 
@@ -1837,29 +1784,24 @@ public class StructureService {
     }
 
     public static long Structure_GetBuildable(Structure s) {
-	    StructureInfo si;
-        long structuresBuilt;
-        long ret = 0;
-        int i;
-
         if (s == null) return 0;
 
-        si = g_table_structureInfo[s.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
-        structuresBuilt = House_Get_ByIndex(s.o.houseID).structuresBuilt;
+        long structuresBuilt = House_Get_ByIndex(s.o.houseID).structuresBuilt;
 
+        long ret = 0;
         switch (s.o.type) {
             case STRUCTURE_LIGHT_VEHICLE:
             case STRUCTURE_HEAVY_VEHICLE:
             case STRUCTURE_HIGH_TECH:
             case STRUCTURE_WOR_TROOPER:
             case STRUCTURE_BARRACKS:
-                for (i = 0; i < UNIT_MAX; i++) {
+                for (int i = 0; i < UNIT_MAX; i++) {
                     g_table_unitInfo[i].o.available = 0;
                 }
 
-                for (i = 0; i < 8; i++) {
-                    UnitInfo ui;
+                for (int i = 0; i < 8; i++) {
                     int upgradeLevelRequired;
                     int unitType = si.buildableUnits[i];
 
@@ -1867,7 +1809,7 @@ public class StructureService {
 
                     if (unitType == UNIT_TRIKE && s.creatorHouseID == HOUSE_ORDOS) unitType = UNIT_RAIDER_TRIKE;
 
-                    ui = g_table_unitInfo[unitType];
+                    UnitInfo ui = g_table_unitInfo[unitType];
                     upgradeLevelRequired = ui.o.upgradeLevelRequired;
 
                     if (unitType == UNIT_SIEGE_TANK && s.creatorHouseID == HOUSE_ORDOS) upgradeLevelRequired--;
@@ -1889,15 +1831,13 @@ public class StructureService {
                 return ret;
 
             case STRUCTURE_CONSTRUCTION_YARD:
-                for (i = 0; i < STRUCTURE_MAX; i++) {
+                for (int i = 0; i < STRUCTURE_MAX; i++) {
                     StructureInfo localsi = g_table_structureInfo[i];
-                    int availableCampaign;
-                    long structuresRequired;
 
                     localsi.o.available = 0;
 
-                    availableCampaign = localsi.o.availableCampaign;
-                    structuresRequired = localsi.o.structuresRequired;
+                    int availableCampaign = localsi.o.availableCampaign;
+                    long structuresRequired = localsi.o.structuresRequired;
 
                     if (i == STRUCTURE_WOR_TROOPER && s.o.houseID == HOUSE_HARKONNEN && g_campaignID >= 1) {
                         structuresRequired &= ~(1 << STRUCTURE_BARRACKS);
@@ -1936,9 +1876,7 @@ public class StructureService {
      */
     public static void Structure_HouseUnderAttack(int houseID) {
         PoolFindStruct find = new PoolFindStruct();
-        House h;
-
-        h = House_Get_ByIndex(houseID);
+        House h = House_Get_ByIndex(houseID);
 
         if (houseID != g_playerHouseID && h.flags.doneFullScaleAttack) return;
         h.flags.doneFullScaleAttack = true;
@@ -1956,17 +1894,14 @@ public class StructureService {
         if (!g_dune2_enhanced) return;
 
         find.houseID = houseID;
-        find.index   = 0xFFFF;
-        find.type    = 0xFFFF;
+        find.index = 0xFFFF;
+        find.type = 0xFFFF;
 
         while (true) {
-		    UnitInfo ui;
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
-            ui = g_table_unitInfo[u.o.type];
+            UnitInfo ui = g_table_unitInfo[u.o.type];
 
             if (ui.bulletType == UNIT_INVALID) continue;
 
@@ -1984,19 +1919,15 @@ public class StructureService {
      */
     static int Structure_AI_PickNextToBuild(Structure s) {
         PoolFindStruct find = new PoolFindStruct();
-        long buildable;
-        int type;
-        House h;
-        int i;
 
         if (s == null) return 0xFFFF;
 
-        h = House_Get_ByIndex(s.o.houseID);
-        buildable = Structure_GetBuildable(s);
+        House h = House_Get_ByIndex(s.o.houseID);
+        long buildable = Structure_GetBuildable(s);
 
         if (s.o.type == STRUCTURE_CONSTRUCTION_YARD) {
-            for (i = 0; i < 5; i++) {
-                type = h.ai_structureRebuild[i][0];
+            for (int i = 0; i < 5; i++) {
+                int type = h.ai_structureRebuild[i][0];
 
                 if (type == 0) continue;
                 if ((buildable & (1 << type)) == 0) continue;
@@ -2009,13 +1940,11 @@ public class StructureService {
 
         if (s.o.type == STRUCTURE_HIGH_TECH) {
             find.houseID = s.o.houseID;
-            find.index   = 0xFFFF;
-            find.type    = UNIT_CARRYALL;
+            find.index = 0xFFFF;
+            find.type = UNIT_CARRYALL;
 
             while (true) {
-                Unit u;
-
-                u = Unit_Find(find);
+                Unit u = Unit_Find(find);
                 if (u == null) break;
 
                 buildable &= ~FLAG_UNIT_CARRYALL;
@@ -2027,8 +1956,8 @@ public class StructureService {
             buildable &= ~FLAG_UNIT_MCV;
         }
 
-        type = 0xFFFF;
-        for (i = 0; i < UNIT_MAX; i++) {
+        int type = 0xFFFF;
+        for (int i = 0; i < UNIT_MAX; i++) {
             if ((buildable & (1 << i)) == 0) continue;
 
             if ((Tools_Random_256() % 4) == 0) type = i;

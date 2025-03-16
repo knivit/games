@@ -5,12 +5,16 @@ import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.SCREEN_2;
 import static com.tsoft.dune2.gui.GuiService.GUI_Mouse_Hide;
+import static com.tsoft.dune2.gui.GuiService.GUI_Mouse_Show;
+import static com.tsoft.dune2.ini.IniService.Ini_GetString;
 import static com.tsoft.dune2.input.MouseService.g_mouseDisabled;
 import static com.tsoft.dune2.input.MouseService.g_mouseLock;
+import static com.tsoft.dune2.opendune.OpenDuneService.g_unpackSHPonLoad;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
 import static com.tsoft.dune2.os.EndianService.READ_LE_UINT32;
 import static com.tsoft.dune2.script.ScriptService.*;
 import static com.tsoft.dune2.sprites.IconMapEntries.*;
+import static com.tsoft.dune2.strings.StringService.String_GenerateFilename;
 import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
 import static com.tsoft.dune2.utils.CFunc.uint8;
 
@@ -21,11 +25,11 @@ public class SpritesService {
     public static byte[] g_iconRTBL = null;
     public static byte[] g_iconRPAL = null;
     public static byte[] g_tilesPixels = null;
-    public static byte[] g_iconMap = null;
+    public static int[] g_iconMap = null;
 
-    static byte[] g_fileRgnclkCPS = null;
-    static byte[] g_fileRegionINI = null;
-    static byte[] g_regions = null;
+    public static byte[] g_fileRgnclkCPS = null;
+    public static byte[] g_fileRegionINI = null;
+    public static int[] g_regions = null;
 
     public static int g_veiledTileID;
     public static int g_bloomTileID;
@@ -63,33 +67,41 @@ public class SpritesService {
                 return;
             }
         }
+
         buffer = File_ReadWholeFile(filename);
         if (buffer == null) return;
 
-        count = READ_LE_int(buffer);
+        count = READ_LE_int(buffer, 0);
         Debug("%s: %d %d\n", filename, count, expectedCount);
-        oldFormat = (4 + (long)count * 4) != READ_LE_UINT32(buffer + 2);
+        oldFormat = (4 + (long)count * 4) != READ_LE_UINT32(buffer, 2);
 
         s_spritesCount += count;
         g_sprites = (int **)realloc(g_sprites, s_spritesCount * sizeof(int *));
 
         for (i = 0; i < count; i++) {
             byte[] dst = null;
-            long offset = oldFormat ? (long)READ_LE_int(buffer + 2 + 2 * i) : READ_LE_UINT32(buffer + 2 + 4 * i);
+            int offset = oldFormat ? READ_LE_int(buffer,2 + 2 * i) : (int)READ_LE_UINT32(buffer, 2 + 4 * i);
 
             if (offset == 0) {
                 Warning("Sprites %-12s %3d : Load Error\n", filename, i);
             } else {
-			    byte *src = buffer + offset;
-                if (!oldFormat) src += 2;
+			    byte[] src = buffer;
+                int srcOff = offset;
+                if (!oldFormat) srcOff += 2;
                 Debug("Sprites %-12s %3d : 0x%04x %2dx%2d %2d %5d %5d\n", filename, i,
-                    READ_LE_int(src)/*Flags*/, READ_LE_int(src+3)/*Width*/, src[2], /* height */
-                    src[5] /* height */, READ_LE_int(src+6) /* packed size */, READ_LE_int(src+8) /* decoded size */);
-                if (g_unpackSHPonLoad && (src[0] & 0x2) == 0) {
-                    size = READ_LE_int(src+8) + 10;
-                    if (READ_LE_int(src) & 0x1) {
+                    READ_LE_int(src, srcOff)/*Flags*/,
+                    READ_LE_int(src, srcOff+3)/*Width*/,
+                    src[srcOff+2], /* height */
+                    src[srcOff+5] /* height */,
+                    READ_LE_int(src, srcOff+6) /* packed size */,
+                    READ_LE_int(src, srcOff+8) /* decoded size */);
+
+                if (g_unpackSHPonLoad && (src[srcOff+0] & 0x2) == 0) {
+                    size = READ_LE_int(src, srcOff+8) + 10;
+                    if ((READ_LE_int(src, srcOff) & 0x1) != 0) {
                         size += 16;	/* 16 bytes more for the palette */
                     }
+
                     dst = (int *)malloc(size);
                     if (dst == null) {
                         Error("Sprites_Load(%s) failed to allocate %u bytes\n", filename, size);
@@ -104,15 +116,15 @@ public class SpritesService {
                         encoded_data += 7;
 					    *decoded_data++ = *encoded_data++;    /* copy pixel size */
 					    *decoded_data++ = *encoded_data++;
-                        if (READ_LE_int(src) & 0x1) {
+                        if ((READ_LE_int(src, srcOff) & 0x1) != 0) {
                             memcpy(decoded_data, encoded_data, 16);	/* copy palette */
                             decoded_data += 16;
                             encoded_data += 16;
                         }
-                        Format80_Decode(decoded_data, encoded_data, READ_LE_int(src+8));
+                        Format80_Decode(decoded_data, encoded_data, READ_LE_int(src, srcOff+8));
                     }
                 } else {
-                    size = READ_LE_int(src + 6);	/* "packed" size */
+                    size = READ_LE_int(src, srcOff + 6);	/* "packed" size */
                     dst = (int *)malloc(size);
                     if (dst == null) {
                         Error("Sprites_Load(%s) failed to allocate %u bytes\n", filename, size);
@@ -124,6 +136,7 @@ public class SpritesService {
 
             g_sprites[s_spritesCount - count + i] = dst;
         }
+
         if (expectedCount == 99 && count == 103) {
             // relocation of BTTN when loading SHAPES.SHP of Dune2 v1.0
             memcpy(g_sprites + 7, g_sprites + (s_spritesCount - count + 94), 4 * sizeof(int *));
@@ -176,16 +189,16 @@ public class SpritesService {
                 sourceOff += 2;
                 size = READ_LE_UINT32(source, sourceOff);
                 sourceOff += 4;
-                source += READ_LE_int(source, sourceOff);
+                sourceOff += READ_LE_int(source, sourceOff);
                 sourceOff += 2;
                 System.arraycopy(source, sourceOff, dest, 0, (int)size);
                 break;
 
             case 0x4:
                 sourceOff += 6;
-                source += READ_LE_int(source, sourceOff);
+                sourceOff += READ_LE_int(source, sourceOff);
                 sourceOff += 2;
-                size = Format80_Decode(dest, source, 0xFFFF);
+                size = Format80_Decode(dest, source, sourceOff, 0xFFFF);
                 break;
 
             default: break;
@@ -213,8 +226,8 @@ public class SpritesService {
 
         /* Get the length of the chunks */
         tilesDataLength = ChunkFile_Seek(fileIndex, HTOBE32(CC_SSET));
-        tableLength     = ChunkFile_Seek(fileIndex, HTOBE32(CC_RTBL));
-        paletteLength   = ChunkFile_Seek(fileIndex, HTOBE32(CC_RPAL));
+        tableLength = ChunkFile_Seek(fileIndex, HTOBE32(CC_RTBL));
+        paletteLength = ChunkFile_Seek(fileIndex, HTOBE32(CC_RPAL));
 
         /* Read the header information */
         ChunkFile_Read(fileIndex, HTOBE32(CC_SINF), info, 4);
@@ -253,11 +266,11 @@ public class SpritesService {
         free(g_iconMap);
         g_iconMap = File_ReadWholeFileLE16("ICON.MAP");
 
-        g_veiledTileID    = g_iconMap[g_iconMap[ICM_ICONGROUP_FOG_OF_WAR] + 16];
-        g_bloomTileID     = g_iconMap[g_iconMap[ICM_ICONGROUP_SPICE_BLOOM]];
+        g_veiledTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_FOG_OF_WAR] + 16];
+        g_bloomTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_SPICE_BLOOM]];
         g_builtSlabTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_CONCRETE_SLAB] + 2];
         g_landscapeTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_LANDSCAPE]];
-        g_wallTileID      = g_iconMap[g_iconMap[ICM_ICONGROUP_WALLS]];
+        g_wallTileID = g_iconMap[g_iconMap[ICM_ICONGROUP_WALLS]];
 
         Script_LoadFromFile("UNIT.EMC", g_scriptUnit, g_scriptFunctionsUnit, GFX_Screen_Get_ByIndex(SCREEN_2));
     }
@@ -277,27 +290,21 @@ public class SpritesService {
      * @return palette Loaded palette
      */
     static byte[] Sprites_LoadCPSFile(String filename, int screenID, byte[] palette) {
-        int index;
-        int size;
-        byte[] buffer;
-        byte[] buffer2;
-        int paletteSize;
+        byte[] buffer = GFX_Screen_Get_ByIndex(screenID);
 
-        buffer = GFX_Screen_Get_ByIndex(screenID);
-
-        index = File_Open(filename, FILE_MODE_READ);
+        int index = File_Open(filename, FILE_MODE_READ);
         if (index == FILE_INVALID) {
             Warning("Failed to open %s\n", filename);
             return null;
         }
 
-        size = File_Read_LE16(index);
+        int size = File_Read_LE16(index);
 
         buffer = File_Read(index, 8);
 
         size -= 8;
 
-        paletteSize = READ_LE_int(buffer, 6);
+        int paletteSize = READ_LE_int(buffer, 6);
 
         if (palette != null && paletteSize != 0) {
             palette = File_Read(index, paletteSize);
@@ -309,11 +316,11 @@ public class SpritesService {
         buffer[7] = 0;
         size -= paletteSize;
 
-        buffer2 = GFX_Screen_Get_ByIndex(screenID);
-        buffer2 += GFX_Screen_GetSize_ByIndex(screenID) - size - 8;
+        byte[] buffer2 = GFX_Screen_Get_ByIndex(screenID);
+        int buffer2Off = GFX_Screen_GetSize_ByIndex(screenID) - size - 8;
 
         memmove(buffer2, buffer, 8);
-        File_Read(index, buffer2 + 8, size);
+        File_Read(index, buffer2, buffer2Off + 8, size);
 
         File_Close(index);
 
@@ -334,8 +341,6 @@ public class SpritesService {
     }
 
     public static void Sprites_SetMouseSprite(int hotSpotX, int hotSpotY, byte[] sprite) {
-        int size;
-
         if (sprite == null || g_mouseDisabled != 0) return;
 
         while (g_mouseLock != 0) sleepIdle();
@@ -344,23 +349,23 @@ public class SpritesService {
 
         GUI_Mouse_Hide();
 
-        size = GFX_GetSize(READ_LE_int(sprite + 3) + 16, sprite[5]);
+        int size = GFX_GetSize(READ_LE_int(sprite, 3) + 16, sprite[5]);
 
         if (s_mouseSpriteBufferSize < size) {
             g_mouseSpriteBuffer = realloc(g_mouseSpriteBuffer, size);
             s_mouseSpriteBufferSize = size;
         }
 
-        size = READ_LE_int(sprite + 8) + 10;
-        if ((*sprite & 0x1) != 0) size += 16;
+        size = READ_LE_int(sprite, 8) + 10;
+        if ((sprite[0] & 0x1) != 0) size += 16;
 
         if (s_mouseSpriteSize < size) {
             g_mouseSprite = realloc(g_mouseSprite, size);
             s_mouseSpriteSize = size;
         }
 
-        if ((*sprite & 0x2) != 0) {
-            memcpy(g_mouseSprite, sprite, READ_LE_int(sprite + 6));
+        if ((sprite[0] & 0x2) != 0) {
+            memcpy(g_mouseSprite, sprite, READ_LE_int(sprite, 6));
         } else {
             int *dst = (int *)g_mouseSprite;
             int flags = sprite[0] | 0x2;
@@ -403,26 +408,28 @@ public class SpritesService {
 
     static void InitRegions() {
         int *regions = g_regions;
-        int i;
-        char textBuffer[81];
+        char[] textBuffer = new char[81];
 
         Ini_GetString("INFO", "TOTAL REGIONS", null, textBuffer, lengthof(textBuffer) - 1, g_fileRegionINI);
 
         sscanf(textBuffer, "%hu", &regions[0]);
 
-        for (i = 0; i < regions[0]; i++) regions[i + 1] = 0xFFFF;
+        for (int i = 0; i < regions[0]; i++) {
+            regions[i + 1] = 0xFFFF;
+        }
     }
 
-    static void Sprites_CPS_LoadRegionClick() {
+    public static void Sprites_CPS_LoadRegionClick() {
         int *buf;
-        int i;
         String filename;
 
         buf = GFX_Screen_Get_ByIndex(SCREEN_2);
 
         g_fileRgnclkCPS = buf;
         Sprites_LoadCPSFile("RGNCLK.CPS", SCREEN_2, null);
-        for (i = 0; i < 120; i++) memcpy(buf + (i * 304), buf + 7688 + (i * 320), 304);
+        for (int i = 0; i < 120; i++) {
+            memcpy(buf + (i * 304), buf + 7688 + (i * 320), 304);
+        }
         buf += 120 * 304;
 
         g_fileRegionINI = buf;
@@ -446,7 +453,7 @@ public class SpritesService {
         return false;
     }
 
-    static void Sprites_Init() {
+    public static void Sprites_Init() {
         Sprites_Load("MOUSE.SHP", null, 7);              /*   0 -   6 */
         Sprites_Load(String_GenerateFilename("BTTN"), null, 5); /*   7 -  11 */
         Sprites_Load("SHAPES.SHP", null, 99);            /*  12 - 110 */

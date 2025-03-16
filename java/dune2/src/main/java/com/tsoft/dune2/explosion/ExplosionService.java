@@ -6,6 +6,7 @@ import com.tsoft.dune2.tile.Tile32;
 import java.util.Arrays;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
+import static com.tsoft.dune2.audio.SoundService.Voice_PlayAtTile;
 import static com.tsoft.dune2.explosion.ExplosionCommand.*;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_MAX;
 import static com.tsoft.dune2.explosion.ExplosionType.EXPLOSION_SPICE_BLOOM_TREMOR;
@@ -25,8 +26,8 @@ import static com.tsoft.dune2.video.VideoWin32Service.Video_SetOffset;
 
 public class ExplosionService {
 
-    static Explosion[] g_explosions = new Explosion[EXPLOSION_MAX];     /*!< Explosions. */
-    static long s_explosionTimer = 0;                                   /*!< Timeout value for next explosion activity. */
+    static Explosion[] g_explosions = new Explosion[EXPLOSION_MAX];     /* Explosions. */
+    static long s_explosionTimer = 0;                                   /* Timeout value for next explosion activity. */
 
     /**
      * Update the tile a Explosion is on.
@@ -51,22 +52,15 @@ public class ExplosionService {
     static void Explosion_Func_TileDamage(Explosion e, int parameter) {
         int[] craterIconMapIndex = new int[] { -1, 2, 1 };
 
-        int packed;
-        int type;
-        Tile t;
-        int iconMapIndex;
-        int overlayTileID;
-	    byte[] iconMap;
-
-        packed = Tile_PackTile(e.position);
+        int packed = Tile_PackTile(e.position);
 
         if (!Map_IsPositionUnveiled(packed)) return;
 
-        type = Map_GetLandscapeType(packed);
+        int type = Map_GetLandscapeType(packed);
 
         if (type == LST_STRUCTURE || type == LST_DESTROYED_WALL) return;
 
-        t = g_map[packed];
+        Tile t = g_map[packed];
 
         if (type == LST_CONCRETE_SLAB) {
             t.groundTileID = g_mapTileID[packed];
@@ -76,11 +70,11 @@ public class ExplosionService {
         if (g_table_landscapeInfo[type].craterType == 0) return;
 
         /* You cannot damage veiled tiles */
-        overlayTileID = t.overlayTileID;
+        int overlayTileID = t.overlayTileID;
         if (!Tile_IsUnveiled(overlayTileID)) return;
 
-        iconMapIndex = craterIconMapIndex[g_table_landscapeInfo[type].craterType];
-        iconMap = g_iconMap[g_iconMap[iconMapIndex]];
+        int iconMapIndex = craterIconMapIndex[g_table_landscapeInfo[type].craterType];
+        int[] iconMap = g_iconMap[iconMapIndex];
 
         if (iconMap[0] <= overlayTileID && overlayTileID <= iconMap[10]) {
             /* There already is a crater; make it bigger */
@@ -120,10 +114,9 @@ public class ExplosionService {
      * @param parameter Unused parameter.
      */
     static void Explosion_Func_ScreenShake(Explosion e, int parameter) {
-        int i;
         Debug("Explosion_Func_ScreenShake(%p, %d)\n", e, parameter);
 
-        for(i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             msleep(30);
             Video_SetOffset(320);
 
@@ -138,9 +131,7 @@ public class ExplosionService {
      * @param parameter Unused parameter.
      */
     static void Explosion_Func_BloomExplosion(Explosion e, int parameter) {
-        int packed;
-
-        packed = Tile_PackTile(e.position);
+        int packed = Tile_PackTile(e.position);
 
         if (g_map[packed].groundTileID != g_bloomTileID) return;
 
@@ -153,9 +144,7 @@ public class ExplosionService {
      * @param animationMapID The animation map to use.
      */
     static void Explosion_Func_SetAnimation(Explosion e, int animationMapID) {
-        int packed;
-
-        packed = Tile_PackTile(e.position);
+        int packed = Tile_PackTile(e.position);
 
         if (Structure_Get_ByPackedTile(packed) != null) return;
 
@@ -222,14 +211,11 @@ public class ExplosionService {
      * @param packed A packed position where no activities should take place (any more).
      */
     static void Explosion_StopAtPosition(int packed) {
-        Tile t;
-        int i;
-
-        t = g_map[packed];
+        Tile t = g_map[packed];
 
         if (!t.hasExplosion) return;
 
-        for (i = 0; i < EXPLOSION_MAX; i++) {
+        for (int i = 0; i < EXPLOSION_MAX; i++) {
             Explosion e;
 
             e = g_explosions[i];
@@ -250,21 +236,16 @@ public class ExplosionService {
      * @param position The position to use for init.
      */
     public static void Explosion_Start(int explosionType, Tile32 position) {
-	    ExplosionCommandStruct[] commands;
-        int packed;
-        int i;
-
         if (explosionType > EXPLOSION_SPICE_BLOOM_TREMOR) return;
-        commands = g_table_explosion[explosionType];
 
-        packed = Tile_PackTile(position);
+        ExplosionCommandStruct[] commands = g_table_explosion[explosionType];
+
+        int packed = Tile_PackTile(position);
 
         Explosion_StopAtPosition(packed);
 
-        for (i = 0; i < EXPLOSION_MAX; i++) {
-            Explosion e;
-
-            e = g_explosions[i];
+        for (int i = 0; i < EXPLOSION_MAX; i++) {
+            Explosion e = g_explosions[i];
 
             if (e.commands != null) continue;
 
@@ -285,15 +266,12 @@ public class ExplosionService {
      * Timer tick for explosions.
      */
     public static void Explosion_Tick() {
-        int i;
-
         if (s_explosionTimer > g_timerGUI) return;
+
         s_explosionTimer += 10000;
 
-        for (i = 0; i < EXPLOSION_MAX; i++) {
-            Explosion e;
-
-            e = g_explosions[i];
+        for (int i = 0; i < EXPLOSION_MAX; i++) {
+            Explosion e = g_explosions[i];
 
             if (e.commands == null) continue;
 
@@ -304,9 +282,7 @@ public class ExplosionService {
                 e.current++;
 
                 switch (command) {
-                    default:
                     case EXPLOSION_STOP:               Explosion_Func_Stop(e, parameter); break;
-
                     case EXPLOSION_SET_SPRITE:         Explosion_Func_SetSpriteID(e, parameter); break;
                     case EXPLOSION_SET_TIMEOUT:        Explosion_Func_SetTimeout(e, parameter); break;
                     case EXPLOSION_SET_RANDOM_TIMEOUT: Explosion_Func_SetRandomTimeout(e, parameter); break;
@@ -316,6 +292,7 @@ public class ExplosionService {
                     case EXPLOSION_SCREEN_SHAKE:       Explosion_Func_ScreenShake(e, parameter); break;
                     case EXPLOSION_SET_ANIMATION:      Explosion_Func_SetAnimation(e, parameter); break;
                     case EXPLOSION_BLOOM_EXPLOSION:    Explosion_Func_BloomExplosion(e, parameter); break;
+                    default:
                 }
             }
 

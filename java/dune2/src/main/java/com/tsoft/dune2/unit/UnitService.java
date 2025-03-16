@@ -9,6 +9,8 @@ import com.tsoft.dune2.team.Team;
 import com.tsoft.dune2.tile.Tile32;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Start;
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
+import static com.tsoft.dune2.audio.SoundService.Sound_StartSound;
 import static com.tsoft.dune2.config.ConfigService.g_config;
 import static com.tsoft.dune2.explosion.ExplosionType.*;
 import static com.tsoft.dune2.gobject.GObjectService.*;
@@ -62,7 +64,7 @@ public class UnitService {
     static long s_tickUnitUnknown5 = 0;  /*!< Indicates next time the Unknown5 function is executed. */
     static long s_tickUnitDeviation = 0; /*!< Indicates next time the Deviation function is executed. */
 
-    private static Unit g_unitActive = null;
+    public static Unit g_unitActive = null;
     public static Unit g_unitHouseMissile = null;
     public static Unit g_unitSelected = null;
 
@@ -82,24 +84,19 @@ public class UnitService {
      * @param level 0 = base, 1 = top (turret etc).
      */
     static void Unit_Rotate(Unit unit, int level) {
-        int target;
-        int current;
-        int newCurrent;
-        int diff;
-
         assert (level == 0 || level == 1);
 
         if (unit.orientation[level].speed == 0) return;
 
-        target = unit.orientation[level].target;
-        current = unit.orientation[level].current;
-        diff = target - current;
+        int target = unit.orientation[level].target;
+        int current = unit.orientation[level].current;
+        int diff = target - current;
 
         if (diff > 128) diff -= 256;
         if (diff < -128) diff += 256;
         diff = Math.abs(diff);
 
-        newCurrent = current + unit.orientation[level].speed;
+        int newCurrent = current + unit.orientation[level].speed;
 
         if (Math.abs(unit.orientation[level].speed) >= diff) {
             unit.orientation[level].speed = 0;
@@ -115,11 +112,9 @@ public class UnitService {
     }
 
     static void Unit_MovementTick(Unit unit) {
-        int speed;
-
         if (unit.speed == 0) return;
 
-        speed = unit.speedRemainder;
+        int speed = unit.speedRemainder;
 
         /* Units in the air don't feel the effect of gameSpeed */
         if (g_table_unitInfo[unit.o.type].movementType != MOVEMENT_WINGER) {
@@ -139,7 +134,6 @@ public class UnitService {
      * Loop over all units, performing various of tasks.
      */
     public static void GameLoop_Unit() {
-        PoolFindStruct find = new PoolFindStruct();
         boolean tickMovement = false;
         boolean tickRotation = false;
         boolean tickBlinking = false;
@@ -185,18 +179,16 @@ public class UnitService {
             s_tickUnitDeviation = g_timerGame + 60;
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
         find.index = 0xFFFF;
         find.type = 0xFFFF;
 
         while (true) {
-		    UnitInfo ui;
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
-            ui = g_table_unitInfo[u.o.type];
+            UnitInfo ui = g_table_unitInfo[u.o.type];
 
             g_scriptCurrentObject = u.o;
             g_scriptCurrentStructure = null;
@@ -206,9 +198,7 @@ public class UnitService {
             if (u.o.flags.isNotOnMap) continue;
 
             if (tickUnknown4 && u.targetAttack != 0 && ui.o.flags.hasTurret) {
-                Tile32 tile;
-
-                tile = Tools_Index_GetTile(u.targetAttack);
+                Tile32 tile = Tools_Index_GetTile(u.targetAttack);
 
                 Unit_SetOrientation(u, Tile_GetDirection(u.o.position, tile), false, 1);
             }
@@ -218,9 +208,7 @@ public class UnitService {
 
                 if (u.fireDelay != 0) {
                     if (ui.movementType == MOVEMENT_WINGER && !ui.flags.isNormalUnit) {
-                        Tile32 tile;
-
-                        tile = u.currentDestination;
+                        Tile32 tile = u.currentDestination;
 
                         if (Tools_Index_GetType(u.targetAttack) == IT_UNIT && g_table_unitInfo[Tools_Index_GetUnit(u.targetAttack).o.type].movementType == MOVEMENT_WINGER) {
                             tile = Tools_Index_GetTile(u.targetAttack);
@@ -309,7 +297,7 @@ public class UnitService {
                 if (u.o.script.delay == 0) {
                     if (Script_IsLoaded(u.o.script)) {
                         int opcodesLeft = SCRIPT_UNIT_OPCODES_PER_TICK + 2;
-                        if (!ui.o.flags.scriptNoSlowdown && !Map_IsPositionInViewport(u.o.position, null, null)) {
+                        if (!ui.o.flags.scriptNoSlowdown && !Map_IsPositionInViewport(u.o.position, new Tile32())) {
                             opcodesLeft = 3;
                         }
 
@@ -366,7 +354,7 @@ public class UnitService {
      * Convert the name of an action to the type value of that action, or
      * ACTION_INVALID if not found.
      */
-    static int Unit_ActionStringToType(String name) {
+    public static int Unit_ActionStringToType(String name) {
         if (name == null) return ACTION_INVALID;
 
         for (int type = 0; type < ACTION_MAX; type++) {
@@ -381,10 +369,9 @@ public class UnitService {
      * MOVEMENT_INVALID if not found.
      */
     public static int Unit_MovementStringToType(String name) {
-        int type;
         if (name == null) return MOVEMENT_INVALID;
 
-        for (type = 0; type < MOVEMENT_MAX; type++) {
+        for (int type = 0; type < MOVEMENT_MAX; type++) {
             if (g_table_movementTypeName[type].equalsIgnoreCase(name)) return type;
         }
 
@@ -402,14 +389,11 @@ public class UnitService {
      * @return The new created Unit, or NULL if something failed.
      */
     public static Unit Unit_Create(int index, int typeID, int houseID, Tile32 position, int orientation) {
-	    UnitInfo ui;
-        Unit u;
-
         if (houseID >= HOUSE_MAX) return null;
         if (typeID >= UNIT_MAX) return null;
 
-        ui = g_table_unitInfo[typeID];
-        u = Unit_Allocate(index, typeID, houseID);
+        UnitInfo ui = g_table_unitInfo[typeID];
+        Unit u = Unit_Allocate(index, typeID, houseID);
         if (u == null) return null;
 
         u.o.houseID = houseID;
@@ -484,12 +468,8 @@ public class UnitService {
      * @return Returns true if and only if a Unit with the given attributes is on the map.
      */
     public static boolean Unit_IsTypeOnMap(int houseID, int typeID) {
-        int i;
-
-        for (i = 0; i < g_unitFindCount; i++) {
-            Unit u;
-
-            u = g_unitFindArray[i];
+        for (int i = 0; i < g_unitFindCount; i++) {
+            Unit u = g_unitFindArray[i];
             if (houseID != HOUSE_INVALID && Unit_GetHouseID(u) != houseID) continue;
             if (typeID != UNIT_INVALID && u.o.type != typeID) continue;
             if (g_validateStrictIfZero == 0 && u.o.flags.isNotOnMap) continue;
@@ -506,12 +486,10 @@ public class UnitService {
      * @param action The action.
      */
     public static void Unit_SetAction(Unit u, int action) {
-	    ActionInfo ai;
-
         if (u == null) return;
         if (u.actionID == ACTION_DESTRUCT || u.actionID == ACTION_DIE || action == ACTION_INVALID) return;
 
-        ai = g_table_actionInfo[action];
+        ActionInfo ai = g_table_actionInfo[action];
 
         switch (ai.switchType) {
             case 0:
@@ -564,12 +542,10 @@ public class UnitService {
      * @return Amount of space left in the team.
      */
     public static int Unit_RemoveFromTeam(Unit u) {
-        Team t;
-
         if (u == null) return 0;
         if (u.team == 0) return 0;
 
-        t = Team_Get_ByIndex(u.team - 1);
+        Team t = Team_Get_ByIndex(u.team - 1);
 
         t.members--;
         u.team = 0;
@@ -583,7 +559,7 @@ public class UnitService {
      * @param u The unit to get the team of.
      * @return The team.
      */
-    static Team Unit_GetTeam(Unit u) {
+    public static Team Unit_GetTeam(Unit u) {
         if (u == null) return null;
         if (u.team == 0) return null;
         return Team_Get_ByIndex(u.team - 1);
@@ -592,37 +568,28 @@ public class UnitService {
     /**
      * ?? Sorts unit array and count enemy/allied units.
      */
-    static void Unit_Sort() {
-        House h;
-        int i;
-
-        h = g_playerHouse;
+    public static void Unit_Sort() {
+        House h = g_playerHouse;
         h.unitCountEnemy = 0;
         h.unitCountAllied = 0;
 
-        for (i = 0; i < g_unitFindCount - 1; i++) {
-            Unit u1;
-            Unit u2;
-            int y1;
-            int y2;
-
-            u1 = g_unitFindArray[i];
-            u2 = g_unitFindArray[i + 1];
-            y1 = Tile_GetY(u1.o.position);
-            y2 = Tile_GetY(u2.o.position);
+        for (int i = 0; i < g_unitFindCount - 1; i++) {
+            Unit u1 = g_unitFindArray[i];
+            Unit u2 = g_unitFindArray[i + 1];
+            int y1 = Tile_GetY(u1.o.position);
+            int y2 = Tile_GetY(u2.o.position);
             if (g_table_unitInfo[u1.o.type].movementType == MOVEMENT_FOOT) y1 -= 0x100;
             if (g_table_unitInfo[u2.o.type].movementType == MOVEMENT_FOOT) y2 -= 0x100;
 
-            if ((int) y1 > (int) y2) {
+            if (y1 > y2) {
                 g_unitFindArray[i] = u2;
                 g_unitFindArray[i + 1] = u1;
             }
         }
 
-        for (i = 0; i < g_unitFindCount; i++) {
-            Unit u;
+        for (int i = 0; i < g_unitFindCount; i++) {
+            Unit u = g_unitFindArray[i];
 
-            u = g_unitFindArray[i];
             if ((u.o.seenByHouses & (1 << g_playerHouseID)) != 0 && !u.o.flags.isNotOnMap) {
                 if (House_AreAllied(u.o.houseID, g_playerHouseID)) {
                     h.unitCountAllied++;
@@ -640,11 +607,9 @@ public class UnitService {
      * @return The unit.
      */
     public static Unit Unit_Get_ByPackedTile(int packed) {
-        Tile tile;
-
         if (Tile_IsOutOfMap(packed)) return null;
 
-        tile = g_map[packed];
+        Tile tile = g_map[packed];
         if (!tile.hasUnit) return null;
         return Unit_Get_ByIndex(tile.index - 1);
     }
@@ -663,18 +628,13 @@ public class UnitService {
      * 2 - valid movement, will attempt to damage/conquer the structure
      */
     public static int Unit_IsValidMovementIntoStructure(Unit unit, Structure s) {
-	    StructureInfo si;
-	    UnitInfo ui;
-        int unitEnc;
-        int structEnc;
-
         if (unit == null || s == null) return 0;
 
-        si = g_table_structureInfo[s.o.type];
-        ui = g_table_unitInfo[unit.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
 
-        unitEnc = Tools_Index_Encode(unit.o.index, IT_UNIT);
-        structEnc = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
+        int unitEnc = Tools_Index_Encode(unit.o.index, IT_UNIT);
+        int structEnc = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
 
         /* Movement into structure of other owner. */
         if (Unit_GetHouseID(unit) != s.o.houseID) {
@@ -682,8 +642,9 @@ public class UnitService {
             if (unit.o.type == UNIT_SABOTEUR && unit.targetMove == structEnc) return 2;
             /* Entering houses is only possible for foot-units and if the structure is conquerable.
              * Everyone else can only move close to the building. */
-            if (ui.movementType == MOVEMENT_FOOT && si.o.flags.conquerable)
+            if (ui.movementType == MOVEMENT_FOOT && si.o.flags.conquerable) {
                 return unit.targetMove == structEnc ? 2 : 1;
+            }
             return 0;
         }
 
@@ -704,28 +665,23 @@ public class UnitService {
      * @param destination The destination (encoded index).
      */
     public static void Unit_SetDestination(Unit u, int destination) {
-        Structure s;
-
         if (u == null) return;
         if (!Tools_Index_IsValid(destination)) return;
         if (u.targetMove == destination) return;
 
         if (Tools_Index_GetType(destination) == IT_TILE) {
-            Unit u2;
-            int packed;
+            int packed = Tools_Index_Decode(destination);
 
-            packed = Tools_Index_Decode(destination);
-
-            u2 = Unit_Get_ByPackedTile(packed);
+            Unit u2 = Unit_Get_ByPackedTile(packed);
             if (u2 != null) {
                 if (u != u2) destination = Tools_Index_Encode(u2.o.index, IT_UNIT);
             } else {
-                s = Structure_Get_ByPackedTile(packed);
+                Structure s = Structure_Get_ByPackedTile(packed);
                 if (s != null) destination = Tools_Index_Encode(s.o.index, IT_STRUCTURE);
             }
         }
 
-        s = Tools_Index_GetStructure(destination);
+        Structure s = Tools_Index_GetStructure(destination);
         if (s != null && s.o.houseID == Unit_GetHouseID(u)) {
             if (Unit_IsValidMovementIntoStructure(u, s) == 1 || g_table_unitInfo[u.o.type].movementType == MOVEMENT_WINGER) {
                 Object_Script_Variable4_Link(Tools_Index_Encode(u.o.index, IT_UNIT), destination);
@@ -745,11 +701,6 @@ public class UnitService {
      * @return The priority of the target.
      */
     public static int Unit_GetTargetUnitPriority(Unit unit, Unit target) {
-	    UnitInfo targetInfo;
-	    UnitInfo unitInfo;
-        int distance;
-        int priority;
-
         if (unit == null || target == null) return 0;
         if (unit == target) return 0;
 
@@ -758,26 +709,27 @@ public class UnitService {
 
         if (House_AreAllied(Unit_GetHouseID(unit), Unit_GetHouseID(target))) return 0;
 
-        unitInfo = g_table_unitInfo[unit.o.type];
-        targetInfo = g_table_unitInfo[target.o.type];
+        UnitInfo unitInfo = g_table_unitInfo[unit.o.type];
+        UnitInfo targetInfo = g_table_unitInfo[target.o.type];
 
         if (!targetInfo.o.flags.priority) return 0;
 
         if (targetInfo.movementType == MOVEMENT_WINGER) {
             if (!unitInfo.o.flags.targetAir) return 0;
-            if (target.o.houseID == g_playerHouseID && !Map_IsPositionUnveiled(Tile_PackTile(target.o.position)))
+            if (target.o.houseID == g_playerHouseID && !Map_IsPositionUnveiled(Tile_PackTile(target.o.position))) {
                 return 0;
+            }
         }
 
         if (!Map_IsValidPosition(Tile_PackTile(target.o.position))) return 0;
 
-        distance = Tile_GetDistanceRoundedUp(unit.o.position, target.o.position);
+        int distance = Tile_GetDistanceRoundedUp(unit.o.position, target.o.position);
 
         if (!Map_IsValidPosition(Tile_PackTile(unit.o.position))) {
             if (targetInfo.fireDistance >= distance) return 0;
         }
 
-        priority = targetInfo.o.priorityTarget + targetInfo.o.priorityBuild;
+        int priority = targetInfo.o.priorityTarget + targetInfo.o.priorityBuild;
         if (distance != 0) priority = (priority / distance) + 1;
 
         if (priority > 0x7D00) return 0x7D00;
@@ -791,29 +743,26 @@ public class UnitService {
      * @return 1 if unit.originEncoded was not 0, else 0.
      */
     public static int Unit_FindClosestRefinery(Unit unit) {
-        int res;
         Structure s = null;
         int mind = 0;
-        Structure s2;
-        int d;
-        PoolFindStruct find = new PoolFindStruct();
 
-        res = (unit.originEncoded == 0) ? 0 : 1;
+        int res = (unit.originEncoded == 0) ? 0 : 1;
 
         if (unit.o.type != UNIT_HARVESTER) {
             unit.originEncoded = Tools_Index_Encode(Tile_PackTile(unit.o.position), IT_TILE);
             return res;
         }
 
+        PoolFindStruct find = new PoolFindStruct();
         find.type = STRUCTURE_REFINERY;
         find.houseID = Unit_GetHouseID(unit);
         find.index = 0xFFFF;
 
         while (true) {
-            s2 = Structure_Find(find);
+            Structure s2 = Structure_Find(find);
             if (s2 == null) break;
             if (s2.state != STRUCTURE_STATE_BUSY) continue;
-            d = Tile_GetDistance(unit.o.position, s2.o.position);
+            int d = Tile_GetDistance(unit.o.position, s2.o.position);
             if (mind != 0 && d >= mind) continue;
             mind = d;
             s = s2;
@@ -825,9 +774,9 @@ public class UnitService {
             find.index = 0xFFFF;
 
             while (true) {
-                s2 = Structure_Find(find);
+                Structure s2 = Structure_Find(find);
                 if (s2 == null) break;
-                d = Tile_GetDistance(unit.o.position, s2.o.position);
+                int d = Tile_GetDistance(unit.o.position, s2.o.position);
                 if (mind != 0 && d >= mind) continue;
                 mind = d;
                 s = s2;
@@ -922,22 +871,20 @@ public class UnitService {
      * @return The best target or NULL if none found.
      */
     static Unit Unit_FindBestTargetUnit(Unit u, int mode) {
-        Tile32 position;
-        int distance;
         PoolFindStruct find = new PoolFindStruct();
         Unit best = null;
         int bestPriority = 0;
 
         if (u == null) return null;
 
-        position = u.o.position;
+        Tile32 position = u.o.position;
         if (u.originEncoded == 0) {
             u.originEncoded = Tools_Index_Encode(Tile_PackTile(position), IT_TILE);
         } else {
             position = Tools_Index_GetTile(u.originEncoded);
         }
 
-        distance = g_table_unitInfo[u.o.type].fireDistance << 8;
+        int distance = g_table_unitInfo[u.o.type].fireDistance << 8;
         if (mode == 2) distance <<= 1;
 
         find.houseID = HOUSE_INVALID;
@@ -1536,7 +1483,7 @@ public class UnitService {
      * @param range  ??.
      * @return True if and only if the unit has no hitpoints left.
      */
-    static boolean Unit_Damage(Unit unit, int damage, int range) {
+    public static boolean Unit_Damage(Unit unit, int damage, int range) {
 	    UnitInfo ui;
         boolean alive = false;
         int houseID;
@@ -1629,9 +1576,7 @@ public class UnitService {
         find.index = 0xFFFF;
 
         while (true) {
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
 
             if (u.targetMove == encoded) u.targetMove = 0;
@@ -1644,9 +1589,7 @@ public class UnitService {
         find.index = 0xFFFF;
 
         while (true) {
-            Structure s;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
 
             if (s.o.type != STRUCTURE_TURRET && s.o.type != STRUCTURE_ROCKET_TURRET) continue;
@@ -1660,9 +1603,7 @@ public class UnitService {
         find.index = 0xFFFF;
 
         while (true) {
-            Team t;
-
-            t = Team_Find(find);
+            Team t = Team_Find(find);
             if (t == null) break;
 
             if (t.target == encoded) t.target = 0;
@@ -1766,15 +1707,13 @@ public class UnitService {
      * @return The new created Unit, or NULL if something failed.
      */
     public static Unit Unit_CreateWrapper(int houseID, int typeID, int destination) {
-        Tile32 tile;
-        House h;
         int orientation;
         Unit unit;
         Unit carryall;
 
-        tile = Tile_UnpackTile(Map_FindLocationTile(Tools_Random_256() & 3, houseID));
+        Tile32 tile = Tile_UnpackTile(Map_FindLocationTile(Tools_Random_256() & 3, houseID));
 
-        h = House_Get_ByIndex(houseID);
+        House h = House_Get_ByIndex(houseID);
 
         {
             Tile32 t = new Tile32();
@@ -1842,10 +1781,8 @@ public class UnitService {
      * @param packed The packed tile around where to look.
      * @return A packed tile where a Unit/Structure is, or the given packed tile if nothing found.
      */
-    static int Unit_FindTargetAround(int packed) {
-        int[] around = new int[] {0, -1, 1, -64, 64, -65, -63, 65, 63};
-
-        int i;
+    public static int Unit_FindTargetAround(int packed) {
+        int[] around = new int[] { 0, -1, 1, -64, 64, -65, -63, 65, 63 };
 
         if (g_selectionType == SELECTIONTYPE_PLACE) return packed;
 
@@ -1853,7 +1790,7 @@ public class UnitService {
 
         if (Map_GetLandscapeType(packed) == LST_BLOOM_FIELD) return packed;
 
-        for (i = 0; i < around.length; i++) {
+        for (int i = 0; i < around.length; i++) {
             Unit u;
 
             u = Unit_Get_ByPackedTile(packed + around[i]);
@@ -1872,22 +1809,17 @@ public class UnitService {
      * @return True if and only if the position of the unit is already occupied.
      */
     public static boolean Unit_IsTileOccupied(Unit unit) {
-	    UnitInfo ui;
-        int packed;
-        Unit unit2;
-        int speed;
-
         if (unit == null) return true;
 
-        ui = g_table_unitInfo[unit.o.type];
-        packed = Tile_PackTile(unit.o.position);
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
+        int packed = Tile_PackTile(unit.o.position);
 
-        speed = g_table_landscapeInfo[Map_GetLandscapeType(packed)].movementSpeed[ui.movementType];
+        int speed = g_table_landscapeInfo[Map_GetLandscapeType(packed)].movementSpeed[ui.movementType];
         if (speed == 0) return true;
 
         if (unit.o.type == UNIT_SANDWORM || ui.movementType == MOVEMENT_WINGER) return false;
 
-        unit2 = Unit_Get_ByPackedTile(packed);
+        Unit unit2 = Unit_Get_ByPackedTile(packed);
         if (unit2 != null && unit2 != unit) {
             if (House_AreAllied(Unit_GetHouseID(unit2), Unit_GetHouseID(unit))) return true;
             if (ui.movementType != MOVEMENT_TRACKED) return true;
@@ -1904,11 +1836,9 @@ public class UnitService {
      * @param speed The new speed of the unit (a percent value between 0 and 255).
      */
     public static void Unit_SetSpeed(Unit unit, int speed) {
-        int speedPerTick;
-
         assert (unit != null);
 
-        speedPerTick = 0;
+        int speedPerTick = 0;
 
         unit.speed = 0;
         unit.speedRemainder = 0;
@@ -1955,13 +1885,10 @@ public class UnitService {
      * @return The new created Unit, or NULL if something failed.
      */
     public static Unit Unit_CreateBullet(Tile32 position, int type, int houseID, int damage, int target) {
-	    UnitInfo ui;
-        Tile32 tile;
-
         if (!Tools_Index_IsValid(target)) return null;
 
-        ui = g_table_unitInfo[type];
-        tile = Tools_Index_GetTile(target);
+        UnitInfo ui = g_table_unitInfo[type];
+        Tile32 tile = Tools_Index_GetTile(target);
 
         switch (type) {
             case UNIT_MISSILE_HOUSE:
@@ -1969,13 +1896,9 @@ public class UnitService {
             case UNIT_MISSILE_TURRET:
             case UNIT_MISSILE_DEVIATOR:
             case UNIT_MISSILE_TROOPER: {
-                int orientation;
-                Unit bullet;
-                Unit u;
+                int orientation = Tile_GetDirection(position, tile);
 
-                orientation = Tile_GetDirection(position, tile);
-
-                bullet = Unit_Create(UNIT_INDEX_INVALID, type, houseID, position, orientation);
+                Unit bullet = Unit_Create(UNIT_INDEX_INVALID, type, houseID, position, orientation);
                 if (bullet == null) return null;
 
                 Voice_PlayAtTile(ui.bulletSound, position);
@@ -1990,13 +1913,14 @@ public class UnitService {
 
                 bullet.fireDelay = ui.fireDistance & 0xFF;
 
-                u = Tools_Index_GetUnit(target);
+                Unit u = Tools_Index_GetUnit(target);
                 if (u != null && g_table_unitInfo[u.o.type].movementType == MOVEMENT_WINGER) {
                     bullet.fireDelay <<= 1;
                 }
 
-                if (type == UNIT_MISSILE_HOUSE || (bullet.o.seenByHouses & (1 << g_playerHouseID)) != 0)
+                if (type == UNIT_MISSILE_HOUSE || (bullet.o.seenByHouses & (1 << g_playerHouseID)) != 0) {
                     return bullet;
+                }
 
                 Tile_RemoveFogInRadius(bullet.o.position, 2);
 
@@ -2005,15 +1929,11 @@ public class UnitService {
 
             case UNIT_BULLET:
             case UNIT_SONIC_BLAST: {
-                int orientation;
-                Tile32 t;
-                Unit bullet;
+                int orientation = Tile_GetDirection(position, tile);
 
-                orientation = Tile_GetDirection(position, tile);
+                Tile32 t = Tile_MoveByDirection(Tile_MoveByDirection(position, 0, 32), orientation, 128);
 
-                t = Tile_MoveByDirection(Tile_MoveByDirection(position, 0, 32), orientation, 128);
-
-                bullet = Unit_Create(UNIT_INDEX_INVALID, type, houseID, t, orientation);
+                Unit bullet = Unit_Create(UNIT_INDEX_INVALID, type, houseID, t, orientation);
                 if (bullet == null) return null;
 
                 if (type == UNIT_SONIC_BLAST) {
@@ -2043,12 +1963,11 @@ public class UnitService {
      * @param unit The Unit to display status text for.
      */
     public static void Unit_DisplayStatusText(Unit unit) {
-	    UnitInfo ui;
-        StringBuilder buffer = new StringBuilder();
-
         if (unit == null) return;
 
-        ui = g_table_unitInfo[unit.o.type];
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
+
+        StringBuilder buffer = new StringBuilder();
 
         if (unit.o.type == UNIT_SANDWORM) {
             buffer.append(String_Get_ByIndex(ui.o.stringID_abbrev)));
@@ -2062,9 +1981,7 @@ public class UnitService {
         }
 
         if (unit.o.type == UNIT_HARVESTER) {
-            int stringID;
-
-            stringID = STR_IS_D_PERCENT_FULL;
+            int stringID = STR_IS_D_PERCENT_FULL;
 
             if (unit.actionID == ACTION_HARVEST && unit.amount < 100) {
                 int type = Map_GetLandscapeType(Tile_PackTile(unit.o.position));
@@ -2122,16 +2039,13 @@ public class UnitService {
      */
     public static Unit Unit_CallUnitByType(int type, int houseID, int target, boolean createCarryall) {
         PoolFindStruct find = new PoolFindStruct();
-        Unit unit = null;
-
         find.houseID = houseID;
         find.type = type;
         find.index = 0xFFFF;
 
+        Unit unit = null;
         while (true) {
-            Unit u;
-
-            u = Unit_Find(find);
+            Unit u = Unit_Find(find);
             if (u == null) break;
             if (u.o.linkedID != 0xFF) continue;
             if (u.targetMove != 0) continue;
@@ -2166,9 +2080,6 @@ public class UnitService {
      * @param s    The Structure.
      */
     public static void Unit_EnterStructure(Unit unit, Structure s) {
-	    StructureInfo si;
-	    UnitInfo ui;
-
         if (unit == null || s == null) return;
 
         if (unit == g_unitSelected) {
@@ -2180,8 +2091,8 @@ public class UnitService {
             }
         }
 
-        ui = g_table_unitInfo[unit.o.type];
-        si = g_table_structureInfo[s.o.type];
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
+        StructureInfo si = g_table_structureInfo[s.o.type];
 
         if (!unit.o.flags.allocated || s.o.hitpoints == 0) {
             Unit_Remove(unit);
@@ -2208,6 +2119,7 @@ public class UnitService {
                 unit.o.flags.isSmoking = false;
                 unit.spriteOffset = 0;
             }
+
             unit.o.linkedID = s.o.linkedID;
             s.o.linkedID = unit.o.index & 0xFF;
             return;
@@ -2221,9 +2133,7 @@ public class UnitService {
 
         /* Take over the building when low on hitpoints */
         if (s.o.hitpoints < si.o.hitpoints / 4) {
-            House h;
-
-            h = House_Get_ByIndex(s.o.houseID);
+            House h = House_Get_ByIndex(s.o.houseID);
             s.o.houseID = Unit_GetHouseID(unit);
             h.structuresBuilt = Structure_GetStructuresBuilt(h);
 
@@ -2265,29 +2175,25 @@ public class UnitService {
     static Structure Unit_FindBestTargetStructure(Unit unit, int mode) {
         Structure best = null;
         int bestPriority = 0;
-        Tile32 position;
-        int distance;
-        PoolFindStruct find = new PoolFindStruct();
 
         if (unit == null) return null;
 
-        position = Tools_Index_GetTile(unit.originEncoded);
-        distance = g_table_unitInfo[unit.o.type].fireDistance << 8;
+        Tile32 position = Tools_Index_GetTile(unit.originEncoded);
+        int distance = g_table_unitInfo[unit.o.type].fireDistance << 8;
 
+        PoolFindStruct find = new PoolFindStruct();
         find.houseID = HOUSE_INVALID;
         find.index = 0xFFFF;
         find.type = 0xFFFF;
 
         while (true) {
-            Structure s;
-            Tile32 curPosition = new Tile32();
-            int priority;
-
-            s = Structure_Find(find);
+            Structure s = Structure_Find(find);
             if (s == null) break;
-            if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL)
+            if (s.o.type == STRUCTURE_SLAB_1x1 || s.o.type == STRUCTURE_SLAB_2x2 || s.o.type == STRUCTURE_WALL) {
                 continue;
+            }
 
+            Tile32 curPosition = new Tile32();
             curPosition.x = s.o.position.x + g_table_structure_layoutTileDiff[g_table_structureInfo[s.o.type].layout].x;
             curPosition.y = s.o.position.y + g_table_structure_layoutTileDiff[g_table_structureInfo[s.o.type].layout].y;
 
@@ -2300,7 +2206,7 @@ public class UnitService {
                 }
             }
 
-            priority = Unit_GetTargetStructurePriority(unit, s);
+            int priority = Unit_GetTargetStructurePriority(unit, s);
 
             if (priority >= bestPriority) {
                 best = s;
@@ -2323,19 +2229,15 @@ public class UnitService {
      * or a score to enter the tile otherwise.
      */
     public static int Unit_GetTileEnterScore(Unit unit, int packed, int orient8) {
-	    UnitInfo ui;
-        Unit u;
-        Structure s;
-        int type;
         int res;
 
         if (unit == null) return 0;
 
-        ui = g_table_unitInfo[unit.o.type];
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
 
         if (!Map_IsValidPosition(packed) && ui.movementType != MOVEMENT_WINGER) return 256;
 
-        u = Unit_Get_ByPackedTile(packed);
+        Unit u = Unit_Get_ByPackedTile(packed);
         if (u != null && u != unit && unit.o.type != UNIT_SANDWORM) {
             if (unit.o.type == UNIT_SABOTEUR && unit.targetMove == Tools_Index_Encode(u.o.index, IT_UNIT))
                 return 0;
@@ -2345,14 +2247,14 @@ public class UnitService {
                 return 256;
         }
 
-        s = Structure_Get_ByPackedTile(packed);
+        Structure s = Structure_Get_ByPackedTile(packed);
         if (s != null) {
             res = Unit_IsValidMovementIntoStructure(unit, s);
             if (res == 0) return 256;
             return -res;
         }
 
-        type = Map_GetLandscapeType(packed);
+        int type = Map_GetLandscapeType(packed);
 
         if (g_dune2_enhanced) {
             res = g_table_landscapeInfo[type].movementSpeed[ui.movementType] * ui.movingSpeedFactor / 256;
@@ -2385,12 +2287,11 @@ public class UnitService {
      * @return The encoded index of the best target or 0 if none found.
      */
     public static int Unit_FindBestTargetEncoded(Unit unit, int mode) {
-        Structure s;
         Unit target;
 
         if (unit == null) return 0;
 
-        s = null;
+        Structure s = null;
 
         if (mode == 4) {
             s = Unit_FindBestTargetStructure(unit, mode);
@@ -2412,8 +2313,9 @@ public class UnitService {
 
             priority = Unit_GetTargetUnitPriority(unit, target);
 
-            if (Unit_GetTargetStructurePriority(unit, s) >= priority)
+            if (Unit_GetTargetStructurePriority(unit, s) >= priority) {
                 return Tools_Index_Encode(s.o.index, IT_STRUCTURE);
+            }
             return Tools_Index_Encode(target.o.index, IT_UNIT);
         }
 
@@ -2455,15 +2357,9 @@ public class UnitService {
      * @param unit The Unit doing the action.
      */
     public static void Unit_UpdateMap(int type, Unit unit) {
-	    UnitInfo ui;
-        Tile32 position;
-        int packed;
-        Tile t;
-        int radius;
-
         if (unit == null || unit.o.flags.isNotOnMap || !unit.o.flags.used) return;
 
-        ui = g_table_unitInfo[unit.o.type];
+        UnitInfo ui = g_table_unitInfo[unit.o.type];
 
         if (ui.movementType == MOVEMENT_WINGER) {
             if (type != 0) {
@@ -2475,9 +2371,9 @@ public class UnitService {
             return;
         }
 
-        position = unit.o.position;
-        packed = Tile_PackTile(position);
-        t = g_map[packed];
+        Tile32 position = unit.o.position;
+        int packed = Tile_PackTile(position);
+        Tile t = g_map[packed];
 
         if (t.isUnveiled || unit.o.houseID == g_playerHouseID) {
             Unit_HouseUnitCount_Add(unit, g_playerHouseID);
@@ -2501,7 +2397,7 @@ public class UnitService {
             g_dirtyUnitCount++;
         }
 
-        radius = ui.dimension + 3;
+        int radius = ui.dimension + 3;
 
         if (unit.o.flags.bulletIsBig || unit.o.flags.isSmoking || (unit.o.type == UNIT_HARVESTER && unit.actionID == ACTION_HARVEST))
             radius = 33;
@@ -2521,7 +2417,7 @@ public class UnitService {
      * @param unit   The Unit to remove.
      * @param packed The packed tile.
      */
-    static void Unit_RemoveFromTile(Unit unit, int packed) {
+    public static void Unit_RemoveFromTile(Unit unit, int packed) {
         Tile t = g_map[packed];
 
         if (t.hasUnit && Unit_Get_ByPackedTile(packed) == unit && (packed != Tile_PackTile(unit.currentDestination) || unit.o.flags.s.bulletIsBig)) {
@@ -2534,7 +2430,7 @@ public class UnitService {
         Map_Update(packed, 0, false);
     }
 
-    static void Unit_AddToTile(Unit unit, int packed) {
+    public static void Unit_AddToTile(Unit unit, int packed) {
         Map_UnveilTile(packed, Unit_GetHouseID(unit));
         Map_MarkTileDirty(packed);
         Map_Update(packed, 1, false);
@@ -2549,38 +2445,30 @@ public class UnitService {
      * @return The priority of the target.
      */
     public static int Unit_GetTargetStructurePriority(Unit unit, Structure target) {
-	    StructureInfo si;
-        int priority;
-        int distance;
-
         if (unit == null || target == null) return 0;
 
         if (House_AreAllied(Unit_GetHouseID(unit), target.o.houseID)) return 0;
         if ((target.o.seenByHouses & (1 << Unit_GetHouseID(unit))) == 0) return 0;
 
-        si = g_table_structureInfo[target.o.type];
-        priority = si.o.priorityBuild + si.o.priorityTarget;
-        distance = Tile_GetDistanceRoundedUp(unit.o.position, target.o.position);
+        StructureInfo si = g_table_structureInfo[target.o.type];
+        int priority = si.o.priorityBuild + si.o.priorityTarget;
+        int distance = Tile_GetDistanceRoundedUp(unit.o.position, target.o.position);
         if (distance != 0) priority /= distance;
 
         return Math.min(priority, 32000);
     }
 
     public static void Unit_LaunchHouseMissile(int packed) {
-        Tile32 tile;
-        boolean isAI;
-        House h;
-
         if (g_unitHouseMissile == null) return;
 
-        h = House_Get_ByIndex(g_unitHouseMissile.o.houseID);
+        House h = House_Get_ByIndex(g_unitHouseMissile.o.houseID);
 
-        tile = Tile_UnpackTile(packed);
+        Tile32 tile = Tile_UnpackTile(packed);
         tile = Tile_MoveByRandom(tile, 160, false);
 
         packed = Tile_PackTile(tile);
 
-        isAI = g_unitHouseMissile.o.houseID != g_playerHouseID;
+        boolean isAI = g_unitHouseMissile.o.houseID != g_playerHouseID;
 
         Unit_Free(g_unitHouseMissile);
 

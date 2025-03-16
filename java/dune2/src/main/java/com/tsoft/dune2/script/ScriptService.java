@@ -6,14 +6,16 @@ import com.tsoft.dune2.team.Team;
 import com.tsoft.dune2.unit.Unit;
 
 import static com.tsoft.dune2.file.FileService.*;
+import static com.tsoft.dune2.os.EndianService.BETOH16;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
+import static com.tsoft.dune2.script.Script.*;
 import static com.tsoft.dune2.script.ScriptCommand.*;
 import static com.tsoft.dune2.script.ScriptStructureService.*;
 
 public class ScriptService {
 
-    public static final int SCRIPT_UNIT_OPCODES_PER_TICK = 50;         /*!< The amount of opcodes a unit can execute per tick. */
-    public static final int SCRIPT_FUNCTIONS_COUNT = 64;               /*!< There are never more than 64 functions for a script category. */
+    public static final int SCRIPT_UNIT_OPCODES_PER_TICK = 50;         /* The amount of opcodes a unit can execute per tick. */
+    public static final int SCRIPT_FUNCTIONS_COUNT = 64;               /* There are never more than 64 functions for a script category. */
 
     public static GObject g_scriptCurrentObject;
     public static Structure g_scriptCurrentStructure;
@@ -33,28 +35,28 @@ public class ScriptService {
     static ScriptFunction[] g_scriptFunctionsStructure = new ScriptFunction[] {
         /* 00 */ General::Script_General_Delay,
         /* 01 */ General::Script_General_NoOperation,
-        /* 02 */ General::Script_Structure_Unknown0A81,
-        /* 03 */ General::Script_Structure_FindUnitByType,
-        /* 04 */ General::Script_Structure_SetState,
+        /* 02 */ ScriptStructureService::Script_Structure_Unknown0A81,
+        /* 03 */ ScriptStructureService::Script_Structure_FindUnitByType,
+        /* 04 */ ScriptStructureService::Script_Structure_SetState,
         /* 05 */ General::Script_General_DisplayText,
-        /* 06 */ General::Script_Structure_Unknown11B9,
-        /* 07 */ General::Script_Structure_Unknown0C5A,
-        /* 08 */ General::Script_Structure_FindTargetUnit,
-        /* 09 */ General::Script_Structure_RotateTurret,
-        /* 0A */ General::Script_Structure_GetDirection,
-        /* 0B */ General::Script_Structure_Fire,
+        /* 06 */ ScriptStructureService::Script_Structure_Unknown11B9,
+        /* 07 */ ScriptStructureService::Script_Structure_Unknown0C5A,
+        /* 08 */ ScriptStructureService::Script_Structure_FindTargetUnit,
+        /* 09 */ ScriptStructureService::Script_Structure_RotateTurret,
+        /* 0A */ ScriptStructureService::Script_Structure_GetDirection,
+        /* 0B */ ScriptStructureService::Script_Structure_Fire,
         /* 0C */ General::Script_General_NoOperation,
-        /* 0D */ General::Script_Structure_GetState,
-        /* 0E */ General::Script_Structure_VoicePlay,
-        /* 0F */ General::Script_Structure_RemoveFogAroundTile,
+        /* 0D */ ScriptStructureService::Script_Structure_GetState,
+        /* 0E */ ScriptStructureService::Script_Structure_VoicePlay,
+        /* 0F */ ScriptStructureService::Script_Structure_RemoveFogAroundTile,
         /* 10 */ General::Script_General_NoOperation,
         /* 11 */ General::Script_General_NoOperation,
         /* 12 */ General::Script_General_NoOperation,
         /* 13 */ General::Script_General_NoOperation,
         /* 14 */ General::Script_General_NoOperation,
-        /* 15 */ General::Script_Structure_RefineSpice,
-        /* 16 */ General::Script_Structure_Explode,
-        /* 17 */ General::Script_Structure_Destroy,
+        /* 15 */ ScriptStructureService::Script_Structure_RefineSpice,
+        /* 16 */ ScriptStructureService::Script_Structure_Explode,
+        /* 17 */ ScriptStructureService::Script_Structure_Destroy,
         /* 18 */ General::Script_General_NoOperation,
     };
 
@@ -62,68 +64,68 @@ public class ScriptService {
      * Converted script functions for Units.
     */
     public static ScriptFunction[] g_scriptFunctionsUnit = new ScriptFunction[] {
-        /* 00 */ General::Script_Unit_GetInfo,
-        /* 01 */ General::Script_Unit_SetAction,
+        /* 00 */ ScriptUnitService::Script_Unit_GetInfo,
+        /* 01 */ ScriptUnitService::Script_Unit_SetAction,
         /* 02 */ General::Script_General_DisplayText,
         /* 03 */ General::Script_General_GetDistanceToTile,
-        /* 04 */ General::Script_Unit_StartAnimation,
-        /* 05 */ General::Script_Unit_SetDestination,
-        /* 06 */ General::Script_Unit_GetOrientation,
-        /* 07 */ General::Script_Unit_SetOrientation,
-        /* 08 */ General::Script_Unit_Fire,
-        /* 09 */ General::Script_Unit_MCVDeploy,
-        /* 0A */ General::Script_Unit_SetActionDefault,
-        /* 0B */ General::Script_Unit_Blink,
-        /* 0C */ General::Script_Unit_CalculateRoute,
+        /* 04 */ ScriptUnitService::Script_Unit_StartAnimation,
+        /* 05 */ ScriptUnitService::Script_Unit_SetDestination,
+        /* 06 */ ScriptUnitService::Script_Unit_GetOrientation,
+        /* 07 */ ScriptUnitService::Script_Unit_SetOrientation,
+        /* 08 */ ScriptUnitService::Script_Unit_Fire,
+        /* 09 */ ScriptUnitService::Script_Unit_MCVDeploy,
+        /* 0A */ ScriptUnitService::Script_Unit_SetActionDefault,
+        /* 0B */ ScriptUnitService::Script_Unit_Blink,
+        /* 0C */ ScriptUnitService::Script_Unit_CalculateRoute,
         /* 0D */ General::Script_General_IsEnemy,
-        /* 0E */ General::Script_Unit_ExplosionSingle,
-        /* 0F */ General::Script_Unit_Die,
+        /* 0E */ ScriptUnitService::Script_Unit_ExplosionSingle,
+        /* 0F */ ScriptUnitService::Script_Unit_Die,
         /* 10 */ General::Script_General_Delay,
         /* 11 */ General::Script_General_IsFriendly,
-        /* 12 */ General::Script_Unit_ExplosionMultiple,
-        /* 13 */ General::Script_Unit_SetSprite,
-        /* 14 */ General::Script_Unit_TransportDeliver,
+        /* 12 */ ScriptUnitService::Script_Unit_ExplosionMultiple,
+        /* 13 */ ScriptUnitService::Script_Unit_SetSprite,
+        /* 14 */ ScriptUnitService::Script_Unit_TransportDeliver,
         /* 15 */ General::Script_General_NoOperation,
-        /* 16 */ General::Script_Unit_MoveToTarget,
+        /* 16 */ ScriptUnitService::Script_Unit_MoveToTarget,
         /* 17 */ General::Script_General_RandomRange,
         /* 18 */ General::Script_General_FindIdle,
-        /* 19 */ General::Script_Unit_SetDestinationDirect,
-        /* 1A */ General::Script_Unit_Stop,
-        /* 1B */ General::Script_Unit_SetSpeed,
-        /* 1C */ General::Script_Unit_FindBestTarget,
-        /* 1D */ General::Script_Unit_GetTargetPriority,
-        /* 1E */ General::Script_Unit_MoveToStructure,
-        /* 1F */ General::Script_Unit_IsInTransport,
-        /* 20 */ General::Script_Unit_GetAmount,
-        /* 21 */ General::Script_Unit_RandomSoldier,
-        /* 22 */ General::Script_Unit_Pickup,
-        /* 23 */ General::Script_Unit_CallUnitByType,
-        /* 24 */ General::Script_Unit_Unknown2552,
-        /* 25 */ General::Script_Unit_FindStructure,
+        /* 19 */ ScriptUnitService::Script_Unit_SetDestinationDirect,
+        /* 1A */ ScriptUnitService::Script_Unit_Stop,
+        /* 1B */ ScriptUnitService::Script_Unit_SetSpeed,
+        /* 1C */ ScriptUnitService::Script_Unit_FindBestTarget,
+        /* 1D */ ScriptUnitService::Script_Unit_GetTargetPriority,
+        /* 1E */ ScriptUnitService::Script_Unit_MoveToStructure,
+        /* 1F */ ScriptUnitService::Script_Unit_IsInTransport,
+        /* 20 */ ScriptUnitService::Script_Unit_GetAmount,
+        /* 21 */ ScriptUnitService::Script_Unit_RandomSoldier,
+        /* 22 */ ScriptUnitService::Script_Unit_Pickup,
+        /* 23 */ ScriptUnitService::Script_Unit_CallUnitByType,
+        /* 24 */ ScriptUnitService::Script_Unit_Unknown2552,
+        /* 25 */ ScriptUnitService::Script_Unit_FindStructure,
         /* 26 */ General::Script_General_VoicePlay,
-        /* 27 */ General::Script_Unit_DisplayDestroyedText,
-        /* 28 */ General::Script_Unit_RemoveFog,
+        /* 27 */ ScriptUnitService::Script_Unit_DisplayDestroyedText,
+        /* 28 */ ScriptUnitService::Script_Unit_RemoveFog,
         /* 29 */ General::Script_General_SearchSpice,
-        /* 2A */ General::Script_Unit_Harvest,
+        /* 2A */ ScriptUnitService::Script_Unit_Harvest,
         /* 2B */ General::Script_General_NoOperation,
         /* 2C */ General::Script_General_GetLinkedUnitType,
         /* 2D */ General::Script_General_GetIndexType,
         /* 2E */ General::Script_General_DecodeIndex,
-        /* 2F */ General::Script_Unit_IsValidDestination,
-        /* 30 */ General::Script_Unit_GetRandomTile,
-        /* 31 */ General::Script_Unit_IdleAction,
+        /* 2F */ ScriptUnitService::Script_Unit_IsValidDestination,
+        /* 30 */ ScriptUnitService::Script_Unit_GetRandomTile,
+        /* 31 */ ScriptUnitService::Script_Unit_IdleAction,
         /* 32 */ General::Script_General_UnitCount,
-        /* 33 */ General::Script_Unit_GoToClosestStructure,
+        /* 33 */ ScriptUnitService::Script_Unit_GoToClosestStructure,
         /* 34 */ General::Script_General_NoOperation,
         /* 35 */ General::Script_General_NoOperation,
-        /* 36 */ General::Script_Unit_Sandworm_GetBestTarget,
-        /* 37 */ General::Script_Unit_Unknown2BD5,
+        /* 36 */ ScriptUnitService::Script_Unit_Sandworm_GetBestTarget,
+        /* 37 */ ScriptUnitService::Script_Unit_Unknown2BD5,
         /* 38 */ General::Script_General_GetOrientation,
         /* 39 */ General::Script_General_NoOperation,
-        /* 3A */ General::Script_Unit_SetTarget,
+        /* 3A */ ScriptUnitService::Script_Unit_SetTarget,
         /* 3B */ General::Script_General_Unknown0288,
         /* 3C */ General::Script_General_DelayRandom,
-        /* 3D */ General::Script_Unit_Rotate,
+        /* 3D */ ScriptUnitService::Script_Unit_Rotate,
         /* 3E */ General::Script_General_GetDistanceToObject,
         /* 3F */ General::Script_General_NoOperation,
     };
@@ -131,21 +133,21 @@ public class ScriptService {
     /**
      * Converted script functions for Teams.
      */
-    static ScriptFunction g_scriptFunctionsTeam = new ScriptFunction[] {
+    static ScriptFunction[] g_scriptFunctionsTeam = new ScriptFunction[] {
         /* 00 */ General::Script_General_Delay,
-        /* 01 */ General::Script_Team_DisplayText,
-        /* 02 */ General::Script_Team_GetMembers,
-        /* 03 */ General::Script_Team_AddClosestUnit,
-        /* 04 */ General::Script_Team_GetAverageDistance,
-        /* 05 */ General::Script_Team_Unknown0543,
-        /* 06 */ General::Script_Team_FindBestTarget,
-        /* 07 */ General::Script_Team_Unknown0788,
-        /* 08 */ General::Script_Team_Load,
-        /* 09 */ General::Script_Team_Load2,
+        /* 01 */ ScriptTeamService::Script_Team_DisplayText,
+        /* 02 */ ScriptTeamService::Script_Team_GetMembers,
+        /* 03 */ ScriptTeamService::Script_Team_AddClosestUnit,
+        /* 04 */ ScriptTeamService::Script_Team_GetAverageDistance,
+        /* 05 */ ScriptTeamService::Script_Team_Unknown0543,
+        /* 06 */ ScriptTeamService::Script_Team_FindBestTarget,
+        /* 07 */ ScriptTeamService::Script_Team_Unknown0788,
+        /* 08 */ ScriptTeamService::Script_Team_Load,
+        /* 09 */ ScriptTeamService::Script_Team_Load2,
         /* 0A */ General::Script_General_DelayRandom,
         /* 0B */ General::Script_General_DisplayModalMessage,
-        /* 0C */ General::Script_Team_GetVariable6,
-        /* 0D */ General::Script_Team_GetTarget,
+        /* 0C */ ScriptTeamService::Script_Team_GetVariable6,
+        /* 0D */ ScriptTeamService::Script_Team_GetTarget,
         /* 0E */ General::Script_General_NoOperation,
     };
 
@@ -175,9 +177,9 @@ public class ScriptService {
      * @param value The value to push.
      * @note Use SCRIPT_PUSH(position) to use; do not use this function directly.
      */
-    public static void Script_Stack_Push(ScriptEngine script, int value, String filename, int lineno) {
+    public static void Script_Stack_Push(ScriptEngine script, int value) {
         if (script.stackPointer == 0) {
-            Script_Error("Stack Overflow at %s:%d", filename, lineno);
+            Script_Error("Stack Overflow at %s:%d", "filename", "lineno");
             script.script = null;
             return;
         }
@@ -190,9 +192,9 @@ public class ScriptService {
      * @return The value that was on the stack.
      * @note Use SCRIPT_POP(position) to use; do not use this function directly.
      */
-    public static int Script_Stack_Pop(ScriptEngine script, String filename, int lineno) {
+    public static int Script_Stack_Pop(ScriptEngine script) {
         if (script.stackPointer >= 15) {
-            Script_Error("Stack Overflow at %s:%d", filename, lineno);
+            Script_Error("Stack Overflow at %s:%d", "filename", "lineno");
             script.script = null;
             return 0;
         }
@@ -206,11 +208,11 @@ public class ScriptService {
      * @return The value that was on the stack.
      * @note Use SCRIPT_PEEK(position) to use; do not use this function directly.
      */
-    public static int Script_Stack_Peek(ScriptEngine script, int position, String filename, int lineno) {
+    public static int Script_Stack_Peek(ScriptEngine script, int position) {
         assert(position > 0);
 
         if (script.stackPointer >= 16 - position) {
-            Script_Error("Stack Overflow at %s:%d", filename, lineno);
+            Script_Error("Stack Overflow at %s:%d", "filename", "lineno");
             script.script = null;
             return 0;
         }
@@ -230,8 +232,8 @@ public class ScriptService {
         if (script == null) return;
         if (scriptInfo == null) return;
 
-        script.script       = null;
-        script.scriptInfo   = scriptInfo;
+        script.script = null;
+        script.scriptInfo = scriptInfo;
         script.isSubroutine = 0;
         script.framePointer = 17;
         script.stackPointer = 15;
@@ -281,18 +283,15 @@ public class ScriptService {
      *   invalid opcode.
      */
     public static boolean Script_Run(ScriptEngine script) {
-        ScriptInfo scriptInfo;
-        int current, parameter;
-        int opcode;
-
         if (!Script_IsLoaded(script)) return false;
-        scriptInfo = script.scriptInfo;
 
-        current = BETOH16(script.script);
+        ScriptInfo scriptInfo = script.scriptInfo;
+
+        int current = BETOH16(script.script);
         script.script++;
 
-        opcode    = (current >> 8) & 0x1F;
-        parameter = 0;
+        int opcode = (current >> 8) & 0x1F;
+        int parameter = 0;
 
         if ((current & 0x8000) != 0) {
             /* When this flag is set, the instruction is a GOTO with a 13bit address */
@@ -320,7 +319,7 @@ public class ScriptService {
 
             case SCRIPT_PUSH_RETURN_OR_LOCATION: {
                 if (parameter == 0) { /* PUSH RETURNVALUE */
-                    STACK_PUSH(script.returnValue);
+                    STACK_PUSH(script, script.returnValue);
                     return true;
                 }
 
@@ -328,8 +327,8 @@ public class ScriptService {
                     long location;
                     location = (script.script - scriptInfo.start) + 1;
 
-                    STACK_PUSH(location);
-                    STACK_PUSH(script.framePointer);
+                    STACK_PUSH(script, location);
+                    STACK_PUSH(script, script.framePointer);
                     script.framePointer = script.stackPointer + 2;
 
                     return true;
@@ -341,47 +340,48 @@ public class ScriptService {
             }
 
             case SCRIPT_PUSH: case SCRIPT_PUSH2: {
-                STACK_PUSH(parameter);
+                STACK_PUSH(script, parameter);
                 return true;
             }
 
             case SCRIPT_PUSH_VARIABLE: {
-                STACK_PUSH(script.variables[parameter]);
+                STACK_PUSH(script, script.variables[parameter]);
                 return true;
             }
 
             case SCRIPT_PUSH_LOCAL_VARIABLE: {
                 if (script.framePointer - parameter - 2 >= 15) {
-                    Script_Error("Stack Overflow at %s:%d", __FILE__, __LINE__);
+                    Script_Error("Stack Overflow at %s:%d");
                     script.script = null;
                     return false;
                 }
 
-                STACK_PUSH(script.stack[script.framePointer - parameter - 2]);
+                STACK_PUSH(script, script.stack[script.framePointer - parameter - 2]);
                 return true;
             }
 
             case SCRIPT_PUSH_PARAMETER: {
                 if (script.framePointer + parameter - 1 >= 15) {
-                    Script_Error("Stack Overflow at %s:%d", __FILE__, __LINE__);
+                    Script_Error("Stack Overflow at %s:%d");
                     script.script = null;
                     return false;
                 }
 
-                STACK_PUSH(script.stack[script.framePointer + parameter - 1]);
+                STACK_PUSH(script, script.stack[script.framePointer + parameter - 1]);
                 return true;
             }
 
             case SCRIPT_POP_RETURN_OR_LOCATION: {
                 if (parameter == 0) { /* POP RETURNVALUE */
-                    script.returnValue = STACK_POP();
+                    script.returnValue = STACK_POP(script);
                     return true;
                 }
                 if (parameter == 1) { /* POP FRAMEPOINTER + LOCATION */
-                    STACK_PEEK(2); if (script.script == null) return false;
+                    STACK_PEEK(script, 2);
+                    if (script.script == null) return false;
 
-                    script.framePointer = STACK_POP();
-                    script.script = scriptInfo.start + STACK_POP();
+                    script.framePointer = STACK_POP(script);
+                    script.script = scriptInfo.start + STACK_POP(script);
                     return true;
                 }
 
@@ -391,29 +391,29 @@ public class ScriptService {
             }
 
             case SCRIPT_POP_VARIABLE: {
-                script.variables[parameter] = STACK_POP();
+                script.variables[parameter] = STACK_POP(script);
                 return true;
             }
 
             case SCRIPT_POP_LOCAL_VARIABLE: {
                 if (script.framePointer - parameter - 2 >= 15) {
-                    Script_Error("Stack Overflow at %s:%d", __FILE__, __LINE__);
+                    Script_Error("Stack Overflow at %s:%d");
                     script.script = null;
                     return false;
                 }
 
-                script.stack[script.framePointer - parameter - 2] = STACK_POP();
+                script.stack[script.framePointer - parameter - 2] = STACK_POP(script);
                 return true;
             }
 
             case SCRIPT_POP_PARAMETER: {
                 if (script.framePointer + parameter - 1 >= 15) {
-                    Script_Error("Stack Overflow at %s:%d", __FILE__, __LINE__);
+                    Script_Error("Stack Overflow at %s:%d");
                     script.script = null;
                     return false;
                 }
 
-                script.stack[script.framePointer + parameter - 1] = STACK_POP();
+                script.stack[script.framePointer + parameter - 1] = STACK_POP(script);
                 return true;
             }
 
@@ -440,9 +440,10 @@ public class ScriptService {
             }
 
             case SCRIPT_JUMP_NE: {
-                STACK_PEEK(1); if (script.script == null) return false;
+                STACK_PEEK(script, 1);
+                if (script.script == null) return false;
 
-                if (STACK_POP() != 0) return true;
+                if (STACK_POP(script) != 0) return true;
 
                 script.script = scriptInfo.start + (parameter & 0x7FFF);
                 return true;
@@ -450,15 +451,15 @@ public class ScriptService {
 
             case SCRIPT_UNARY: {
                 if (parameter == 0) { /* STACK = !STACK */
-                    STACK_PUSH((STACK_POP() == 0) ? 1 : 0);
+                    STACK_PUSH(script, (STACK_POP(script) == 0) ? 1 : 0);
                     return true;
                 }
                 if (parameter == 1) { /* STACK = -STACK */
-                    STACK_PUSH(-STACK_POP());
+                    STACK_PUSH(script, -STACK_POP(script));
                     return true;
                 }
                 if (parameter == 2) { /* STACK = ~STACK */
-                    STACK_PUSH(~STACK_POP());
+                    STACK_PUSH(script, ~STACK_POP(script));
                     return true;
                 }
 
@@ -468,28 +469,28 @@ public class ScriptService {
             }
 
             case SCRIPT_BINARY: {
-                int right = STACK_POP();
-                int left  = STACK_POP();
+                int right = STACK_POP(script);
+                int left  = STACK_POP(script);
 
                 switch (parameter) {
-                    case 0:  STACK_PUSH((left != 0 && right != 0) ? 1 : 0); break; /* left && right */
-                    case 1:  STACK_PUSH((left != 0 || right != 0) ? 1 : 0); break; /* left || right */
-                    case 2:  STACK_PUSH((left == right) ? 1 : 0); break; /* left == right */
-                    case 3:  STACK_PUSH((left != right) ? 1 : 0); break; /* left != right */
-                    case 4:  STACK_PUSH((left <  right) ? 1 : 0); break; /* left <  right */
-                    case 5:  STACK_PUSH((left <= right) ? 1 : 0); break; /* left <= right */
-                    case 6:  STACK_PUSH((left >  right) ? 1 : 0); break; /* left >  right */
-                    case 7:  STACK_PUSH((left >= right) ? 1 : 0); break; /* left >= right */
-                    case 8:  STACK_PUSH( left +  right         ); break; /* left +  right */
-                    case 9:  STACK_PUSH( left -  right         ); break; /* left -  right */
-                    case 10: STACK_PUSH( left *  right         ); break; /* left *  right */
-                    case 11: STACK_PUSH( left /  right         ); break; /* left /  right */
-                    case 12: STACK_PUSH( left >> right         ); break; /* left >> right */
-                    case 13: STACK_PUSH( left << right         ); break; /* left << right */
-                    case 14: STACK_PUSH( left &  right         ); break; /* left &  right */
-                    case 15: STACK_PUSH( left |  right         ); break; /* left |  right */
-                    case 16: STACK_PUSH( left %  right         ); break; /* left %  right */
-                    case 17: STACK_PUSH( left ^  right         ); break; /* left ^  right */
+                    case 0:  STACK_PUSH(script, (left != 0 && right != 0) ? 1 : 0); break; /* left && right */
+                    case 1:  STACK_PUSH(script, (left != 0 || right != 0) ? 1 : 0); break; /* left || right */
+                    case 2:  STACK_PUSH(script, (left == right) ? 1 : 0); break; /* left == right */
+                    case 3:  STACK_PUSH(script, (left != right) ? 1 : 0); break; /* left != right */
+                    case 4:  STACK_PUSH(script, (left <  right) ? 1 : 0); break; /* left <  right */
+                    case 5:  STACK_PUSH(script, (left <= right) ? 1 : 0); break; /* left <= right */
+                    case 6:  STACK_PUSH(script, (left >  right) ? 1 : 0); break; /* left >  right */
+                    case 7:  STACK_PUSH(script, (left >= right) ? 1 : 0); break; /* left >= right */
+                    case 8:  STACK_PUSH(script, left +  right); break; /* left +  right */
+                    case 9:  STACK_PUSH(script, left -  right); break; /* left -  right */
+                    case 10: STACK_PUSH(script, left *  right); break; /* left *  right */
+                    case 11: STACK_PUSH(script, left /  right); break; /* left /  right */
+                    case 12: STACK_PUSH(script, left >> right); break; /* left >> right */
+                    case 13: STACK_PUSH(script, left << right); break; /* left << right */
+                    case 14: STACK_PUSH(script, left &  right); break; /* left &  right */
+                    case 15: STACK_PUSH(script, left |  right); break; /* left |  right */
+                    case 16: STACK_PUSH(script, left %  right); break; /* left %  right */
+                    case 17: STACK_PUSH(script, left ^  right); break; /* left ^  right */
 
                     default:
                         Script_Error("Unknown parameter %d for opcode 17", parameter);
@@ -500,10 +501,11 @@ public class ScriptService {
                 return true;
             }
             case SCRIPT_RETURN: {
-                STACK_PEEK(2); if (script.script == null) return false;
+                STACK_PEEK(script, 2);
+                if (script.script == null) return false;
 
-                script.returnValue = STACK_POP();
-                script.script = scriptInfo.start + STACK_POP();
+                script.returnValue = STACK_POP(script);
+                script.script = scriptInfo.start + STACK_POP(script);
 
                 script.isSubroutine = 0;
                 return true;
@@ -531,8 +533,8 @@ public class ScriptService {
         scriptInfo = script.scriptInfo;
         script.isSubroutine = 1;
 
-        STACK_PUSH((uint16)(script.script - scriptInfo.start));
-        STACK_PUSH(script.returnValue);
+        STACK_PUSH(script, (script.script - scriptInfo.start));
+        STACK_PUSH(script, script.returnValue);
 
         script.script = scriptInfo.start + scriptInfo.offsets[typeID];
     }

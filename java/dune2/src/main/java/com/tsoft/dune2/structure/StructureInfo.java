@@ -13,7 +13,7 @@ public class StructureInfo {
     public int powerUsage;                          /* How much power this Structure uses (positive value) or produces (negative value). */
     public int layout;                              /* Layout type of Structure. */
     public int iconGroup;                           /* In which IconGroup the sprites of the Structure belongs. */
-    public int[] animationIndex = new int[3];      /* The index inside g_table_animation_structure for the Animation of the Structure. */
-    public int[] buildableUnits = new int[8];      /* Which units this structure can produce. */
+    public int[] animationIndex = new int[3];       /* The index inside g_table_animation_structure for the Animation of the Structure. */
+    public int[] buildableUnits = new int[8];       /* Which units this structure can produce. */
     public int[] upgradeCampaign = new int[3];      /* Minimum campaign for upgrades. */
 }

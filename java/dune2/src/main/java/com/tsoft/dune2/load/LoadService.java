@@ -1,11 +1,13 @@
 package com.tsoft.dune2.load;
 
+import static com.tsoft.dune2.audio.SoundService.Sound_Output_Feedback;
 import static com.tsoft.dune2.file.FileService.File_ReadBlockFile;
 import static com.tsoft.dune2.file.SearchDirectory.SEARCHDIR_PERSONAL_DATA_DIR;
+import static com.tsoft.dune2.gfx.GfxService.g_palette1;
 import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.house.HouseType.HOUSE_MERCENARY;
-import static com.tsoft.dune2.opendune.OpenDuneService.Game_Init;
-import static com.tsoft.dune2.opendune.OpenDuneService.Game_Prepare;
+import static com.tsoft.dune2.opendune.GameMode.GM_RESTART;
+import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.os.EndianService.BETOH32;
 import static com.tsoft.dune2.sprites.SpritesService.Sprites_LoadTiles;
 

@@ -1,8 +1,10 @@
 package com.tsoft.dune2.gui;
 
+import com.tsoft.dune2.gfx.Screen;
 import com.tsoft.dune2.gobject.GObjectInfo;
 import com.tsoft.dune2.gui.widget.Widget;
 import com.tsoft.dune2.gui.widget.WidgetInfo;
+import com.tsoft.dune2.gui.widget.WidgetProperties;
 import com.tsoft.dune2.house.House;
 import com.tsoft.dune2.house.HouseType;
 import com.tsoft.dune2.pool.PoolFindStruct;
@@ -13,9 +15,11 @@ import com.tsoft.dune2.unit.Unit;
 import java.util.Arrays;
 
 import static com.tsoft.dune2.animation.AnimationService.Animation_Tick;
+import static com.tsoft.dune2.codec.Format80Service.Format80_Decode;
+import static com.tsoft.dune2.config.ConfigService.g_config;
 import static com.tsoft.dune2.config.ConfigService.g_gameConfig;
 import static com.tsoft.dune2.explosion.ExplosionService.Explosion_Tick;
-import static com.tsoft.dune2.file.FileService.File_Exists;
+import static com.tsoft.dune2.file.FileService.*;
 import static com.tsoft.dune2.gfx.GfxService.*;
 import static com.tsoft.dune2.gfx.Screen.*;
 import static com.tsoft.dune2.gui.FactoryResult.FACTORY_RESUME;
@@ -25,20 +29,26 @@ import static com.tsoft.dune2.gui.ViewportService.GUI_Widget_Viewport_Draw;
 import static com.tsoft.dune2.gui.font.FontService.Font_GetStringWidth;
 import static com.tsoft.dune2.gui.widget.DrawMode.DRAW_MODE_NONE;
 import static com.tsoft.dune2.gui.widget.DrawMode.DRAW_MODE_SPRITE;
-import static com.tsoft.dune2.gui.widget.WidgetDrawService.GUI_Widget_ActionPanel_Draw;
+import static com.tsoft.dune2.gui.widget.WidgetDrawService.*;
 import static com.tsoft.dune2.gui.widget.WidgetService.*;
 import static com.tsoft.dune2.house.HouseService.g_playerHouse;
+import static com.tsoft.dune2.house.HouseService.g_playerHouseID;
 import static com.tsoft.dune2.house.HouseType.*;
+import static com.tsoft.dune2.ini.IniService.Ini_GetString;
+import static com.tsoft.dune2.input.InputService.*;
 import static com.tsoft.dune2.input.MouseService.*;
 import static com.tsoft.dune2.map.MapService.*;
 import static com.tsoft.dune2.opendune.OpenDuneService.*;
 import static com.tsoft.dune2.pool.PoolHouseService.House_Get_ByIndex;
 import static com.tsoft.dune2.pool.PoolStructureService.Structure_Find;
 import static com.tsoft.dune2.sprites.SpritesService.*;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_FRENCH;
+import static com.tsoft.dune2.strings.Language.LANGUAGE_GERMAN;
 import static com.tsoft.dune2.strings.StringService.String_GenerateFilename;
 import static com.tsoft.dune2.strings.StringService.String_Get_ByIndex;
 import static com.tsoft.dune2.strings.Strings.*;
 import static com.tsoft.dune2.structure.StructureService.Structure_Get_ByPackedTile;
+import static com.tsoft.dune2.structure.StructureService.g_structureActivePosition;
 import static com.tsoft.dune2.table.TableHouseInfo.g_table_houseInfo;
 import static com.tsoft.dune2.table.TableStructureInfo.g_table_structureInfo;
 import static com.tsoft.dune2.structure.StructureType.*;
@@ -48,6 +58,7 @@ import static com.tsoft.dune2.table.TableWidgetInfo.g_table_factoryWidgetInfo;
 import static com.tsoft.dune2.tile.TileService.Tile_GetPackedX;
 import static com.tsoft.dune2.tile.TileService.Tile_GetPackedY;
 import static com.tsoft.dune2.timer.TimerService.*;
+import static com.tsoft.dune2.timer.TimerType.TIMER_GAME;
 import static com.tsoft.dune2.tools.ToolsService.BitArray_Set;
 import static com.tsoft.dune2.tools.ToolsService.Tools_RandomLCG_Range;
 import static com.tsoft.dune2.unit.MovementType.MOVEMENT_SLITHER;
@@ -58,6 +69,7 @@ import static com.tsoft.dune2.utils.CFunc.READ_LE_int;
 import static com.tsoft.dune2.utils.CFunc.uint8;
 import static com.tsoft.dune2.video.VideoWin32Service.Video_Mouse_SetPosition;
 import static com.tsoft.dune2.wsa.WsaService.*;
+import static java.lang.Integer.min;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static org.lwjgl.system.libc.LibCString.memset;
@@ -83,8 +95,8 @@ public class GuiService {
     static int[] g_colours = new int[16];		/*!< Colors used for drawing chars */
     static ClippingArea g_clipping = new ClippingArea(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
     public static byte[] g_palette_998A = null;
-    static int[] g_remap = new int[256];
-    static FactoryWindowItem[] g_factoryWindowItems = new FactoryWindowItem[25];
+    static byte[] g_remap = new byte[256];
+    public static FactoryWindowItem[] g_factoryWindowItems = new FactoryWindowItem[25];
     static int g_factoryWindowOrdered = 0;
     static int g_factoryWindowBase = 0;
     static int g_factoryWindowTotal = 0;
@@ -95,7 +107,7 @@ public class GuiService {
     static boolean g_factoryWindowStarport = false;
     static int[] s_factoryWindowGraymapTbl = new int[256];
     static Widget[] s_factoryWindowWidgets = new Widget[13];
-    static int[] s_factoryWindowWsaBuffer = new int[64000];
+    static byte[] s_factoryWindowWsaBuffer = new byte[64000];
     static int *s_palette1_houseColour;
     static long s_tickCreditsAnimation = 0;                         /*!< Next tick when credits animation needs an update. */
     static long s_arrowAnimationTimeout = 0;                        /*!< Timeout value for the next palette change in the animation of the arrows. */
@@ -122,19 +134,19 @@ public class GuiService {
     public static int g_cursorSpriteID;
     static int g_cursorDefaultSpriteID;
 
-    static boolean g_structureHighHealth;                   /*!< If false, the repair button will flash. */
+    static boolean g_structureHighHealth;                   /* If false, the repair button will flash. */
     static boolean g_var_37B8;
 
-    public static int g_viewportMessageCounter;             /*!< Countdown counter for displaying #g_viewportMessageText, bit 0 means 'display the text'. */
-    public static byte[] g_viewportMessageText;             /*!< If not \c null, message text displayed in the viewport. */
+    public static int g_viewportMessageCounter;             /* Countdown counter for displaying #g_viewportMessageText, bit 0 means 'display the text'. */
+    public static byte[] g_viewportMessageText;             /* If not \c null, message text displayed in the viewport. */
 
-    public static int g_viewportPosition;                   /*!< Top-left tile of the viewport. */
-    public static int g_minimapPosition;                    /*!< Top-left tile of the border in the minimap. */
-    public static int g_selectionRectanglePosition;         /*!< Position of the structure selection rectangle. */
-    public static int g_selectionPosition;                  /*!< Current selection position (packed). */
-    public static int g_selectionWidth;                     /*!< Width of the selection. */
-    public static int g_selectionHeight;                    /*!< Height of the selection. */
-    public static int g_selectionState = 1;                 /*!< State of the selection (\c 1 is valid, \c 0 is not valid, \c <0 valid but missing some slabs. */
+    public static int g_viewportPosition;                   /* Top-left tile of the viewport. */
+    public static int g_minimapPosition;                    /* Top-left tile of the border in the minimap. */
+    public static int g_selectionRectanglePosition;         /* Position of the structure selection rectangle. */
+    public static int g_selectionPosition;                  /* Current selection position (packed). */
+    public static int g_selectionWidth;                     /* Width of the selection. */
+    public static int g_selectionHeight;                    /* Height of the selection. */
+    public static int g_selectionState = 1;                 /* State of the selection (\c 1 is valid, \c 0 is not valid, \c <0 valid but missing some slabs. */
 
     /*!< Colours used for the border of widgets. */
     static byte[][] s_colourBorderSchema = new byte[][] {
@@ -931,7 +943,7 @@ public class GuiService {
         int  distX;
         byte[] palette = null;
         int spriteDecodedLength; /* if encoded with Format80 */
-        int[] spriteBuffer = new int[20000];	/* for sprites encoded with Format80 : maximum size for credits images is 19841, elsewere it is 3456 */
+        byte[] spriteBuffer = new byte[20000];	/* for sprites encoded with Format80 : maximum size for credits images is 19841, elsewere it is 3456 */
 
         byte[] buf = null;
         int bPos = 0;
@@ -1013,7 +1025,7 @@ public class GuiService {
         }
 
         if ((spriteFlags & 0x2) == 0) {
-            Format80_Decode(spriteBuffer, sprite, spriteDecodedLength);
+            Format80_Decode(spriteBuffer, sprite, spritePos, spriteDecodedLength);
 
             sprite = spriteBuffer;
         }
@@ -1532,7 +1544,7 @@ public class GuiService {
      * @param score The base score.
      * @param houseID The houseID of the player.
      */
-    static void GUI_EndStats_Show(int killedAllied, int killedEnemy, int destroyedAllied, int destroyedEnemy, int harvestedAllied, int harvestedEnemy, int score, int houseID) {
+    public static void GUI_EndStats_Show(int killedAllied, int killedEnemy, int destroyedAllied, int destroyedEnemy, int harvestedAllied, int harvestedEnemy, int score, int houseID) {
         int oldScreenID;
         int statsBoxCount;
         int textLeft;	/* text left position */
@@ -1833,7 +1845,7 @@ public class GuiService {
      * @param reference The colour to use as reference.
      * @param intensity The intensity to use.
      */
-    static void GUI_Palette_CreateMapping(byte[] palette, byte[] colours, int reference, int intensity) {
+    public static void GUI_Palette_CreateMapping(byte[] palette, byte[] colours, int reference, int intensity) {
         int index;
 
         if (palette == null || colours == null) return;
@@ -2614,34 +2626,25 @@ public class GuiService {
         return count * sizeof(Widget);
     }
 
-    static long GUI_FactoryWindow_LoadGraymapTbl(void)
-    {
-        int fileID;
-
-        fileID = File_Open("GRAYRMAP.TBL", FILE_MODE_READ);
+    static long GUI_FactoryWindow_LoadGraymapTbl() {
+        int fileID = File_Open("GRAYRMAP.TBL", FILE_MODE_READ);
         File_Read(fileID, s_factoryWindowGraymapTbl, 256);
         File_Close(fileID);
 
         return 256;
     }
 
-    static int GUI_FactoryWindow_CalculateStarportPrice(int credits)
-    {
+    static int GUI_FactoryWindow_CalculateStarportPrice(int credits) {
         credits = (credits / 10) * 4 + (credits / 10) * (Tools_RandomLCG_Range(0, 6) + Tools_RandomLCG_Range(0, 6));
 
         return min(credits, 999);
     }
 
-    static int GUI_FactoryWindow_Sorter(const void *a, const void *b)
-    {
-	const FactoryWindowItem *pa = a;
-	const FactoryWindowItem *pb = b;
-
-        return pb.sortPriority - pa.sortPriority;
+    static int GUI_FactoryWindow_Sorter(FactoryWindowItem a, FactoryWindowItem b) {
+        return b.sortPriority - a.sortPriority;
     }
 
-    static void GUI_FactoryWindow_InitItems(void)
-    {
+    static void GUI_FactoryWindow_InitItems() {
         g_factoryWindowTotal = 0;
         g_factoryWindowSelected = 0;
         g_factoryWindowBase = 0;
@@ -2678,17 +2681,15 @@ public class GuiService {
                 g_factoryWindowTotal++;
             }
         } else {
-            int i;
-
-            for (i = 0; i < STRUCTURE_MAX; i++) {
-                ObjectInfo *oi = &g_table_structureInfo[i].o;
+            for (int i = 0; i < STRUCTURE_MAX; i++) {
+                GObjectInfo oi = g_table_structureInfo[i].o;
 
                 if (oi.available == 0) continue;
 
-                g_factoryWindowItems[g_factoryWindowTotal].objectInfo    = oi;
-                g_factoryWindowItems[g_factoryWindowTotal].objectType    = i;
-                g_factoryWindowItems[g_factoryWindowTotal].credits       = oi.buildCredits;
-                g_factoryWindowItems[g_factoryWindowTotal].sortPriority  = oi.sortPriority;
+                g_factoryWindowItems[g_factoryWindowTotal].objectInfo = oi;
+                g_factoryWindowItems[g_factoryWindowTotal].objectType = i;
+                g_factoryWindowItems[g_factoryWindowTotal].credits = oi.buildCredits;
+                g_factoryWindowItems[g_factoryWindowTotal].sortPriority = oi.sortPriority;
 
                 if (i == 0 || i == 1) g_factoryWindowItems[g_factoryWindowTotal].sortPriority = 0x64;
 
@@ -2730,7 +2731,7 @@ public class GuiService {
         for (i = g_factoryWindowTotal; i < 4; i++) GUI_Widget_MakeInvisible(GUI_Widget_Get_ByIndex(g_widgetInvoiceTail, i + 46));
 
         for (i = 0; i < 4; i++) {
-            FactoryWindowItem *item = GUI_FactoryWindow_GetItem(i);
+            FactoryWindowItem item = GUI_FactoryWindow_GetItem(i);
 
             if (item == null) continue;
 
@@ -2775,8 +2776,7 @@ public class GuiService {
      * @param upgradeCost Cost of upgrading the structure.
      * @return Unknown value.
      */
-    FactoryResult GUI_DisplayFactoryWindow(boolean isConstructionYard, boolean isStarPort, int upgradeCost)
-    {
+    static FactoryResult GUI_DisplayFactoryWindow(boolean isConstructionYard, boolean isStarPort, int upgradeCost) {
         Screen oldScreenID;
         int backup[3];
 
@@ -2823,6 +2823,14 @@ public class GuiService {
         return g_factoryWindowResult;
     }
 
+    static int[] gameSpeedStrings = new int[] {
+        STR_SLOWEST,
+        STR_SLOW,
+        STR_NORMAL,
+        STR_FAST,
+        STR_FASTEST
+    };
+
     public static String GUI_String_Get_ByIndex(int stringID) {
         extern char g_savegameDesc[5][51];
 
@@ -2842,14 +2850,6 @@ public class GuiService {
                 break;
 
             case -12: {
-                static const int gameSpeedStrings[] = {
-                    STR_SLOWEST,
-                    STR_SLOW,
-                    STR_NORMAL,
-                    STR_FAST,
-                    STR_FASTEST
-                };
-
                 stringID = gameSpeedStrings[g_gameConfig.gameSpeed];
             } break;
 
@@ -2867,8 +2867,7 @@ public class GuiService {
         return String_Get_ByIndex(stringID);
     }
 
-    static void GUI_StrategicMap_AnimateArrows(void)
-    {
+    static void GUI_StrategicMap_AnimateArrows() {
         if (s_arrowAnimationTimeout >= g_timerGUI) return;
         s_arrowAnimationTimeout = g_timerGUI + 7;
 
@@ -2879,8 +2878,7 @@ public class GuiService {
         GFX_SetPalette(g_palette1);
     }
 
-    static void GUI_StrategicMap_AnimateSelected(int selected, StrategicMapData *data)
-    {
+    static void GUI_StrategicMap_AnimateSelected(int selected, StrategicMapData *data) {
         char key[4];
         char buffer[81];
         int x;
@@ -2946,8 +2944,7 @@ public class GuiService {
      * @param region Region to obtain.
      * @return True if and only if the region has already been done.
      */
-    static boolean GUI_StrategicMap_IsRegionDone(int region)
-    {
+    static boolean GUI_StrategicMap_IsRegionDone(int region) {
         return (g_strategicRegionBits & (1 << region)) != 0;
     }
 
@@ -2956,8 +2953,7 @@ public class GuiService {
      * @param region Region to change.
      * @param set Region must be set or reset.
      */
-    static void GUI_StrategicMap_SetRegionDone(int region, boolean set)
-    {
+    static void GUI_StrategicMap_SetRegionDone(int region, boolean set) {
         if (set) {
             g_strategicRegionBits |= (1 << region);
         } else {
@@ -2965,22 +2961,18 @@ public class GuiService {
         }
     }
 
-    static int GUI_StrategicMap_ClickedRegion(void)
-    {
-        int key;
-
+    static int GUI_StrategicMap_ClickedRegion() {
         GUI_StrategicMap_AnimateArrows();
 
         if (Input_Keyboard_NextKey() == 0) return 0;
 
-        key = Input_WaitForValidInput();
+        int key = Input_WaitForValidInput();
         if (key != 0xC6 && key != 0xC7) return 0;
 
         return g_fileRgnclkCPS[(g_mouseClickY - 24) * 304 + g_mouseClickX - 8];
     }
 
-    static boolean GUI_StrategicMap_FastForwardToggleWithESC(void)
-    {
+    static boolean GUI_StrategicMap_FastForwardToggleWithESC() {
         if (Input_Keyboard_NextKey() == 0) return s_strategicMapFastForward;
 
         if (Input_WaitForValidInput() != 0x1B) return s_strategicMapFastForward;
@@ -2992,9 +2984,9 @@ public class GuiService {
         return s_strategicMapFastForward;
     }
 
-    static void GUI_StrategicMap_DrawText(const char *string)
-    {
-        static long l_timerNext = 0;
+    static long l_timerNext = 0;
+
+    static void GUI_StrategicMap_DrawText(const char *string) {
         Screen oldScreenID;
         int y;
 
@@ -3021,8 +3013,7 @@ public class GuiService {
         GFX_Screen_SetActive(oldScreenID);
     }
 
-    static int GUI_StrategicMap_ScenarioSelection(int campaignID)
-    {
+    static int GUI_StrategicMap_ScenarioSelection(int campaignID) {
         int count;
         char key[6];
         boolean loop;
@@ -3110,8 +3101,7 @@ public class GuiService {
         return scenarioID;
     }
 
-    static void GUI_StrategicMap_ReadHouseRegions(int houseID, int campaignID)
-    {
+    static void GUI_StrategicMap_ReadHouseRegions(int houseID, int campaignID) {
         char key[4];
         char buffer[100];
         char groupText[16];
@@ -3125,18 +3115,17 @@ public class GuiService {
         if (Ini_GetString(groupText, key, null, buffer, sizeof(buffer) - 1, g_fileRegionINI) == null) return;
 
         while (*s != '\0') {
-        int region = atoi(s);
+            int region = atoi(s);
 
-        if (region != 0) g_regions[region] = houseID;
+            if (region != 0) g_regions[region] = houseID;
 
-        while (*s != '\0') {
-            if (*s++ == ',') break;
+            while (*s != '\0') {
+                if (*s++ == ',') break;
+            }
         }
     }
-    }
 
-    static void GUI_StrategicMap_DrawRegion(int houseId, int region, boolean progressive)
-    {
+    static void GUI_StrategicMap_DrawRegion(int houseId, int region, boolean progressive) {
         char key[4];
         char buffer[81];
         int x;
@@ -3159,36 +3148,31 @@ public class GuiService {
         GUI_Screen_FadeIn2(x + 8, y + 24, Sprite_GetWidth(sprite), Sprite_GetHeight(sprite), SCREEN_1, SCREEN_0, GUI_StrategicMap_FastForwardToggleWithESC() ? 0 : 1, false);
     }
 
-    static void GUI_StrategicMap_PrepareRegions(int campaignID)
-    {
-        int i;
-
-        for (i = 0; i < campaignID; i++) {
+    static void GUI_StrategicMap_PrepareRegions(int campaignID) {
+        for (int i = 0; i < campaignID; i++) {
             GUI_StrategicMap_ReadHouseRegions(HOUSE_HARKONNEN, i + 1);
             GUI_StrategicMap_ReadHouseRegions(HOUSE_ATREIDES, i + 1);
             GUI_StrategicMap_ReadHouseRegions(HOUSE_ORDOS, i + 1);
             GUI_StrategicMap_ReadHouseRegions(HOUSE_SARDAUKAR, i + 1);
         }
 
-        for (i = 0; i < g_regions[0]; i++) {
+        for (int i = 0; i < g_regions[0]; i++) {
             if (g_regions[i + 1] == 0xFFFF) continue;
 
             GUI_StrategicMap_DrawRegion((int)g_regions[i + 1], i + 1, false);
         }
     }
 
-    static void GUI_StrategicMap_ShowProgression(int campaignID)
-    {
+    static void GUI_StrategicMap_ShowProgression(int campaignID) {
         char key[10];
         char category[10];
         char buf[100];
-        int i;
 
         snprintf(category, sizeof(category), "GROUP%hu", campaignID);
 
-        for (i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             int houseID = (g_playerHouseID + i) % 6;
-		const char *s = buf;
+		    const char *s = buf;
 
             strncpy(key, g_table_houseInfo[houseID].name, 3);
             key[3] = '\0';
@@ -3219,15 +3203,12 @@ public class GuiService {
         GUI_StrategicMap_DrawText("");
     }
 
-    int GUI_StrategicMap_Show(int campaignID, boolean win)
-    {
+    public static int GUI_StrategicMap_Show(int campaignID, boolean win) {
         int scenarioID;
         int previousCampaignID;
-        int x;
-        int y;
         Screen oldScreenID;
-        int palette[3 * 256];
-        int loc316[12];
+        int[] palette = new int[3 * 256];
+        int[] loc316 = new int[12];
 
         if (campaignID == 0) return 1;
 
@@ -3249,8 +3230,8 @@ public class GuiService {
 
         GUI_Palette_RemapScreen(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_2, g_remap);
 
-        x = 0;
-        y = 0;
+        int x = 0;
+        int y = 0;
 
         switch (g_playerHouseID) {
             case HOUSE_HARKONNEN:
@@ -3346,12 +3327,12 @@ public class GuiService {
         GUI_Mouse_Show_Safe();
 
         if (*g_regions >= campaignID) {
-        GUI_StrategicMap_DrawText(String_Get_ByIndex(STR_SELECT_YOUR_NEXT_REGION));
+            GUI_StrategicMap_DrawText(String_Get_ByIndex(STR_SELECT_YOUR_NEXT_REGION));
 
-        scenarioID = GUI_StrategicMap_ScenarioSelection(campaignID);
-    } else {
-        scenarioID = 0;
-    }
+            scenarioID = GUI_StrategicMap_ScenarioSelection(campaignID);
+        } else {
+            scenarioID = 0;
+        }
 
         Driver_Music_FadeOut();
 
@@ -3405,18 +3386,16 @@ public class GuiService {
 
         if (offset < 0 || offset >= g_factoryWindowTotal) return null;
 
-        return &g_factoryWindowItems[offset];
+        return g_factoryWindowItems[offset];
     }
 
     static void GUI_FactoryWindow_DrawDetails() {
-        int oldScreenID;
         FactoryWindowItem item = GUI_FactoryWindow_GetItem(g_factoryWindowSelected);
         GObjectInfo oi = item.objectInfo;
-        byte[] wsa;
 
-        oldScreenID = GFX_Screen_SetActive(SCREEN_1);
+        int oldScreenID = GFX_Screen_SetActive(SCREEN_1);
 
-        wsa = WSA_LoadFile(oi.wsa, s_factoryWindowWsaBuffer, sizeof(s_factoryWindowWsaBuffer), false);
+        byte[] wsa = WSA_LoadFile(oi.wsa, s_factoryWindowWsaBuffer, s_factoryWindowWsaBuffer.length, false);
         WSA_DisplayFrame(wsa, 0, 128, 48, SCREEN_1);
         WSA_Unload(wsa);
 
@@ -3424,21 +3403,17 @@ public class GuiService {
 		    StructureInfo si;
             int x = 288;
             int y = 136;
-            byte[] sprite;
-            int width;
-            int i;
-            int j;
 
             GUI_DrawSprite(SCREEN_1, g_sprites[64], x, y, 0, 0);
             x++;
             y++;
 
-            sprite = g_sprites[24];
-            width = Sprite_GetWidth(sprite) + 1;
+            byte[] sprite = g_sprites[24];
+            int width = Sprite_GetWidth(sprite) + 1;
             si = g_table_structureInfo[item.objectType];
 
-            for (j = 0; j < g_table_structure_layoutSize[si.layout].height; j++) {
-                for (i = 0; i < g_table_structure_layoutSize[si.layout].width; i++) {
+            for (int j = 0; j < g_table_structure_layoutSize[si.layout].height; j++) {
+                for (int i = 0; i < g_table_structure_layoutSize[si.layout].width; i++) {
                     GUI_DrawSprite(SCREEN_1, sprite, x + i * width, y + j * width, 0, 0);
                 }
             }
@@ -3480,29 +3455,26 @@ public class GuiService {
     }
 
     static void GUI_FactoryWindow_DrawCaption(String caption) {
-        int oldScreenID;
+        int oldScreenID = GFX_Screen_SetActive(SCREEN_1);
 
-        oldScreenID = GFX_Screen_SetActive(SCREEN_1);
+        GUI_DrawFilledRectangle(128, 21, 310, 35, (byte)116);
 
-        GUI_DrawFilledRectangle(128, 21, 310, 35, 116);
+        if (caption != null) {
+            GUI_DrawText_Wrapper(caption, 128, 23, 12, 0, 0x12);
+        } else {
+            FactoryWindowItem item = GUI_FactoryWindow_GetItem(g_factoryWindowSelected);
+            GObjectInfo oi = item.objectInfo;
 
-        if (caption != null && *caption != '\0') {
-        GUI_DrawText_Wrapper(caption, 128, 23, 12, 0, 0x12);
-    } else {
-        FactoryWindowItem item = GUI_FactoryWindow_GetItem(g_factoryWindowSelected);
-        GObjectInfo oi = item.objectInfo;
-        int width;
+            GUI_DrawText_Wrapper(String_Get_ByIndex(oi.stringID_full), 128, 23, 12, 0, 0x12);
 
-        GUI_DrawText_Wrapper(String_Get_ByIndex(oi.stringID_full), 128, 23, 12, 0, 0x12);
+            int width = Font_GetStringWidth(String_Get_ByIndex(STR_COST_999));
+            GUI_DrawText_Wrapper(String_Get_ByIndex(STR_COST_3D), 310 - width, 23, 12, 0, 0x12, item.credits);
 
-        width = Font_GetStringWidth(String_Get_ByIndex(STR_COST_999));
-        GUI_DrawText_Wrapper(String_Get_ByIndex(STR_COST_3D), 310 - width, 23, 12, 0, 0x12, item.credits);
-
-        if (g_factoryWindowStarport) {
-            width += Font_GetStringWidth(String_Get_ByIndex(STR_QTY_99)) + 2;
-            GUI_DrawText_Wrapper(String_Get_ByIndex(STR_QTY_2D), 310 - width, 23, 12, 0, 0x12, item.amount);
+            if (g_factoryWindowStarport) {
+                width += Font_GetStringWidth(String_Get_ByIndex(STR_QTY_99)) + 2;
+                GUI_DrawText_Wrapper(String_Get_ByIndex(STR_QTY_2D), 310 - width, 23, 12, 0, 0x12, item.amount);
+            }
         }
-    }
 
         GUI_Mouse_Hide_Safe();
         if (oldScreenID == SCREEN_0) GFX_Screen_Copy2(128, 21, 128, 21, 182, 14, SCREEN_1, oldScreenID, false);
@@ -3512,40 +3484,38 @@ public class GuiService {
     }
 
     static void GUI_FactoryWindow_UpdateDetails(FactoryWindowItem item) {
-        int y;
 	    GObjectInfo oi = item.objectInfo;
         int type = item.objectType;
 
         /* check the available units and unit count limit */
         if (oi.available == -1) return;
 
-        y = 160;
+        int y = 160;
         if (oi.available <= item.amount) y = 169;
         else if (g_starPortEnforceUnitLimit && g_table_unitInfo[type].movementType != MOVEMENT_WINGER && g_table_unitInfo[type].movementType != MOVEMENT_SLITHER) {
             House h = g_playerHouse;
             if (h.unitCount >= h.unitCountMax) y = 178;
         }
+
         GUI_Mouse_Hide_Safe();
         GUI_Screen_Copy(16, y, 16, 99, 23, 9, SCREEN_1, SCREEN_ACTIVE);
         GUI_Mouse_Show_Safe();
     }
 
+    private static long paletteChangeTimer;
+    private static byte paletteColour;
+    private static byte paletteChange;
+
     /**
      * Update the selection in the factory window.
-     * If \a selectionChanged, it draws the rectangle around the new entry.
+     * If selectionChanged, it draws the rectangle around the new entry.
      * In addition, the palette colour of the rectangle is slowly changed back and
      * forth between white and the house colour by palette changes, thus giving it
      * the appearance of glowing.
      * @param selectionChanged User has selected a new thing to build.
      */
     static void GUI_FactoryWindow_UpdateSelection(boolean selectionChanged) {
-        long paletteChangeTimer;
-        int paletteColour;
-        int paletteChange;
-
         if (selectionChanged) {
-            int y;
-
             memset(g_palette1 + 255 * 3, 0x3F, 3);
 
             /* calling GFX_SetPalette() now is useless as it will be done at the end of the function */
@@ -3555,7 +3525,7 @@ public class GuiService {
             paletteColour = 0;
             paletteChange = 8;
 
-            y = g_factoryWindowSelected * 32 + 24;
+            int y = g_factoryWindowSelected * 32 + 24;
 
             GUI_Mouse_Hide_Safe();
             GUI_DrawWiredRectangle(71, y - 1, 104, y + 24, 255);
@@ -3576,19 +3546,19 @@ public class GuiService {
 
         switch (g_playerHouseID) {
             case HOUSE_HARKONNEN:
-			  *(g_palette1 + 255 * 3 + 1) = paletteColour;
-			  *(g_palette1 + 255 * 3 + 2) = paletteColour;
-                break;
+			  g_palette1[255 * 3 + 1] = paletteColour;
+			  g_palette1[255 * 3 + 2] = paletteColour;
+              break;
 
             case HOUSE_ATREIDES:
-			  *(g_palette1 + 255 * 3 + 0) = paletteColour;
-			  *(g_palette1 + 255 * 3 + 1) = paletteColour;
-                break;
+			  g_palette1[255 * 3 + 0] = paletteColour;
+			  g_palette1[255 * 3 + 1] = paletteColour;
+              break;
 
             case HOUSE_ORDOS:
-			  *(g_palette1 + 255 * 3 + 0) = paletteColour;
-			  *(g_palette1 + 255 * 3 + 2) = paletteColour;
-                break;
+			  g_palette1[255 * 3 + 0] = paletteColour;
+			  g_palette1[255 * 3 + 2] = paletteColour;
+              break;
 
             default: break;
         }
@@ -3610,7 +3580,6 @@ public class GuiService {
     public static void GUI_Screen_FadeIn(int xSrc, int ySrc, int xDst, int yDst, int width, int height, int screenSrc, int screenDst) {
         int[] offsetsY = new int[100];
         int[] offsetsX = new int[40];
-        int x, y;
 
         if (screenDst == SCREEN_0) {
             GUI_Mouse_Hide_InRegion(xDst << 3, yDst, (xDst + width) << 3, yDst + height);
@@ -3618,21 +3587,18 @@ public class GuiService {
 
         height /= 2;
 
-        for (x = 0; x < width;  x++) offsetsX[x] = x;
-        for (y = 0; y < height; y++) offsetsY[y] = y;
+        for (int x = 0; x < width;  x++) offsetsX[x] = x;
+        for (int y = 0; y < height; y++) offsetsY[y] = y;
 
-        for (x = 0; x < width; x++) {
-            int index;
-            int temp;
+        for (int x = 0; x < width; x++) {
+            int index = Tools_RandomLCG_Range(0, width - 1);
 
-            index = Tools_RandomLCG_Range(0, width - 1);
-
-            temp = offsetsX[index];
+            int temp = offsetsX[index];
             offsetsX[index] = offsetsX[x];
             offsetsX[x] = temp;
         }
 
-        for (y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
             int index;
             int temp;
 
@@ -3643,13 +3609,11 @@ public class GuiService {
             offsetsY[y] = temp;
         }
 
-        for (y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
             int y2 = y;
-            for (x = 0; x < width; x++) {
-                int offsetX, offsetY;
-
-                offsetX = offsetsX[x];
-                offsetY = offsetsY[y2];
+            for (int x = 0; x < width; x++) {
+                int offsetX = offsetsX[x];
+                int offsetY = offsetsY[y2];
 
                 GUI_Screen_Copy(xSrc + offsetX, ySrc + offsetY * 2, xDst + offsetX, yDst + offsetY * 2, 1, 2, screenSrc, screenDst);
 
@@ -3667,13 +3631,11 @@ public class GuiService {
     }
 
     static void GUI_FactoryWindow_PrepareScrollList() {
-        FactoryWindowItem item;
-
         GUI_Mouse_Hide_Safe();
         GUI_Screen_Copy(9, 24, 9, 40, 4, 128, SCREEN_0, SCREEN_1);
         GUI_Mouse_Show_Safe();
 
-        item = GUI_FactoryWindow_GetItem(-1);
+        FactoryWindowItem item = GUI_FactoryWindow_GetItem(-1);
 
         if (item != null) {
             GObjectInfo oi = item.objectInfo;
@@ -3703,9 +3665,9 @@ public class GuiService {
     }
 
     /**
-     * Fade in parts of the screen from one screenbuffer to the other screenbuffer.
-     * @param x The X-position in the source and destination screenbuffers.
-     * @param y The Y-position in the source and destination screenbuffers.
+     * Fade in parts of the screen from one screen buffer to the other screen buffer.
+     * @param x The X-position in the source and destination screen buffers.
+     * @param y The Y-position in the source and destination screen buffers.
      * @param width The width of the screen to copy.
      * @param height The height of the screen to copy.
      * @param screenSrc The ID of the source screen.
@@ -3715,8 +3677,6 @@ public class GuiService {
      */
     public static void GUI_Screen_FadeIn2(int x, int y, int width, int height, int screenSrc, int screenDst, int delay, boolean skipnull) {
         int oldScreenID;
-        int i;
-        int j;
 
         int[] columns = new int[SCREEN_WIDTH];
         int[] rows = new int[SCREEN_HEIGHT];
@@ -3728,36 +3688,31 @@ public class GuiService {
             GUI_Mouse_Hide_InRegion(x, y, x + width, y + height);
         }
 
-        for (i = 0; i < width; i++)  columns[i] = i;
-        for (i = 0; i < height; i++) rows[i] = i;
+        for (int i = 0; i < width; i++) columns[i] = i;
+        for (int i = 0; i < height; i++) rows[i] = i;
 
-        for (i = 0; i < width; i++) {
-            int tmp;
+        for (int i = 0; i < width; i++) {
+            int j = Tools_RandomLCG_Range(0, width - 1);
 
-            j = Tools_RandomLCG_Range(0, width - 1);
-
-            tmp = columns[j];
+            int tmp = columns[j];
             columns[j] = columns[i];
             columns[i] = tmp;
         }
 
-        for (i = 0; i < height; i++) {
-            int tmp;
+        for (int i = 0; i < height; i++) {
+            int j = Tools_RandomLCG_Range(0, height - 1);
 
-            j = Tools_RandomLCG_Range(0, height - 1);
-
-            tmp = rows[j];
+            int tmp = rows[j];
             rows[j] = rows[i];
             rows[i] = tmp;
         }
 
         oldScreenID = GFX_Screen_SetActive(screenDst);
 
-        for (j = 0; j < height; j++) {
+        for (int j = 0; j < height; j++) {
             int j2 = j;
 
-            for (i = 0; i < width; i++) {
-                int colour;
+            for (int i = 0; i < width; i++) {
                 int curX = x + columns[i];
                 int curY = y + rows[j2];
 
@@ -3765,7 +3720,7 @@ public class GuiService {
 
                 GFX_Screen_SetActive(screenSrc);
 
-                colour = GFX_GetPixel(curX, curY);
+                byte colour = GFX_GetPixel(curX, curY);
 
                 GFX_Screen_SetActive(screenDst);
 
@@ -3773,6 +3728,7 @@ public class GuiService {
 
                 GFX_PutPixel(curX, curY, colour);
             }
+
             GFX_Screen_SetDirty(screenDst, x, y, x + width, y + height);
 
             Timer_Sleep(delay);
@@ -3790,13 +3746,11 @@ public class GuiService {
      *  buffer.
      */
     public static void GUI_Mouse_Show() {
-        int left, top;
-
         if (g_mouseDisabled == 1) return;
         if (g_mouseHiddenDepth == 0 || --g_mouseHiddenDepth != 0) return;
 
-        left = g_mouseX - g_mouseSpriteHotspotX;
-        top  = g_mouseY - g_mouseSpriteHotspotY;
+        int left = g_mouseX - g_mouseSpriteHotspotX;
+        int top = g_mouseY - g_mouseSpriteHotspotY;
 
         s_mouseSpriteLeft = (left < 0) ? 0 : (left >> 3);
         s_mouseSpriteTop = (top < 0) ? 0 : top;
@@ -3865,12 +3819,10 @@ public class GuiService {
      *  #GUI_Mouse_Hide_InRegion().
      */
     public static void GUI_Mouse_Show_InRegion() {
-        int counter;
-
         while (g_mouseLock != 0) sleepIdle();
         g_mouseLock++;
 
-        counter = g_regionFlags & 0xFF;
+        int counter = g_regionFlags & 0xFF;
         if (counter == 0 || --counter != 0) {
             g_regionFlags = (g_regionFlags & 0xFF00) | (counter & 0xFF);
             g_mouseLock--;
@@ -3891,19 +3843,16 @@ public class GuiService {
      *  mouse was really hidden.
      */
     public static void GUI_Mouse_Hide_InRegion(int left, int top, int right, int bottom) {
-        int minx, miny;
-        int maxx, maxy;
-
-        minx = left - ((g_mouseWidth - 1) << 3) + g_mouseSpriteHotspotX;
+        int minx = left - ((g_mouseWidth - 1) << 3) + g_mouseSpriteHotspotX;
         if (minx < 0) minx = 0;
 
-        miny = top - g_mouseHeight + g_mouseSpriteHotspotY;
+        int miny = top - g_mouseHeight + g_mouseSpriteHotspotY;
         if (miny < 0) miny = 0;
 
-        maxx = right + g_mouseSpriteHotspotX;
+        int maxx = right + g_mouseSpriteHotspotX;
         if (maxx > SCREEN_WIDTH - 1) maxx = SCREEN_WIDTH - 1;
 
-        maxy = bottom + g_mouseSpriteHotspotY;
+        int maxy = bottom + g_mouseSpriteHotspotY;
         if (maxy > SCREEN_HEIGHT - 1) maxy = SCREEN_HEIGHT - 1;
 
         while (g_mouseLock != 0) sleepIdle();
@@ -3952,13 +3901,10 @@ public class GuiService {
      * @param widgetIndex The index of the widget to check on.
      */
     public static void GUI_Mouse_Hide_InWidget(int widgetIndex) {
-        int left, top;
-        int width, height;
-
-        left   = g_widgetProperties[widgetIndex].xBase << 3;
-        top    = g_widgetProperties[widgetIndex].yBase;
-        width  = g_widgetProperties[widgetIndex].width << 3;
-        height = g_widgetProperties[widgetIndex].height;
+        int left = g_widgetProperties[widgetIndex].xBase << 3;
+        int top = g_widgetProperties[widgetIndex].yBase;
+        int width = g_widgetProperties[widgetIndex].width << 3;
+        int height = g_widgetProperties[widgetIndex].height;
 
         GUI_Mouse_Hide_InRegion(left, top, left + width - 1, top + height - 1);
     }
@@ -4147,26 +4093,15 @@ public class GuiService {
     }
 
     static void GUI_HallOfFame_Encode(HallOfFameStruct data) {
-        int i;
-        int *d;
-
-        for (d = (int *)data, i = 0; i < 128; i++, d++){
-            *d = ( * d + i) ^0xA7;
-        }
+        // do nothing
     }
 
     static void GUI_HallOfFame_Decode(HallOfFameStruct data) {
-        int i;
-        int *d;
-
-        for (d = (int *)data, i = 0; i < 128; i++, d++) {
-            *d = (*d ^ 0xA7) - i;
-        }
+        // do nothing
     }
 
     static int GUI_HallOfFame_InsertScore(HallOfFameStruct data, int score) {
-        int i;
-        for (i = 0; i < 8; i++, data++) {
+        for (int i = 0; i < 8; i++, data++) {
             if (data.score >= score) continue;
 
             memmove(data + 1, data, 128);
@@ -4183,11 +4118,7 @@ public class GuiService {
     }
 
     static void GUI_HallOfFame_Show(int score) {
-        int width;
-        int editLine;
-        Widget w;
         int fileID;
-        HallOfFameStruct data;
 
         GUI_Mouse_Hide_Safe();
 
@@ -4199,7 +4130,7 @@ public class GuiService {
             s_ticksPlayed = 0;
         }
 
-        data = (HallOfFameStruct)GFX_Screen_Get_ByIndex(SCREEN_2);
+        HallOfFameStruct data = (HallOfFameStruct)GFX_Screen_Get_ByIndex(SCREEN_2);
 
         if (!File_Exists_Personal("SAVEFAME.DAT")) {
             int written;
@@ -4221,13 +4152,14 @@ public class GuiService {
 
         GUI_HallOfFame_DrawBackground(score, true);
 
+        int editLine;
         if (score == 0xFFFF) {
             editLine = 0;
         } else {
             editLine = GUI_HallOfFame_InsertScore(data, score);
         }
 
-        width = GUI_HallOfFame_DrawData(data, false);
+        int width = GUI_HallOfFame_DrawData(data, false);
 
         GUI_Screen_Copy(0, 0, 0, 0, SCREEN_WIDTH / 8, SCREEN_HEIGHT, SCREEN_1, SCREEN_0);
 
@@ -4237,7 +4169,7 @@ public class GuiService {
 
             name = data[editLine - 1].name;
 
-            memcpy(&backupProperties, &g_widgetProperties[19], sizeof(WidgetProperties));
+            memcpy(backupProperties, g_widgetProperties[19], sizeof(WidgetProperties));
 
             g_widgetProperties[19].xBase = 4;
             g_widgetProperties[19].yBase = (editLine - 1) * 11 + 90;
@@ -4265,7 +4197,7 @@ public class GuiService {
                 while (*nameEnd <= ' ' && nameEnd >= name) *nameEnd-- = '\0';
             }
 
-            memcpy(&g_widgetProperties[19], &backupProperties, sizeof(WidgetProperties));
+            memcpy(g_widgetProperties[19], backupProperties, sizeof(WidgetProperties));
 
             GUI_HallOfFame_DrawData(data, true);
 
@@ -4278,7 +4210,7 @@ public class GuiService {
 
         GUI_Mouse_Show_Safe();
 
-        w = GUI_HallOfFame_CreateButtons(data);
+        Widget w = GUI_HallOfFame_CreateButtons(data);
 
         Input_History_Clear();
 
@@ -4298,32 +4230,27 @@ public class GuiService {
     }
 
     static int GUI_HallOfFame_DrawData(HallOfFameStruct data, boolean show) {
-        int oldScreenID;
 	    char *scoreString;
 	    char *battleString;
         int width = 0;
-        int offsetY;
-        int scoreX;
-        int battleX;
-        int i;
 
-        oldScreenID = GFX_Screen_SetActive(SCREEN_1);
+        int oldScreenID = GFX_Screen_SetActive(SCREEN_1);
         GUI_DrawFilledRectangle(8, 80, 311, 178, 116);
         GUI_DrawText_Wrapper(null, 0, 0, 0, 0, 0x22);
 
         battleString = String_Get_ByIndex(STR_BATTLE);
         scoreString = String_Get_ByIndex(STR_SCORE);
 
-        scoreX = 320 - Font_GetStringWidth(scoreString) / 2 - 12;
-        battleX = scoreX - Font_GetStringWidth(scoreString) / 2 - 8 - Font_GetStringWidth(battleString) / 2;
-        offsetY = 80;
+        int scoreX = 320 - Font_GetStringWidth(scoreString) / 2 - 12;
+        int battleX = scoreX - Font_GetStringWidth(scoreString) / 2 - 8 - Font_GetStringWidth(battleString) / 2;
+        int offsetY = 80;
 
         GUI_DrawText_Wrapper(String_Get_ByIndex(STR_NAME_AND_RANK), 32, offsetY, 8, 0, 0x22);
         GUI_DrawText_Wrapper(battleString, battleX, offsetY, 8, 0, 0x122);
         GUI_DrawText_Wrapper(scoreString, scoreX, offsetY, 8, 0, 0x122);
 
         offsetY = 90;
-        for (i = 0; i < 8; i++, offsetY += 11) {
+        for (int i = 0; i < 8; i++, offsetY += 11) {
             char buffer[81];
 		    char *p1, *p2;
 
@@ -4369,12 +4296,7 @@ public class GuiService {
      * @param colour The colour of the rectangle.
      */
     public static void GUI_DrawXorFilledRectangle(int left, int top, int right, int bottom, int colour) {
-        int x;
-        int y;
-        int height;
-        int width;
-
-        int *screen = GFX_Screen_GetActive();
+        byte[] screen = GFX_Screen_GetActive();
 
         if (left >= SCREEN_WIDTH) return;
         if (left < 0) left = 0;
@@ -4391,38 +4313,37 @@ public class GuiService {
         if (left > right) return;
         if (top > bottom) return;
 
-        screen += left + top * SCREEN_WIDTH;
-        width = right - left + 1;
-        height = bottom - top + 1;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-			    *screen++ ^= colour;
+        int screenOff = left + top * SCREEN_WIDTH;
+        int width = right - left + 1;
+        int height = bottom - top + 1;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+			    screen[screenOff++] ^= colour;
             }
-            screen += SCREEN_WIDTH - width;
+            screenOff += SCREEN_WIDTH - width;
         }
     }
 
     /**
-     * Create the remap palette for the givern house.
+     * Create the remap palette for the given house.
      * @param houseID The house ID.
      */
     public static void GUI_Palette_CreateRemap(int houseID) {
-        int i;
-        int loc4;
-        int loc6;
-        int *remap;
+        byte[] remap = g_remap;
 
-        remap = g_remap;
-        for (i = 0; i < 0x100; i++, remap++) {
-		    *remap = i & 0xFF;
+        int remapOff = 0;
+        for (int i = 0; i < 0x100; i++, remapOff++) {
+		    remap[remapOff] = (byte)(i & 0xFF);
 
-            loc6 = i / 16;
-            loc4 = i % 16;
+            int loc6 = i / 16;
+            int loc4 = i % 16;
             if (loc6 == 9 && loc4 <= 6) {
-			    *remap = (houseID << 4) + 0x90 + loc4;
+			    remap[remapOff] = (byte)((houseID << 4) + 0x90 + loc4);
             }
         }
     }
+
+    private static long s_timerViewportMessage = 0;
 
     /**
      * Draw the screen.
@@ -4430,17 +4351,12 @@ public class GuiService {
      * @param screenID The screen to draw on.
      */
     public static void GUI_DrawScreen(int screenID) {
-        long s_timerViewportMessage = 0;
-        boolean hasScrolled = false;
-        int oldScreenID;
-        int xpos;
-
         if (g_selectionType == SELECTIONTYPE_MENTAT) return;
         if (g_selectionType == SELECTIONTYPE_DEBUG) return;
         if (g_selectionType == SELECTIONTYPE_UNKNOWN6) return;
         if (g_selectionType == SELECTIONTYPE_INTRO) return;
 
-        oldScreenID = GFX_Screen_SetActive(screenID);
+        int oldScreenID = GFX_Screen_SetActive(screenID);
 
         if (!GFX_Screen_IsActive(SCREEN_0)) g_viewport_forceRedraw = true;
 
@@ -4448,6 +4364,7 @@ public class GuiService {
         Animation_Tick();
         Unit_Sort();
 
+        boolean hasScrolled = false;
         if (!g_viewport_forceRedraw && g_viewportPosition != g_minimapPosition) {
             int viewportX = Tile_GetPackedX(g_viewportPosition);
             int viewportY = Tile_GetPackedY(g_viewportPosition);
@@ -4490,7 +4407,7 @@ public class GuiService {
         if (hasScrolled) {
             Map_SetSelectionObjectPosition(0xFFFF);
 
-            for (xpos = 0; xpos < 14; xpos++) {
+            for (int xpos = 0; xpos < 14; xpos++) {
                 int v = g_minimapPosition + xpos + 6*64;
 
                 BitArray_Set(g_dirtyViewport, v);
@@ -4507,7 +4424,7 @@ public class GuiService {
             g_viewportMessageCounter--;
             s_timerViewportMessage = g_timerGUI + 60;
 
-            for (xpos = 0; xpos < 14; xpos++) {
+            for (int xpos = 0; xpos < 14; xpos++) {
                 Map_Update(g_viewportPosition + xpos + 6 * 64, 0, true);
             }
         }
@@ -4531,49 +4448,43 @@ public class GuiService {
      */
     public static void GUI_SetPaletteAnimated(byte[] palette, int ticksOfAnimation) {
         boolean progress;
-        int diffPerTick;
-        int tickSlice;
         long timerCurrent;
-        int highestDiff;
-        int ticks;
-        int tickCurrent;
-        int[] data = new int[256 * 3];
-        int i;
+        byte[] data = new byte[256 * 3];
 
         if (palette == null) return;
 
         memcpy(data, g_paletteActive, 256 * 3);
 
-        highestDiff = 0;
-        for (i = 0; i < 256 * 3; i++) {
+        int highestDiff = 0;
+        for (int i = 0; i < 256 * 3; i++) {
             int diff = (int)palette[i] - (int)data[i];
             highestDiff = max(highestDiff, abs(diff));
         }
 
-        ticks = ticksOfAnimation << 8;
+        int ticks = ticksOfAnimation << 8;
         if (highestDiff != 0) ticks /= highestDiff;
 
         /* Find a nice value to change every timeslice */
-        tickSlice = ticks;
-        diffPerTick = 1;
+        int tickSlice = ticks;
+        int diffPerTick = 1;
         while (diffPerTick <= highestDiff && ticks < (2 << 8)) {
             ticks += tickSlice;
             diffPerTick++;
         }
 
-        tickCurrent = 0;
+        int tickCurrent = 0;
         timerCurrent = g_timerSleep;
 
         for (;;) {
             progress = false;	/* will be set true if any color is changed */
 
-            tickCurrent  += (int)ticks;
-            timerCurrent += (long)(tickCurrent >> 8);
+            tickCurrent  += ticks;
+            timerCurrent += (tickCurrent >> 8);
             tickCurrent  &= 0xFF;
 
-            for (i = 0; i < 256 * 3; i++) {
-                int goal = palette[i];
-                int current = data[i];
+            for (int i = 0; i < 256 * 3; i++) {
+                byte goal = palette[i];
+                byte current = data[i];
 
                 if (goal == current) continue;
 
@@ -4585,7 +4496,7 @@ public class GuiService {
                     current -= diffPerTick;
                     if (current < goal) current = goal;
                 }
-                data[i] = (int)current;
+                data[i] = current;
             }
 
             /* if no color was changed, the target palette has been reached */

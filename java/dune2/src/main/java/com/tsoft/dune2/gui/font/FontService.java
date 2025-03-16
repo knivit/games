@@ -117,7 +117,7 @@ public class FontService {
         g_fontCurrent = f;
     }
 
-    static boolean Font_Init() {
+    public static boolean Font_Init() {
         g_fontIntro = Font_LoadFile("INTRO.FNT");
         if ((g_config.language == LANGUAGE_GERMAN) && File_Exists("new6pg.fnt")) {
             g_fontNew6p = Font_LoadFile("new6pg.fnt");

@@ -94,7 +94,7 @@ public class MouseService {
      * @param right The right side of the region.
      * @param bottom The bottom side of the region.
      */
-    static void Mouse_SetRegion(int left, int top, int right, int bottom) {
+    public static void Mouse_SetRegion(int left, int top, int right, int bottom) {
         if (left > right) {
             int temp = left;
             left = right;

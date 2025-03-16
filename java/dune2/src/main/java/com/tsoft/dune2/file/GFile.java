@@ -6,7 +6,7 @@ package com.tsoft.dune2.file;
 public class GFile {
 
     public CFile fp;
-    public long size;
+    public int size;
     public long start;
     public long position;
     public FileInfo pakInfo;

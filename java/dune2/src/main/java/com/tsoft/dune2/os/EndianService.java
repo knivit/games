@@ -57,6 +57,6 @@ public class EndianService {
     }
 
     public static long READ_BE_UINT32(long p) {
-        return (((uint32)(p)[0] << 24) | ((uint32)(p)[1] << 16) | ((uint32)(p)[2] << 8) | (uint32)(p)[3]);
+        return (((long)(p)[0] << 24) | ((uint32)(p)[1] << 16) | ((uint32)(p)[2] << 8) | (uint32)(p)[3]);
     }
 }
