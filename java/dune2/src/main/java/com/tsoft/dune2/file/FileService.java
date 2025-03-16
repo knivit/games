@@ -1,11 +1,19 @@
 package com.tsoft.dune2.file;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Function;
+
+import static com.tsoft.dune2.file.CFile.EOF;
+import static com.tsoft.dune2.file.CFile.fopen;
 import static com.tsoft.dune2.file.ConvertCase.*;
 import static com.tsoft.dune2.file.SearchDirectory.*;
+import static com.tsoft.dune2.ini.IniFileService.IniFile_GetString;
 import static com.tsoft.dune2.os.EndianService.HTOBE32;
 import static com.tsoft.dune2.utils.CFunc.*;
 import static java.lang.Math.min;
 
+@Slf4j
 public class FileService {
 
     public static final int FILE_MODE_READ       = 0x01;
@@ -49,63 +57,43 @@ public class FileService {
     /**
      * Write a long value from a little endian file.
      */
-    public static boolean fwrite_le_long(long value, FILE *stream) {
-        if (putc(value & 0xff, stream) == EOF) return false;
-        if (putc((value >> 8) & 0xff, stream) == EOF) return false;
-        if (putc((value >> 16) & 0xff, stream) == EOF) return false;
-        if (putc((value >> 24) & 0xff, stream) == EOF) return false;
+    public static boolean fwrite_le_long(long value, CFile stream) {
+        if (stream.putc(value & 0xff) == EOF) return false;
+        if (stream.putc((value >> 8) & 0xff) == EOF) return false;
+        if (stream.putc((value >> 16) & 0xff) == EOF) return false;
+        if (stream.putc((value >> 24) & 0xff) == EOF) return false;
         return true;
     }
 
     /**
      * Write a int value from a little endian file.
      */
-    public static boolean fwrite_le_int(int value, FILE *stream) {
-        if (putc(value & 0xff, stream) == EOF) return false;
-        if (putc((value >> 8) & 0xff, stream) == EOF) return false;
+    public static boolean fwrite_le_int(int value, CFile stream) {
+        if (stream.putc(value & 0xff) == EOF) return false;
+        if (stream.putc((value >> 8) & 0xff) == EOF) return false;
         return true;
     }
 
-    static void File_MakeCompleteFilename(byte[] buf, size_t len, int dir, String filename, int convert) {
-        int j;
-        int i = 0;
-
+    static String File_MakeCompleteFilename(int dir, String filename, int convert) {
+        String fullFileName = filename;
         if (dir == SEARCHDIR_GLOBAL_DATA_DIR || dir == SEARCHDIR_CAMPAIGN_DIR) {
             /* Note: campaign specific data directory not implemented. */
-            i = snprintf(buf, len, "%s\\%s", g_dune_data_dir, filename);
+            fullFileName = g_dune_data_dir + "/" + filename;
         } else if (dir == SEARCHDIR_PERSONAL_DATA_DIR) {
-            i = snprintf(buf, len, "%s\\%s", g_personal_data_dir, filename);
+            fullFileName = g_personal_data_dir + "/" + filename;
         }
-        buf[len - 1] = '\0';
 
-        if (i > (int)len) {
-            Warning("output truncated : %s (%s)\n", buf, filename);
-            i = (int)len;
-        }
-        if (convert != NO_CONVERT) {
-            for (j = i - 1; j >= 0; j--) {
-                if (buf[j] == '/' || buf[j] == '\\')
-                    break;
-                if (convert == CONVERT_TO_LOWERCASE) {
-                    if ('A' <= buf[j] && buf[j] <= 'Z')
-                        buf[j] = buf[j] + 'a' - 'A';
-                } else if (convert == CONVERT_TO_UPPERCASE) {
-                    if ('a' <= buf[j] && buf[j] <= 'z')
-                        buf[j] = buf[j] - 'a' + 'A';
-                }
-            }
-        }
+        return fullFileName;
     }
 
     /**
      * Open a file from the data/ directory
      */
-    static FILE *fopendatadir(int dir, String name, String mode) {
-        char filenameComplete[1024];
+    static CFile fopendatadir(int dir, String name, String mode) {
         FileInfo fileInfo;
 	    String filename;
 
-        Debug("fopendatadir(%d, %s, %s)\n", dir, name, mode);
+        log.info("fopendatadir({}, {}, {})", dir, name, mode);
         if (dir != SEARCHDIR_PERSONAL_DATA_DIR) {
             fileInfo = FileInfo_Find_ByName(name, null);
             if (fileInfo != null) {
@@ -115,23 +103,23 @@ public class FileService {
             } else {
                 filename = name;
             }
-            File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), dir, filename, NO_CONVERT);
+
+            String filenameComplete = File_MakeCompleteFilename(dir, filename, NO_CONVERT);
             return fopen(filenameComplete, mode);
         } else {
-            FILE *f;
             /* try both in lower and upper case */
-            File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), dir, name, CONVERT_TO_UPPERCASE);
-            f = fopen(filenameComplete, mode);
+            String filenameComplete = File_MakeCompleteFilename(dir, name, CONVERT_TO_UPPERCASE);
+            CFile f = fopen(filenameComplete, mode);
             if (f != null) return f;
-            File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), dir, name, CONVERT_TO_LOWERCASE);
+            filenameComplete = File_MakeCompleteFilename(dir, name, CONVERT_TO_LOWERCASE);
             return fopen(filenameComplete, mode);
         }
     }
-    
+
     static GFile[] s_file = new GFile[FILE_MAX];
 
     static FileInfoLinkedElem s_files_in_root = null;
-    
+
     static PakFileInfoLinkedElem s_files_in_pak = null;
 
     /**
@@ -181,7 +169,7 @@ public class FileService {
         }
 
         if (fileIndex >= FILE_MAX) {
-            Warning("Limit of %d open files reached.\n", FILE_MAX);
+            log.warn("Limit of {} open files reached.", FILE_MAX);
             return FILE_INVALID;
         }
 
@@ -195,11 +183,11 @@ public class FileService {
                 s_file[fileIndex].fp = fopendatadir(dir, filename, "rb");
                 if (s_file[fileIndex].fp == null) return FILE_INVALID;
 
-                s_file[fileIndex].start    = 0;
+                s_file[fileIndex].start = 0;
                 s_file[fileIndex].position = 0;
-                fseek(s_file[fileIndex].fp, 0, SEEK_END);
-                s_file[fileIndex].size = ftell(s_file[fileIndex].fp);
-                fseek(s_file[fileIndex].fp, 0, SEEK_SET);
+                s_file[fileIndex].fp.fseek(0, SEEK_END);
+                s_file[fileIndex].size = s_file[fileIndex].fp.ftell();
+                s_file[fileIndex].fp.fseek(0, SEEK_SET);
             } else {
                 /* file is found in PAK */
                 if (pakInfo != s_currentPakInfo) {
@@ -210,12 +198,12 @@ public class FileService {
                 s_file[fileIndex].fp = s_currentPakFp;
                 if (s_file[fileIndex].fp == null) return FILE_INVALID;
 
-                s_file[fileIndex].start    = fileInfo.filePosition;
+                s_file[fileIndex].start = fileInfo.filePosition;
                 s_file[fileIndex].position = 0;
-                s_file[fileIndex].size     = fileInfo.fileSize;
+                s_file[fileIndex].size = fileInfo.fileSize;
 
                 /* Go to the start of the file now */
-                fseek(s_file[fileIndex].fp, s_file[fileIndex].start, SEEK_SET);
+                s_file[fileIndex].fp.fseek(s_file[fileIndex].start, SEEK_SET);
             }
             s_file[fileIndex].pakInfo = pakInfo;
             return fileIndex;
@@ -224,20 +212,21 @@ public class FileService {
         /* Check if we can find the file outside any PAK file */
         s_file[fileIndex].fp = fopendatadir(dir, filename, (mode == FILE_MODE_WRITE) ? "wb" : ((mode == FILE_MODE_READ_WRITE) ? "wb+" : "rb"));
         if (s_file[fileIndex].fp != null) {
-            s_file[fileIndex].start    = 0;
+            s_file[fileIndex].start = 0;
             s_file[fileIndex].position = 0;
-            s_file[fileIndex].size     = 0;
+            s_file[fileIndex].size = 0;
             s_file[fileIndex].pakInfo  = null;
 
             /* We can only check the size of the file if we are reading (or appending) */
             if ((mode & FILE_MODE_READ) != 0) {
-                fseek(s_file[fileIndex].fp, 0, SEEK_END);
-                s_file[fileIndex].size = ftell(s_file[fileIndex].fp);
-                fseek(s_file[fileIndex].fp, 0, SEEK_SET);
+                s_file[fileIndex].fp.fseek(0, SEEK_END);
+                s_file[fileIndex].size = s_file[fileIndex].fp.ftell();
+                s_file[fileIndex].fp.fseek(0, SEEK_SET);
             }
 
             return fileIndex;
         }
+
         return FILE_INVALID;
     }
 
@@ -294,20 +283,19 @@ public class FileService {
      * @return True if PAK processing was ok.
      */
     static boolean _File_Init_ProcessPak(String pakpath, long paksize, FileInfo pakInfo) {
-        FILE *f;
         long position;
         long nextposition;
         long size;
         char filename[256];
         int i;
 
-        f = fopen(pakpath, "rb");
+        CFile f = fopen(pakpath, "rb");
         if (f == null) {
-            Error("failed to open %s", pakpath);
+            log.error("failed to open {}", pakpath);
             return false;
         }
         if (!fread_le_long(&nextposition, f)) {
-            fclose(f);
+            f.fclose();
             return false;
         }
 
@@ -321,22 +309,22 @@ public class FileService {
                 if (filename[i] == '\0') break;
             }
             if (i == sizeof(filename)) {
-                fclose(f);
+                f.fclose();
                 return false;
             }
             if (!fread_le_long(&nextposition, f)) {
-                fclose(f);
+                f.fclose();
                 return false;
             }
 
             size = (nextposition != 0) ? nextposition - position : paksize - position;
             if (_File_Init_AddFileInPak(filename, size, position, pakInfo) == null) {
-                fclose(f);
+                f.fclose();
                 return false;
             }
         }
 
-        fclose(f);
+        f.fclose();
         return true;
     }
 
@@ -348,7 +336,7 @@ public class FileService {
      * @param size The file size (bytes).
      * @return True if the processing went OK.
      */
-    static boolean _File_Init_Callback(String name, String path, long size) {
+    public static boolean _File_Init_Callback(String name, String path, long size) {
         FileInfo fileInfo;
 
         fileInfo = _File_Init_AddFileInRootDir(name, size);
@@ -358,7 +346,7 @@ public class FileService {
         if (ext != null) {
             if (".pak".equalsIgnoreCase(ext)) {
                 if (!_File_Init_ProcessPak(path, size, fileInfo)) {
-                    Warning("Failed to process PAK file %s\n", path);
+                    log.warn("Failed to process PAK file {}", path);
                     return false;
                 }
             }
@@ -397,7 +385,7 @@ public class FileService {
         } else {
             /* %APPDATA%/OpenDUNE (win32) */
             if (SHGetFolderPath( null, CSIDL_APPDATA/*CSIDL_COMMON_APPDATA*/, null, 0, buf ) != S_OK) {
-                Warning("Cannot find AppData directory.\n");
+                log.warn("Cannot find AppData directory.");
                 snprintf(g_personal_data_dir, sizeof(g_personal_data_dir), ".");
             } else {
                 PathAppend(buf, TEXT("OpenDUNE"));
@@ -415,10 +403,11 @@ public class FileService {
             strncpy(g_dune_data_dir, buf, sizeof(g_dune_data_dir));
         } else if (g_dune_data_dir[0] == '\0') {
         }
-        File_MakeCompleteFilename(buf, sizeof(buf), SEARCHDIR_GLOBAL_DATA_DIR, "", NO_CONVERT);
 
-        if (!ReadDir_ProcessAllFiles(buf, _File_Init_Callback)) {
-            Error("Cannot initialise files. Does %s directory exist ?\n", buf);
+        String dir = File_MakeCompleteFilename(SEARCHDIR_GLOBAL_DATA_DIR, "", NO_CONVERT);
+
+        if (!ReadDir_ProcessAllFiles(dir, FileService::_File_Init_Callback)) {
+            log.error("Cannot initialise files. Does {} directory exist ?", buf);
             return false;
         }
 
@@ -429,7 +418,8 @@ public class FileService {
      * Free all ressources loaded in memory.
      */
     public static void File_Uninit() {
-        if (s_currentPakFp != null) fclose(s_currentPakFp);
+        if (s_currentPakFp != null) s_currentPakFp.fclose();
+
         s_currentPakFp = null;
         s_currentPakInfo = null;
         while (s_files_in_root != null) {
@@ -487,9 +477,9 @@ public class FileService {
 
         if (res == FILE_INVALID) {
             if(dir == SEARCHDIR_PERSONAL_DATA_DIR) {
-                Warning("Unable to open file '%s'.\n", filename);
+                log.warn("Unable to open file '{}'.", filename);
             } else {
-                Error("Unable to open file '%s'.\n", filename);
+                log.error("Unable to open file '{}'.", filename);
                 System.exit(1);
             }
         }
@@ -511,7 +501,7 @@ public class FileService {
             return;
         }
 
-        fclose(s_file[index].fp);
+        s_file[index].fp.fclose();
         s_file[index].fp = null;
     }
 
@@ -519,7 +509,6 @@ public class FileService {
      * Read bytes from a file into a buffer.
      *
      * @param index The index given by File_Open() of the file.
-     * @param buffer The buffer to read into.
      * @param length The amount of bytes to read.
      * @return The amount of bytes truly read, or 0 if there was a failure.
      */
@@ -529,11 +518,13 @@ public class FileService {
         if (s_file[index].position >= s_file[index].size) return null;
         if (length == 0) return null;
 
-        if (length > s_file[index].size - s_file[index].position) length = s_file[index].size - s_file[index].position;
+        if (length > s_file[index].size - s_file[index].position) {
+            length = s_file[index].size - s_file[index].position;
+        }
 
         byte[] buffer = s_file[index].fp.fread(length);
         if (buffer == null) {
-            Error("Read error\n");
+            log.error("Read error");
             File_Close(index);
 
             length = 0;
@@ -577,8 +568,8 @@ public class FileService {
         if (index >= FILE_MAX) return 0;
         if (s_file[index].fp == null) return 0;
 
-        if (fwrite(buffer, length, 1, s_file[index].fp) != 1) {
-            Error("Write error\n");
+        if (s_file[index].fp.fwrite(buffer, length, 1) != 1) {
+            log.error("Write error");
             File_Close(index);
 
             length = 0;
@@ -604,6 +595,10 @@ public class FileService {
         return (File_Write(index, buffer, 2) == 2);
     }
 
+    public static final int SEEK_SET = 0;
+    public static final int SEEK_CUR = 1;
+    public static final int SEEK_END = 2;
+
     /**
      * Seek inside a file.
      *
@@ -615,19 +610,23 @@ public class FileService {
     public static long File_Seek(int index, long position, int mode) {
         if (index >= FILE_MAX) return 0;
         if (s_file[index].fp == null) return 0;
-        if (mode > 2) { File_Close(index); return 0; }
+
+        if (mode > 2) {
+            File_Close(index);
+            return 0;
+        }
 
         switch (mode) {
             case 0:
-                fseek(s_file[index].fp, s_file[index].start + position, SEEK_SET);
+                s_file[index].fp.fseek(s_file[index].start + position, SEEK_SET);
                 s_file[index].position = position;
                 break;
             case 1:
-                fseek(s_file[index].fp, position, SEEK_CUR);
+                s_file[index].fp.fseek(position, SEEK_CUR);
                 s_file[index].position += position;
                 break;
             case 2:
-                fseek(s_file[index].fp, s_file[index].start + s_file[index].size - position, SEEK_SET);
+                s_file[index].fp.fseek(s_file[index].start + s_file[index].size - position, SEEK_SET);
                 s_file[index].position = s_file[index].size - position;
                 break;
         }
@@ -654,13 +653,11 @@ public class FileService {
      * @param filename The filename to remove.
      */
     public static void File_Delete_Personal(String filename) {
-        char[] filenameComplete = new char[1024];
-
-        File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), SEARCHDIR_PERSONAL_DATA_DIR, filename, CONVERT_TO_LOWERCASE);
+        String filenameComplete = File_MakeCompleteFilename(SEARCHDIR_PERSONAL_DATA_DIR, filename, CONVERT_TO_LOWERCASE);
 
         if (unlink(filenameComplete) < 0) {
             /* try with the upper case file name */
-            File_MakeCompleteFilename(filenameComplete, sizeof(filenameComplete), SEARCHDIR_PERSONAL_DATA_DIR, filename, CONVERT_TO_UPPERCASE);
+            filenameComplete = File_MakeCompleteFilename(SEARCHDIR_PERSONAL_DATA_DIR, filename, CONVERT_TO_UPPERCASE);
             unlink(filenameComplete);
         }
     }
@@ -686,6 +683,7 @@ public class FileService {
     static byte[] File_ReadBlockFile_Ex(int dir, String filename, long length) {
         int index = File_Open_Ex(dir, filename, FILE_MODE_READ);
         if (index == FILE_INVALID) return null;
+
         byte[] buffer = File_Read(index, length);
         File_Close(index);
         return buffer;
@@ -704,17 +702,16 @@ public class FileService {
 
         byte[] buffer = new byte[length + 1];
         if (buffer == null) {
-            Error("Failed to allocate %lu bytes of memory.\n", length + 1);
+            log.error("Failed to allocate {} bytes of memory.", length + 1);
             return null;
         }
 
         if (File_Read(index, buffer, length) != length) {
-            free(buffer);
             return null;
         }
 
         /* In case of text-files it can be very important to have a \0 at the end */
-        ((char *)buffer)[length] = '\0';
+        buffer[length] = 0;
 
         File_Close(index);
 
@@ -735,7 +732,6 @@ public class FileService {
 
         byte[] buffer = new byte[count * 2];
         if (File_Read(index, buffer, count * sizeof(int)) != count * sizeof(int)) {
-            free(buffer);
             return null;
         }
 
@@ -914,5 +910,16 @@ public class FileService {
 
     public static int ChunkFile_Open_Personal(String FILENAME) {
         return ChunkFile_Open_Ex(SEARCHDIR_PERSONAL_DATA_DIR, FILENAME);
+    }
+
+    /**
+     * Process all files in the directory
+     *
+     * @param dirpath path to directory to traverse
+     * @param cb function called back for each file found
+     * @return True if and only if everything was ok
+     */
+    public static boolean ReadDir_ProcessAllFiles(String dirpath, ProcessFileFunction<String, String, Integer, Boolean> cb) {
+        // todo
     }
 }

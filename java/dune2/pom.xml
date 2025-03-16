@@ -16,6 +16,10 @@
         <gdx-ai.version>1.8.2</gdx-ai.version>
         <ashley.version>1.7.4</ashley.version>
         <box2dlights.version>1.5</box2dlights.version>
+
+        <lombok.version>1.18.36</lombok.version>
+        <slf4j-api.version>2.0.17</slf4j-api.version>
+        <logback.version>1.5.17</logback.version>
     </properties>
 
     <dependencies>
@@ -73,6 +77,31 @@
             <groupId>com.badlogicgames.box2dlights</groupId>
             <artifactId>box2dlights</artifactId>
             <version>${box2dlights.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
     </dependencies>
 
